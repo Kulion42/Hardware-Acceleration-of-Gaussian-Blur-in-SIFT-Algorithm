@@ -13,7 +13,9 @@ namespace sift {
 struct ScaleSpacePyramid {
     int num_octaves;
     int imgs_per_octave;
-    std::vector<std::vector<Image>> octaves; 
+    
+    //ovo je potrebno prebaciti u 1D
+    std::vector<Image> images; 
 };
 
 struct Keypoint {
@@ -41,7 +43,7 @@ const int MAX_REFINEMENT_ITERS = 5;
 const float SIGMA_MIN = 0.8;
 const float MIN_PIX_DIST = 0.5;
 const float SIGMA_IN = 0.5;
-const int N_OCT = 8;
+const int N_OCT = 8; //Broj oktava
 const int N_SPO = 3;
 const float C_DOG = 0.015;
 const float C_EDGE = 10;

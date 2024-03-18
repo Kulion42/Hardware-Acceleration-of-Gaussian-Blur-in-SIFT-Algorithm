@@ -11,8 +11,10 @@
 #include "image.hpp"
 
 
+
 namespace sift {
 
+//Menjao na 1D
 ScaleSpacePyramid generate_gaussian_pyramid(const Image& img, float sigma_min,
                                             int num_octaves, int scales_per_octave)
 {
@@ -39,39 +41,54 @@ ScaleSpacePyramid generate_gaussian_pyramid(const Image& img, float sigma_min,
     ScaleSpacePyramid pyramid = {
         num_octaves,
         imgs_per_octave,
-        std::vector<std::vector<Image>>(num_octaves)
+        std::vector<Image>(num_octaves*imgs_per_octave) //zamenio sam da bude 1D
     };
     for (int i = 0; i < num_octaves; i++) {
-        pyramid.octaves[i].reserve(imgs_per_octave);
-        pyramid.octaves[i].push_back(std::move(base_img));
-        for (int j = 1; j < sigma_vals.size(); j++) {
-            const Image& prev_img = pyramid.octaves[i].back();
-            pyramid.octaves[i].push_back(gaussian_blur(prev_img, sigma_vals[j]));
-        }
-        // prepare base image for next octave
-        const Image& next_base_img = pyramid.octaves[i][imgs_per_octave-3];
-        base_img = next_base_img.resize(next_base_img.width/2, next_base_img.height/2,
-                                        Interpolation::NEAREST);
+      //pyramid.octaves[i].reserve(imgs_per_octave);
+      pyramid.images[i*imgs_per_octave] = (base_img); //obrisao std::move(base_img)
+      
+      for(int j = 1; j < imgs_per_octave; j++){  
+          
+          const Image& prev_img = pyramid.images[i*imgs_per_octave + (j-1)];
+          pyramid.images[i*imgs_per_octave + j] = (gaussian_blur(prev_img, sigma_vals[j])); //std::move(base_img)
+          
+          
+          /*
+          for (int k = 1; k < sigma_vals.size(); k++) {
+              const Image& prev_img = pyramid.octaves[i].back();
+              pyramid.octaves[i].push_back(gaussian_blur(prev_img, sigma_vals[j]));
+          }
+          
+          */
+                 
+      }
+          
+          // prepare base image for next octave
+          const Image& next_base_img = pyramid.images[i*imgs_per_octave + (imgs_per_octave - 3)];
+          base_img = next_base_img.resize(next_base_img.width/2, next_base_img.height/2,
+                                          Interpolation::NEAREST);
+      
     }
     return pyramid;
 }
 
+//Menjao na 1D
 // generate pyramid of difference of gaussians (DoG) images
 ScaleSpacePyramid generate_dog_pyramid(const ScaleSpacePyramid& img_pyramid)
 {
     ScaleSpacePyramid dog_pyramid = {
         img_pyramid.num_octaves,
         img_pyramid.imgs_per_octave - 1,
-        std::vector<std::vector<Image>>(img_pyramid.num_octaves)
+        std::vector<Image>(img_pyramid.num_octaves*(img_pyramid.imgs_per_octave-1))
     };
     for (int i = 0; i < dog_pyramid.num_octaves; i++) {
-        dog_pyramid.octaves[i].reserve(dog_pyramid.imgs_per_octave);
+        //dog_pyramid.octaves[i].reserve(dog_pyramid.imgs_per_octave);
         for (int j = 1; j < img_pyramid.imgs_per_octave; j++) {
-            Image diff = img_pyramid.octaves[i][j];
+            Image diff = img_pyramid.images[i*img_pyramid.imgs_per_octave + j];
             for (int pix_idx = 0; pix_idx < diff.size; pix_idx++) {
-                diff.data[pix_idx] -= img_pyramid.octaves[i][j-1].data[pix_idx];
+                diff.data[pix_idx] -= img_pyramid.images[i*img_pyramid.imgs_per_octave + (j - 1)].data[pix_idx];
             }
-            dog_pyramid.octaves[i].push_back(diff);
+            dog_pyramid.images[i*img_pyramid.imgs_per_octave + j] = diff;
         }
     }
     return dog_pyramid;
@@ -215,22 +232,34 @@ bool refine_or_discard_keypoint(Keypoint& kp, const std::vector<Image>& octave,
     return kp_is_valid;
 }
 
+
+//Menjao na 1D
 std::vector<Keypoint> find_keypoints(const ScaleSpacePyramid& dog_pyramid, float contrast_thresh,
                                      float edge_thresh)
 {
     std::vector<Keypoint> keypoints;
     for (int i = 0; i < dog_pyramid.num_octaves; i++) {
-        const std::vector<Image>& octave = dog_pyramid.octaves[i];
+        
+        //const std::vector<Image>& octave = dog_pyramid.images[i];
+        //Treba kopirati celu oktavu iz 1D niza, npr 0-5 element, 6-11 itd.
+        //postoji funkcija copy koja ovo radi
+        
+        //std::vector<Image>& octave; Imam problem sa ovim
+        
+        std::vector<Image> octave_temp;
+        
+        std::copy(dog_pyramid.images.begin() + i*dog_pyramid.imgs_per_octave, dog_pyramid.images.begin() + ((i+1)*dog_pyramid.imgs_per_octave - 1), octave_temp.begin());
+        
         for (int j = 1; j < dog_pyramid.imgs_per_octave-1; j++) {
-            const Image& img = octave[j];
+            const Image& img = octave_temp[j];
             for (int x = 1; x < img.width-1; x++) {
                 for (int y = 1; y < img.height-1; y++) {
                     if (std::abs(img.get_pixel(x, y, 0)) < 0.8*contrast_thresh) {
                         continue;
                     }
-                    if (point_is_extremum(octave, j, x, y)) {
+                    if (point_is_extremum(octave_temp, j, x, y)) {
                         Keypoint kp = {x, y, i, j, -1, -1, -1, -1};
-                        bool kp_is_valid = refine_or_discard_keypoint(kp, octave, contrast_thresh,
+                        bool kp_is_valid = refine_or_discard_keypoint(kp, octave_temp, contrast_thresh,
                                                                       edge_thresh);
                         if (kp_is_valid) {
                             keypoints.push_back(kp);
@@ -243,32 +272,36 @@ std::vector<Keypoint> find_keypoints(const ScaleSpacePyramid& dog_pyramid, float
     return keypoints;
 }
 
+
+//Menjao na 1D
 // calculate x and y derivatives for all images in the input pyramid
 ScaleSpacePyramid generate_gradient_pyramid(const ScaleSpacePyramid& pyramid)
 {
     ScaleSpacePyramid grad_pyramid = {
         pyramid.num_octaves,
         pyramid.imgs_per_octave,
-        std::vector<std::vector<Image>>(pyramid.num_octaves)
+        std::vector<Image>(pyramid.num_octaves*pyramid.imgs_per_octave)
     };
     for (int i = 0; i < pyramid.num_octaves; i++) {
-        grad_pyramid.octaves[i].reserve(grad_pyramid.imgs_per_octave);
-        int width = pyramid.octaves[i][0].width;
-        int height = pyramid.octaves[i][0].height;
+    
+        //grad_pyramid.octaves[i].reserve(grad_pyramid.imgs_per_octave);
+        
+        int width = pyramid.images[i*pyramid.imgs_per_octave].width;
+        int height = pyramid.images[i*pyramid.imgs_per_octave].height;
         for (int j = 0; j < pyramid.imgs_per_octave; j++) {
             Image grad(width, height, 2);
             float gx, gy;
             for (int x = 1; x < grad.width-1; x++) {
                 for (int y = 1; y < grad.height-1; y++) {
-                    gx = (pyramid.octaves[i][j].get_pixel(x+1, y, 0)
-                         -pyramid.octaves[i][j].get_pixel(x-1, y, 0)) * 0.5;
+                    gx = (pyramid.images[i*pyramid.imgs_per_octave + j].get_pixel(x+1, y, 0)
+                         -pyramid.images[i*pyramid.imgs_per_octave + j].get_pixel(x-1, y, 0)) * 0.5;
                     grad.set_pixel(x, y, 0, gx);
-                    gy = (pyramid.octaves[i][j].get_pixel(x, y+1, 0)
-                         -pyramid.octaves[i][j].get_pixel(x, y-1, 0)) * 0.5;
+                    gy = (pyramid.images[i*pyramid.imgs_per_octave + j].get_pixel(x, y+1, 0)
+                         -pyramid.images[i*pyramid.imgs_per_octave + j].get_pixel(x, y-1, 0)) * 0.5;
                     grad.set_pixel(x, y, 1, gy);
                 }
             }
-            grad_pyramid.octaves[i].push_back(grad);
+            grad_pyramid.images[i*pyramid.imgs_per_octave + j] = grad;
         }
     }
     return grad_pyramid;
@@ -295,7 +328,7 @@ std::vector<float> find_keypoint_orientations(Keypoint& kp,
                                               float lambda_ori, float lambda_desc)
 {
     float pix_dist = MIN_PIX_DIST * std::pow(2, kp.octave);
-    const Image& img_grad = grad_pyramid.octaves[kp.octave][kp.scale];
+    const Image& img_grad = grad_pyramid.images[kp.octave*grad_pyramid.imgs_per_octave + kp.scale]; //Menjao na 1D, ovo nisam siguran kako
 
     // discard kp if too close to image borders 
     float min_dist_from_border = std::min({kp.x, kp.y, pix_dist*img_grad.width-kp.x,
@@ -405,7 +438,7 @@ void compute_keypoint_descriptor(Keypoint& kp, float theta,
                                  float lambda_desc)
 {
     float pix_dist = MIN_PIX_DIST * std::pow(2, kp.octave);
-    const Image& img_grad = grad_pyramid.octaves[kp.octave][kp.scale];
+    const Image& img_grad = grad_pyramid.images[kp.octave * grad_pyramid.imgs_per_octave + kp.scale]; //Menjao na 1D, ovo nisam siguran kako
     float histograms[N_HIST][N_HIST][N_ORI] = {0};
 
     //find start and end coords for loops over image patch
@@ -452,7 +485,9 @@ std::vector<Keypoint> find_keypoints_and_descriptors(const Image& img, float sig
 {
     assert(img.channels == 1 || img.channels == 3);
 
+    cout << "test";
     const Image& input = img.channels == 1 ? img : rgb_to_grayscale(img);
+    
     ScaleSpacePyramid gaussian_pyramid = generate_gaussian_pyramid(input, sigma_min, num_octaves,
                                                                    scales_per_octave);
     ScaleSpacePyramid dog_pyramid = generate_dog_pyramid(gaussian_pyramid);
