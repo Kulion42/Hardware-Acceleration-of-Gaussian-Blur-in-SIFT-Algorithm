@@ -35,7 +35,5 @@ Image grayscale_to_rgb(const Image& img);
 Image gaussian_blur(const Image& img, float sigma);
 
 void draw_point(Image& img, int x, int y, int size=3);
-void draw_line(Image& img, int x1, int y1, int x2, int y2);
-
 
 #endif
