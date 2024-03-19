@@ -69,6 +69,7 @@ ScaleSpacePyramid generate_gaussian_pyramid(const Image& img, float sigma_min,
                                           Interpolation::NEAREST);
       
     }
+    
     return pyramid;
 }
 
@@ -82,15 +83,18 @@ ScaleSpacePyramid generate_dog_pyramid(const ScaleSpacePyramid& img_pyramid)
         std::vector<Image>(img_pyramid.num_octaves*(img_pyramid.imgs_per_octave-1))
     };
     for (int i = 0; i < dog_pyramid.num_octaves; i++) {
+    
         //dog_pyramid.octaves[i].reserve(dog_pyramid.imgs_per_octave);
         for (int j = 1; j < img_pyramid.imgs_per_octave; j++) {
             Image diff = img_pyramid.images[i*img_pyramid.imgs_per_octave + j];
             for (int pix_idx = 0; pix_idx < diff.size; pix_idx++) {
                 diff.data[pix_idx] -= img_pyramid.images[i*img_pyramid.imgs_per_octave + (j - 1)].data[pix_idx];
+                
             }
-            dog_pyramid.images[i*img_pyramid.imgs_per_octave + j] = diff;
+            dog_pyramid.images[i*dog_pyramid.imgs_per_octave + (j-1)] = diff;
         }
     }
+
     return dog_pyramid;
 }
 
@@ -242,24 +246,25 @@ std::vector<Keypoint> find_keypoints(const ScaleSpacePyramid& dog_pyramid, float
         
         //const std::vector<Image>& octave = dog_pyramid.images[i];
         //Treba kopirati celu oktavu iz 1D niza, npr 0-5 element, 6-11 itd.
-        //postoji funkcija copy koja ovo radi
         
-        //std::vector<Image>& octave; Imam problem sa ovim
+        //const std::vector<Image>& octave; Imam problem sa ovim
         
-        std::vector<Image> octave_temp;
+        auto start_iterator = dog_pyramid.images.begin() + i*dog_pyramid.imgs_per_octave;
+        auto end_iterator = start_iterator + 5; //exclusive je... ne ide 4 nego 5
         
-        std::copy(dog_pyramid.images.begin() + i*dog_pyramid.imgs_per_octave, dog_pyramid.images.begin() + ((i+1)*dog_pyramid.imgs_per_octave - 1), octave_temp.begin());
+        const std::vector<Image>& octave = std::vector<Image>(start_iterator, end_iterator);
         
         for (int j = 1; j < dog_pyramid.imgs_per_octave-1; j++) {
-            const Image& img = octave_temp[j];
+              
+            const Image& img = octave[j];
             for (int x = 1; x < img.width-1; x++) {
                 for (int y = 1; y < img.height-1; y++) {
                     if (std::abs(img.get_pixel(x, y, 0)) < 0.8*contrast_thresh) {
                         continue;
                     }
-                    if (point_is_extremum(octave_temp, j, x, y)) {
+                    if (point_is_extremum(octave, j, x, y)) {
                         Keypoint kp = {x, y, i, j, -1, -1, -1, -1};
-                        bool kp_is_valid = refine_or_discard_keypoint(kp, octave_temp, contrast_thresh,
+                        bool kp_is_valid = refine_or_discard_keypoint(kp, octave, contrast_thresh,
                                                                       edge_thresh);
                         if (kp_is_valid) {
                             keypoints.push_back(kp);
@@ -433,12 +438,13 @@ void hists_to_vec(float histograms[N_HIST][N_HIST][N_ORI], std::array<uint8_t, 1
     }
 }
 
+//Menjao na 1D
 void compute_keypoint_descriptor(Keypoint& kp, float theta,
                                  const ScaleSpacePyramid& grad_pyramid,
                                  float lambda_desc)
 {
     float pix_dist = MIN_PIX_DIST * std::pow(2, kp.octave);
-    const Image& img_grad = grad_pyramid.images[kp.octave * grad_pyramid.imgs_per_octave + kp.scale]; //Menjao na 1D, ovo nisam siguran kako
+    const Image& img_grad = grad_pyramid.images[kp.octave * grad_pyramid.imgs_per_octave + kp.scale]; //Ovo nisam siguran
     float histograms[N_HIST][N_HIST][N_ORI] = {0};
 
     //find start and end coords for loops over image patch
@@ -485,7 +491,6 @@ std::vector<Keypoint> find_keypoints_and_descriptors(const Image& img, float sig
 {
     assert(img.channels == 1 || img.channels == 3);
 
-    cout << "test";
     const Image& input = img.channels == 1 ? img : rgb_to_grayscale(img);
     
     ScaleSpacePyramid gaussian_pyramid = generate_gaussian_pyramid(input, sigma_min, num_octaves,
