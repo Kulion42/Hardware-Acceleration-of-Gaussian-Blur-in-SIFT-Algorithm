@@ -11,7 +11,6 @@
 #include "image.hpp"
 
 
-
 namespace sift {
 
 //Menjao na 1D
@@ -50,17 +49,9 @@ ScaleSpacePyramid generate_gaussian_pyramid(const Image& img, float sigma_min,
       for(int j = 1; j < imgs_per_octave; j++){  
           
           const Image& prev_img = pyramid.images[i*imgs_per_octave + (j-1)];
-          pyramid.images[i*imgs_per_octave + j] = (gaussian_blur(prev_img, sigma_vals[j])); //std::move(base_img)
+          pyramid.images[i*imgs_per_octave + j] = (gaussian_blur(prev_img, sigma_vals[j]));
           
-          
-          /*
-          for (int k = 1; k < sigma_vals.size(); k++) {
-              const Image& prev_img = pyramid.octaves[i].back();
-              pyramid.octaves[i].push_back(gaussian_blur(prev_img, sigma_vals[j]));
-          }
-          
-          */
-                 
+              
       }
           
           // prepare base image for next octave
