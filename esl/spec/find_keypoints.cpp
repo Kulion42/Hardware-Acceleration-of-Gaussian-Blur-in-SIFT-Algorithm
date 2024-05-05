@@ -11,9 +11,15 @@ int main(int argc, char *argv[])
 
     if (argc != 2) {
         std::cerr << "Usage: ./find_keypoints input.jpg (or .png)\n";
-        return 0;
+        return EXIT_FAILURE;
     }
     Image img(argv[1]);
+    
+    if(img.height > 256 || img.width > 256)
+    {
+      std::cerr << "Image can't be bigger than 256x256 pixels.\n";
+      return EXIT_FAILURE;
+    } 
     img =  img.channels == 1 ? img : rgb_to_grayscale(img);
 
     std::vector<sift::Keypoint> kps = sift::find_keypoints_and_descriptors(img);
