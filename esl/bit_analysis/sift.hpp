@@ -1,19 +1,16 @@
 
 #ifndef SIFT_H
-
 #define SIFT_H
-#define SC_INCLUDE_FX
 
 #include <vector>
 #include <array>
 #include <cstdint>
-#include <systemc>
 #include "image.hpp"
+#include "sc_types.hpp"
 
 namespace sift {
 
 struct ScaleSpacePyramid {
-//Prebačeno u sc tip radi warninga
     sc_dt::sc_int<8> num_octaves;
     sc_dt::sc_int<8> imgs_per_octave;
     
@@ -41,7 +38,7 @@ struct Keypoint {
 // SIFT algorithm parameters, used by default
 //*******************************************
 
-// digital scale space configuration and keypoint detection
+//digital scale space configuration and keypoint detection
 const int MAX_REFINEMENT_ITERS = 5;
 const float SIGMA_MIN = 0.8;
 const float MIN_PIX_DIST = 0.5;
@@ -62,8 +59,8 @@ const float LAMBDA_DESC = 6;
 const float THRESH_ABSOLUTE = 350;
 const float THRESH_RELATIVE = 0.7;
 
-ScaleSpacePyramid generate_gaussian_pyramid(const Image& img, float sigma_min=SIGMA_MIN,
-                                            int num_octaves=N_OCT, int scales_per_octave=N_SPO);
+//ScaleSpacePyramid generate_gaussian_pyramid(const Image& img, float sigma_min=SIGMA_MIN,
+  //                                          int num_octaves=N_OCT, int scales_per_octave=N_SPO);
 
 ScaleSpacePyramid generate_dog_pyramid(const ScaleSpacePyramid& img_pyramid);
 

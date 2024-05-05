@@ -8,64 +8,48 @@
 #include <cassert>
 
 #include "sift.hpp"
-#include "image.hpp"
 
 
 using namespace std;
-using namespace sc_core;
 using namespace sc_dt;
+
 namespace sift {
-//Menjao na 1D
+
 ScaleSpacePyramid generate_gaussian_pyramid(const Image& img, float sigma_min,
                                             int num_octaves, int scales_per_octave)
 {
-typedef sc_dt::sc_ufix_fast num_t;
-
-typedef sc_dt::sc_fix_fast snum_t;
-
-
-
 
     // assume initial sigma is 1.0 (after resizing) and smooth
     // the image with sigma_diff to reach requried base_sigma
-   num_t base_sigma(16, 1);
-     base_sigma = sigma_min / MIN_PIX_DIST;
+   sigma_base_diff_t base_sigma;
+   base_sigma = sigma_min / MIN_PIX_DIST;
    //Image base_img; // = img.resize(img.width*2, img.height*2, Interpolation::BILINEAR);
   
 //Pocetak funkcije resize(img.width*2, img.height*2, Interpolation::BILINEAR);  
 
      Image resized(img.width*2, img.height*2, img.channels);
-    num_t value(16, 0);
+    num_t value;
     value =0;
     for (int x = 0; x < img.width*2; x++) {
         for (int y = 0; y < img.height*2; y++) {
             for (int c = 0; c < img.channels; c++) {
-		snum_t old_x(15, 10), old_y(15, 9);
+		floor_ceil_t old_x, old_y;
     		 old_x = x / 2 -0.25;
     		 old_y = y / 2 - 0.25;
-               // convert_and_find(old_y);
+			  // convert_and_find(old_y);
 //Pocetak funkcije bilinear_interpolate(*this, old_x, old_y, c);
 //value = bilinear_interpolate(*this, old_x, old_y, c);
-    num_t p1(16, 0), p2(16, 0), p3(16, 0), p4(16, 0), q1(16, 0), q2(16, 0);
+    num_t p1,  p2, p3, p4, q1, q2;
     //float p1, p2, p3, p4, q1, q2;
-   num_t x_floor(16, 10), y_floor(16,10), x_ceil(16, 10), y_ceil(16, 10);
+   floor_ceil_t x_floor, y_floor, x_ceil, y_ceil;
      x_floor = std::floor(old_x); y_floor = std::floor(old_y);
      x_ceil = x_floor + 1; y_ceil = y_floor + 1;
     p1 = img.get_pixel(x_floor, y_floor, c);
-   //int broj = convert_and_find(x_floor);//(16, 0)
-    //if (broj > ctrl)
-    //broj = ctrl;
-    //cout << broj <<endl;
     p2 = img.get_pixel(x_ceil, y_floor, c);
-    //int broj = convert_and_find(p2);
     p3 = img.get_pixel(x_floor, y_ceil, c);
-    //convert_and_find(p3);
     p4 = img.get_pixel(x_ceil, y_ceil, c);
-    //convert_and_find(p4);
     q1 = (y_ceil-old_y)*p1 + (old_y-y_floor)*p3;
-     //convert_and_find(q1;
     q2 = (y_ceil-old_y)*p2 + (old_y-y_floor)*p4; 
-    //convert_and_find(q2);
     value = (x_ceil-old_x)*q1 + (old_x-x_floor)*q2;
     //int broj = convert_and_find(value);
         //Kraj funkcije bilinear_interpolate(*this, old_x, old_y, c);					
@@ -79,9 +63,9 @@ typedef sc_dt::sc_fix_fast snum_t;
 //Kraj funkcije resize(img.width*2, img.height*2, Interpolation::BILINEAR);  
   
     
-    num_t sigma_diff(16, 1) ;
+    sigma_base_diff_t sigma_diff;
     sigma_diff = std::sqrt(base_sigma*base_sigma - 1.0f);
-    
+   
     
     //base_img = gaussian_blur(base_img, sigma_diff);
 
@@ -94,16 +78,15 @@ typedef sc_dt::sc_fix_fast snum_t;
         size++;
     sc_int<8> center = size / 2;
     Image kernel(size, 1, 1);
-    num_t sum(16, 2);
+    sum_t sum;
     sum =0;
     for (sc_int<8> k = -size/2; k <= size/2; k++) {
-    	num_t val(16,0);
+    	sigma_base_diff_t val;
         val = std::exp(-(k*k) / (2*sigma_diff*sigma_diff));
-        //
         kernel.set_pixel(center+k, 0, 0, val);
         sum += val;
     }
-   // int broj = convert_and_find(sum);
+	   // int broj = convert_and_find(sum);
     for (sc_int<8> k = 0; k < size; k++)
         kernel.data[k] /= sum;
 
@@ -113,12 +96,13 @@ typedef sc_dt::sc_fix_fast snum_t;
     // convolve vertical
     for (int x = 0; x < base_img.width; x++) {
         for (int y = 0; y < base_img.height; y++) {
-            num_t sum(16, 0);
+            sigma_base_diff_t sum;
             sum = 0;
             for (int k = 0; k < size; k++) {
                 int dy = -center + k;
                 sum += base_img.get_pixel(x, y+dy, 0) * kernel.data[k];
             }
+			
             tmp.set_pixel(x, y, 0, sum);
             //int broj = convert_and_find(sum);
         }
@@ -127,7 +111,7 @@ typedef sc_dt::sc_fix_fast snum_t;
     // convolve horizontal
     for (int x = 0; x < base_img.width; x++) {
         for (int y = 0; y < base_img.height; y++) {
-            num_t sum(16, 0);
+            num_t sum;
             sum = 0;
             for (int k = 0; k < size; k++) {
                 int dx = -center + k;
@@ -143,14 +127,16 @@ typedef sc_dt::sc_fix_fast snum_t;
     sc_int<8> imgs_per_octave = scales_per_octave + 3;
 
     // determine sigma values for bluring
-    num_t k(16, 1);
+    k_t k;
     k = std::pow(2, 1.0/scales_per_octave);
-    std::vector<snum_t> sigma_vals {base_sigma};
+    std::vector<sigma_prev_total_t> sigma_vals {base_sigma};
     for (int i = 1; i < imgs_per_octave; i++) {
-    num_t sigma_prev(24,3), sigma_total(24,3);
+   sigma_prev_total_t sigma_prev, sigma_total;
         sigma_prev = base_sigma * std::pow(k, i-1);
         sigma_total = k * sigma_prev;
         sigma_vals.push_back(std::sqrt(sigma_total*sigma_total - sigma_prev*sigma_prev));
+		//cout << sigma_vals[i] <<endl;
+		
     }
 
     // create a scale space pyramid of gaussian images
@@ -178,14 +164,16 @@ typedef sc_dt::sc_fix_fast snum_t;
         size++;
     sc_int<8> center = size / 2;
     Image kernel(size, 1, 1);
-    num_t sum(24, 3);
+    sigma_prev_total_t sum;
             sum = 0;
     for (int k = -size/2; k <= size/2; k++) {
-    	num_t val(16, 0);
-        val = std::exp(-(k*k) / (2*sigma_vals[j]*sigma_vals[j]));
-        //int broj = convert_and_find(val);
+    	sigma_base_diff_t val;
+       val = std::exp(-(k*k) / (2*sigma_vals[j]*sigma_vals[j]));
+	  // cout << val << endl;
         kernel.set_pixel(center+k, 0, 0, val);
         sum += val;
+		//cout << sum << endl;
+		//; 
     }
     
     for (int k = 0; k < size; k++)
@@ -197,11 +185,12 @@ typedef sc_dt::sc_fix_fast snum_t;
     // convolve vertical
     for (int x = 0; x < prev_img.width; x++) {
         for (int y = 0; y < prev_img.height; y++) {
-            num_t sum(16, 0);
+			sigma_base_diff_t sum;
             sum = 0;
             for (int k = 0; k < size; k++) {
                 int dy = -center + k;
                 sum += prev_img.get_pixel(x, y+dy, 0) * kernel.data[k];
+				//cout << sum << endl;
             }
             tmp.set_pixel(x, y, 0, sum);
         }
@@ -209,7 +198,7 @@ typedef sc_dt::sc_fix_fast snum_t;
     // convolve horizontal
     for (int x = 0; x < prev_img.width; x++) {
         for (int y = 0; y < prev_img.height; y++) {
-            num_t sum(16, 0);
+            sigma_base_diff_t sum;
             sum = 0;
             for (int k = 0; k < size; k++) {
                 int dx = -center + k;
@@ -238,12 +227,12 @@ typedef sc_dt::sc_fix_fast snum_t;
       //Image Image::resize(int new_w, int new_h, Interpolation method) const
 //Pocetak funkcije resize(next_base_img.width/2, next_base_img.height/2, Interpolation::NEAREST);
     Image resized(next_base_img.width/2, next_base_img.height/2, next_base_img.channels);
-    num_t value(16, 0) ;
+    num_t value;
     value = 0;
     for (int x = 0; x < next_base_img.width/2; x++) {
         for (int y = 0; y < next_base_img.height/2; y++) {
             for (int c = 0; c < next_base_img.channels; c++) {
-            	snum_t old_x(15, 10), old_y(15, 9);
+            	floor_ceil_t old_x, old_y;
                  old_x = 2 * x + 0.5;
                  old_y = 2 * y + 0.5;
                 // value = nn_interpolate(*this, old_x, old_y, c);
@@ -259,7 +248,6 @@ typedef sc_dt::sc_fix_fast snum_t;
     
     return pyramid;
 }
-
 //Menjao na 1D
 // generate pyramid of difference of gaussians (DoG) images
 ScaleSpacePyramid generate_dog_pyramid(const ScaleSpacePyramid& img_pyramid)
