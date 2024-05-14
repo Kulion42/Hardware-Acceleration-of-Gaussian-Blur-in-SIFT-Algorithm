@@ -8,6 +8,7 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
 
+using namespace std;
 Image::Image(std::string file_path)
 {
     unsigned char *img_data = stbi_load(file_path.c_str(), &width, &height, &channels, 0);
@@ -152,6 +153,7 @@ float Image::get_pixel(int x, int y, int c) const
         y = 0;
     if (y >= height)
         y = height - 1;
+       // cout << data[c*width*height + y*width + x] << endl;
     return data[c*width*height + y*width + x];
 }
 
@@ -166,9 +168,9 @@ void Image::clamp()
     }
 }
 
-/*
+
 //map coordinate from 0-current_max range to 0-new_max range
-//Eliminisano
+/*
 float map_coordinate(float new_max, float current_max, float coord)
 {
     float a = new_max / current_max;
@@ -180,33 +182,36 @@ float map_coordinate(float new_max, float current_max, float coord)
 Image Image::resize(int new_w, int new_h, Interpolation method) const
 {
     Image resized(new_w, new_h, this->channels);
-    float value = 0;
+    num_t value = 0;
  
     for (int x = 0; x < new_w; x++) {
         for (int y = 0; y < new_h; y++) {
             for (int c = 0; c < resized.channels; c++) {
-                float old_x = map_coordinate(this->width, new_w, x);
+            	floor_ceil_t old_x, old_y;
+                 old_x = map_coordinate(this->width, new_w, x);
+                // cout << old_x <<endl;
 		         
-                float old_y = map_coordinate(this->height, new_h, y);
+                 old_y = map_coordinate(this->height, new_h, y);
+               // cout << old_y <<endl;
                 
                 if (method == Interpolation::BILINEAR)
                     value = bilinear_interpolate(*this, old_x, old_y, c);
                 else if (method == Interpolation::NEAREST)
                     value = nn_interpolate(*this, old_x, old_y, c);     
                 
-                    
+                   // cout << value << endl;
                 resized.set_pixel(x, y, c, value);
             }
         }
     }
     return resized;
 }
-*/
-float bilinear_interpolate(const Image& img, float x, float y, int c)
+
+float bilinear_interpolate(const Image& img,  float x, float y, int c)
 {
     float p1, p2, p3, p4, q1, q2;
     float x_floor = std::floor(x), y_floor = std::floor(y);
-    float x_ceil = x_floor + 1, y_ceil = y_floor + 1;
+    float  x_ceil = x_floor + 1, y_ceil = y_floor + 1;
     p1 = img.get_pixel(x_floor, y_floor, c);
     p2 = img.get_pixel(x_ceil, y_floor, c);
     p3 = img.get_pixel(x_floor, y_ceil, c);
@@ -221,6 +226,7 @@ float nn_interpolate(const Image& img, float x, float y, int c)
     return img.get_pixel(std::round(x), std::round(y), c);
 }
 
+*/
 Image rgb_to_grayscale(const Image& img)
 {
     assert(img.channels == 3);
@@ -254,8 +260,7 @@ Image grayscale_to_rgb(const Image& img)
 }
 
 // separable 2D gaussian blur for 1 channel image
-//Eliminisano
-/*Image gaussian_blur(const Image& img, float sigma)
+/*Image gaussian_blur(const Image& img, sigma_base_diff_t sigma)
 {
     assert(img.channels == 1);
 
@@ -264,9 +269,9 @@ Image grayscale_to_rgb(const Image& img)
         size++;
     int center = size / 2;
     Image kernel(size, 1, 1);
-    float sum = 0;
+    sigma_prev_total_t sum = 0;
     for (int k = -size/2; k <= size/2; k++) {
-        float val = std::exp(-(k*k) / (2*sigma*sigma));
+        sigma_base_diff_t val = std::exp(-(k*k) / (2*sigma*sigma));
         kernel.set_pixel(center+k, 0, 0, val);
         sum += val;
     }
@@ -279,7 +284,7 @@ Image grayscale_to_rgb(const Image& img)
     // convolve vertical
     for (int x = 0; x < img.width; x++) {
         for (int y = 0; y < img.height; y++) {
-            float sum = 0;
+            sigma_base_diff_t sum = 0;
             for (int k = 0; k < size; k++) {
                 int dy = -center + k;
                 sum += img.get_pixel(x, y+dy, 0) * kernel.data[k];
@@ -290,7 +295,7 @@ Image grayscale_to_rgb(const Image& img)
     // convolve horizontal
     for (int x = 0; x < img.width; x++) {
         for (int y = 0; y < img.height; y++) {
-            float sum = 0;
+            sigma_base_diff_t sum = 0;
             for (int k = 0; k < size; k++) {
                 int dx = -center + k;
                 sum += tmp.get_pixel(x+dx, y, 0) * kernel.data[k];

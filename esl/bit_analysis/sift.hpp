@@ -6,18 +6,19 @@
 #include <array>
 #include <cstdint>
 #include "image.hpp"
-#include "sc_types.hpp"
+#include "function.hpp"
+//#include "sc_types.hpp"
 
 namespace sift {
 
-struct ScaleSpacePyramid {
-    sc_dt::sc_int<8> num_octaves;
-    sc_dt::sc_int<8> imgs_per_octave;
+/*struct ScaleSpacePyramid {
+    uint8_t num_octaves;
+    uint8_t imgs_per_octave;
     
     //ovo je potrebno prebaciti u 1D
     std::vector<Image> images; 
 };
-
+*/
 struct Keypoint {
     // discrete coordinates
     int i;
@@ -40,11 +41,11 @@ struct Keypoint {
 
 //digital scale space configuration and keypoint detection
 const int MAX_REFINEMENT_ITERS = 5;
-const float SIGMA_MIN = 0.8;
-const float MIN_PIX_DIST = 0.5;
+//const float SIGMA_MIN = 0.8;
+//const float MIN_PIX_DIST = 0.5;
 const float SIGMA_IN = 0.5;
-const int N_OCT = 8; //Broj oktava
-const int N_SPO = 3;
+//const int N_OCT = 8; //Broj oktava
+//const int N_SPO = 3;
 const float C_DOG = 0.015;
 const float C_EDGE = 10;
 
@@ -59,8 +60,8 @@ const float LAMBDA_DESC = 6;
 const float THRESH_ABSOLUTE = 350;
 const float THRESH_RELATIVE = 0.7;
 
-//ScaleSpacePyramid generate_gaussian_pyramid(const Image& img, float sigma_min=SIGMA_MIN,
-  //                                          int num_octaves=N_OCT, int scales_per_octave=N_SPO);
+//ScaleSpacePyramid generate_gaussian_pyramid(const Image& img, sigma_base_diff_t sigma_min=SIGMA_MIN,
+                                       //  uint8_t num_octaves=N_OCT, uint8_t scales_per_octave=N_SPO);
 
 ScaleSpacePyramid generate_dog_pyramid(const ScaleSpacePyramid& img_pyramid);
 

@@ -34,7 +34,7 @@ ScaleSpacePyramid generate_gaussian_pyramid(const Image& img, float sigma_min,
         float sigma_total = k * sigma_prev;
         sigma_vals.push_back(std::sqrt(sigma_total*sigma_total - sigma_prev*sigma_prev));
     }
-
+	
     // create a scale space pyramid of gaussian images
     // images in each octave are half the size of images in the previous one
     ScaleSpacePyramid pyramid = {

@@ -254,6 +254,7 @@ Image gaussian_blur(const Image& img, float sigma)
     int size = std::ceil(6 * sigma);
     if (size % 2 == 0)
         size++;
+    
     int center = size / 2;
     Image kernel(size, 1, 1);
     float sum = 0;

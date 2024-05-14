@@ -1,0 +1,2 @@
+Using ./find_keypoints executable on image ../images/bellingham.jpeg found 213 keypoints.
+Using ./find_keypoints_sc executable on image ../images/bellingham.jpeg found 214 keypoints.

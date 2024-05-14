@@ -1,10 +1,11 @@
 CC = g++
-PROJECT = fkey_keypoints
+PROJECT = find_keypoints
 
 SRC = find_keypoints.cpp sift.cpp image.cpp 
 
 $(PROJECT) : $(SRC)
 	$(CC) -g  $(SRC) -o $(PROJECT)
-
+run:
+	./$(PROJECT) ../images/"parrot.jpeg" 
 clean:
-	rm fkey_keypoints result.jpg
+	rm find_keypoints result.jpg
