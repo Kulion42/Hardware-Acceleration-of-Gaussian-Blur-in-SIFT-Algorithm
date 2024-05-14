@@ -77,7 +77,7 @@ ScaleSpacePyramid generate_gaussian_pyramid(const Image& img, sigma_base_diff_t 
 }
 
 
-Image gaussian_blur(const Image& img, sigma_base_diff_t sigma)
+Image gaussian_blur(const Image& img, sigma_prev_total_t sigma)
 {
     assert(img.channels == 1);
 

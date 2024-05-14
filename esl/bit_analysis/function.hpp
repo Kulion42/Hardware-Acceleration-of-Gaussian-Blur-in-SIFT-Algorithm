@@ -25,7 +25,7 @@ ScaleSpacePyramid generate_gaussian_pyramid(const Image& img, sigma_base_diff_t 
                                          
 Image resize(const Image& orig, uint16_t new_w, uint16_t new_h, Interpolation method = BILINEAR);
 
-Image gaussian_blur(const Image& img, sigma_base_diff_t sigma);
+Image gaussian_blur(const Image& img, sigma_prev_total_t sigma);
 
 floor_ceil_t map_coordinate(floor_ceil_t new_max, floor_ceil_t current_max, floor_ceil_t coord);
 
