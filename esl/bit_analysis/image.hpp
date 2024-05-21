@@ -18,24 +18,14 @@ struct Image {
     int height;
     int channels;
     int size;
-    float *data;
+    data_t *data;
     bool save(std::string file_path);
-    void set_pixel(int x, int y, int c, float val);
-    float get_pixel(int x, int y, int c) const;
+    void set_pixel(int x, int y, int c, data_t val);
+    data_t get_pixel(int x, int y, int c) const;
     void clamp();
   //  Image resize(int new_w, int new_h, Interpolation method = BILINEAR) const;
     
 };
 
-
-float bilinear_interpolate(const Image& img, float x, float y, int c);
-float nn_interpolate(const Image& img, float x, float y, int c);
-
-Image rgb_to_grayscale(const Image& img);
-Image grayscale_to_rgb(const Image& img);
-
-//Image gaussian_blur(const Image& img, sigma_base_diff_t sigma);
-
-void draw_point(Image& img, int x, int y, int size=3);
 
 #endif

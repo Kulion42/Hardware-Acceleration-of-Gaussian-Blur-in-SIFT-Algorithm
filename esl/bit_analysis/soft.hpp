@@ -1,24 +1,20 @@
+#ifndef SOFT_H
+#define SOFT_H
 
-#ifndef SIFT_H
-#define SIFT_H
-
+#include <cmath>
+#include <iostream>
+#include <cassert>
+#include <utility>
+#include <string>
 #include <vector>
+#include <algorithm>
 #include <array>
 #include <cstdint>
+#include "sc_types.hpp"
 #include "image.hpp"
-#include "function.hpp"
-//#include "sc_types.hpp"
+#include "hard.hpp"
+//#include "ip_core.hpp"
 
-namespace sift {
-
-/*struct ScaleSpacePyramid {
-    uint8_t num_octaves;
-    uint8_t imgs_per_octave;
-    
-    //ovo je potrebno prebaciti u 1D
-    std::vector<Image> images; 
-};
-*/
 struct Keypoint {
     // discrete coordinates
     int i;
@@ -60,8 +56,13 @@ const float LAMBDA_DESC = 6;
 const float THRESH_ABSOLUTE = 350;
 const float THRESH_RELATIVE = 0.7;
 
-//ScaleSpacePyramid generate_gaussian_pyramid(const Image& img, sigma_base_diff_t sigma_min=SIGMA_MIN,
-                                       //  uint8_t num_octaves=N_OCT, uint8_t scales_per_octave=N_SPO);
+
+
+Image rgb_to_grayscale(const Image& img);
+Image grayscale_to_rgb(const Image& img);
+
+
+void draw_point(Image& img, int x, int y, int size=3);
 
 ScaleSpacePyramid generate_dog_pyramid(const ScaleSpacePyramid& img_pyramid);
 
@@ -76,7 +77,7 @@ std::vector<float> find_keypoint_orientations(Keypoint& kp, const ScaleSpacePyra
 void compute_keypoint_descriptor(Keypoint& kp, float theta, const ScaleSpacePyramid& grad_pyramid,
                                  float lambda_desc=LAMBDA_DESC);
 
-std::vector<Keypoint> find_keypoints_and_descriptors(const Image& img, float sigma_min=SIGMA_MIN,
+std::vector<Keypoint> find_keypoints_and_descriptors(const Image& img, k_t sigma_min=SIGMA_MIN,
                                                      int num_octaves=N_OCT, 
                                                      int scales_per_octave=N_SPO, 
                                                      float contrast_thresh=C_DOG,
@@ -93,6 +94,6 @@ Image draw_keypoints(const Image& img, const std::vector<Keypoint>& kps);
 
 Image draw_matches(const Image& a, const Image& b, std::vector<Keypoint>& kps_a,
                    std::vector<Keypoint>& kps_b, std::vector<std::pair<int, int>> matches);
+                   
 
-} // namespace sift
 #endif

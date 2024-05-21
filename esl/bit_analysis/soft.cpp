@@ -1,23 +1,50 @@
-#define _USE_MATH_DEFINES
-#include <cmath>
-#include <iostream>
-#include <vector>
-#include <algorithm>
-#include <array>
-#include <tuple>
-#include <cassert>
-
-#include "sift.hpp"
-
+#include "soft.hpp"
 
 using namespace std;
-using namespace sc_dt;
-
-namespace sift {
 
 
-//Menjao na 1D
-// generate pyramid of difference of gaussians (DoG) images
+
+std::vector<Keypoint> find_keypoints_and_descriptors(const Image& img, k_t sigma_min,
+                                                     int num_octaves, int scales_per_octave, 
+                                                     float contrast_thresh, float edge_thresh, 
+                                                     float lambda_ori, float lambda_desc)
+{
+    assert(img.channels == 1 || img.channels == 3);
+
+    const Image& input = img.channels == 1 ? img : rgb_to_grayscale(img);
+    
+    ScaleSpacePyramid gaussian_pyramid = generate_gaussian_pyramid(input, sigma_min, num_octaves,
+                                                                   scales_per_octave);
+    ScaleSpacePyramid dog_pyramid = generate_dog_pyramid(gaussian_pyramid);
+    std::vector<Keypoint> tmp_kps = find_keypoints(dog_pyramid, contrast_thresh, edge_thresh);
+    ScaleSpacePyramid grad_pyramid = generate_gradient_pyramid(gaussian_pyramid);
+    
+    std::vector<Keypoint> kps;
+
+    for (Keypoint& kp_tmp : tmp_kps) {
+        std::vector<float> orientations = find_keypoint_orientations(kp_tmp, grad_pyramid,
+                                                                     lambda_ori, lambda_desc);
+        for (float theta : orientations) {
+            Keypoint kp = kp_tmp;
+            compute_keypoint_descriptor(kp, theta, grad_pyramid, lambda_desc);
+            kps.push_back(kp);
+        }
+    }
+    return kps;
+}
+
+Image draw_keypoints(const Image& img, const std::vector<Keypoint>& kps)
+{
+    Image res(img);
+    if (img.channels == 1) {
+        res = grayscale_to_rgb(res);
+    }
+    for (auto& kp : kps) {
+        draw_point(res, kp.x, kp.y, 5);
+    }
+    return res;
+}
+
 ScaleSpacePyramid generate_dog_pyramid(const ScaleSpacePyramid& img_pyramid)
 {
     ScaleSpacePyramid dog_pyramid = {
@@ -427,47 +454,3 @@ void compute_keypoint_descriptor(Keypoint& kp, float theta,
     hists_to_vec(histograms, kp.descriptor);
 }
 
-std::vector<Keypoint> find_keypoints_and_descriptors(const Image& img, float sigma_min,
-                                                     int num_octaves, int scales_per_octave, 
-                                                     float contrast_thresh, float edge_thresh, 
-                                                     float lambda_ori, float lambda_desc)
-{
-    assert(img.channels == 1 || img.channels == 3);
-
-    const Image& input = img.channels == 1 ? img : rgb_to_grayscale(img);
-    
-    ScaleSpacePyramid gaussian_pyramid = generate_gaussian_pyramid(input, sigma_min, num_octaves,
-                                                                   scales_per_octave);
-    ScaleSpacePyramid dog_pyramid = generate_dog_pyramid(gaussian_pyramid);
-    std::vector<Keypoint> tmp_kps = find_keypoints(dog_pyramid, contrast_thresh, edge_thresh);
-    ScaleSpacePyramid grad_pyramid = generate_gradient_pyramid(gaussian_pyramid);
-    
-    std::vector<Keypoint> kps;
-
-    for (Keypoint& kp_tmp : tmp_kps) {
-        std::vector<float> orientations = find_keypoint_orientations(kp_tmp, grad_pyramid,
-                                                                     lambda_ori, lambda_desc);
-        for (float theta : orientations) {
-            Keypoint kp = kp_tmp;
-            compute_keypoint_descriptor(kp, theta, grad_pyramid, lambda_desc);
-            kps.push_back(kp);
-        }
-    }
-    return kps;
-}
-
-
-Image draw_keypoints(const Image& img, const std::vector<Keypoint>& kps)
-{
-    Image res(img);
-    if (img.channels == 1) {
-        res = grayscale_to_rgb(res);
-    }
-    for (auto& kp : kps) {
-        draw_point(res, kp.x, kp.y, 5);
-    }
-    return res;
-}
-
-
-} // namespace sift

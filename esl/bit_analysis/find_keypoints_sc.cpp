@@ -1,7 +1,7 @@
 #include <iostream> 
 #include <string> 
 #include "image.hpp"
-#include "sift.hpp"
+#include "soft.hpp"
 
 int sc_main(int argc, char *argv[])
 {
@@ -17,8 +17,8 @@ int sc_main(int argc, char *argv[])
     Image img(argv[1]);
     img =  img.channels == 1 ? img : rgb_to_grayscale(img);
 
-    std::vector<sift::Keypoint> kps = sift::find_keypoints_and_descriptors(img);
-    Image result = sift::draw_keypoints(img, kps);
+    std::vector<Keypoint> kps = find_keypoints_and_descriptors(img);
+    Image result = draw_keypoints(img, kps);
     result.save("result.jpg");
     
     res = fopen("../log_file.txt", "a+");
