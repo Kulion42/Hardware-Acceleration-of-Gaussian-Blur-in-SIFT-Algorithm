@@ -58,6 +58,7 @@ Image::~Image()
     delete[] this->data;
 }
 
+//kopija
 Image::Image(const Image& other)
     :width {other.width},
      height {other.height},
@@ -70,6 +71,8 @@ Image::Image(const Image& other)
         data[i] = other.data[i];
 }
 
+//preklopljen operator, vraca image& da bi se mogao napraviti chain a=b=c
+//proverava self-assignmnet
 Image& Image::operator=(const Image& other)
 {
     if (this != &other) {
@@ -86,6 +89,8 @@ Image& Image::operator=(const Image& other)
     return *this;
 }
 
+//Move konstruktor, koristi se da preuzme resurse od nekog
+//objekta koji ce biti unisten ili je privremeni
 Image::Image(Image&& other)
     :width {other.width},
      height {other.height},
@@ -98,6 +103,8 @@ Image::Image(Image&& other)
     other.size = 0;
 }
 
+//operator premestanja
+//slicno kao i move konstruktor, korisni su zbog softverske efikasnosti
 Image& Image::operator=(Image&& other)
 {
     //std::cout << "move assignment\n";
