@@ -4,14 +4,6 @@
 using namespace std;
 using namespace sc_dt;
 
-floor_ceil_t map_coordinate(float new_max, float current_max, float coord)
-{
-    float a = new_max / current_max;
-    float b = -0.5 + a*0.5;
-   
-    return a*coord + b;
-}
-
 
 ScaleSpacePyramid generate_gaussian_pyramid(const Image& img, k_t sigma_min,
                                             uint8_t num_octaves, uint8_t scales_per_octave)
@@ -21,7 +13,6 @@ ScaleSpacePyramid generate_gaussian_pyramid(const Image& img, k_t sigma_min,
     // the image with sigma_diff to reach requried base_sigma
    sigma_base_diff_t base_sigma;//constant
    base_sigma = sigma_min / MIN_PIX_DIST;//constant
-   Image base_img = resize(img, img.width*2, img.height*2, Interpolation::BILINEAR);//ide u bram 0
   
 
     
@@ -29,7 +20,7 @@ ScaleSpacePyramid generate_gaussian_pyramid(const Image& img, k_t sigma_min,
     sigma_diff = std::sqrt(base_sigma*base_sigma - 1.0f);//constant
     
     
-    base_img = gaussian_blur(base_img, sigma_diff);//ide u bram 0 prima iz bram 0
+    Image base_img = gaussian_blur(img, sigma_diff);//ide u bram 0 prima iz bram 0
 
 
     uint8_t imgs_per_octave = scales_per_octave + 3;//constant
@@ -149,11 +140,7 @@ Image resize(const Image& orig, uint16_t new_w, uint16_t new_h, Interpolation me
                 //cout << old_x << endl;
                  old_y = map_coordinate(orig.height, new_h, y);
               //cout << old_y <<endl;
-                
-                if (method == Interpolation::BILINEAR)
-                    value = bilinear_interpolate(orig, old_x, old_y, c);
-                else if (method == Interpolation::NEAREST)
-                    value = nn_interpolate(orig, old_x, old_y, c);     
+                value = orig.get_pixel(std::round(old_x), std::round(old_y), 0);     
                 
                     //cout << value << endl;
                 resized.set_pixel(x, y, c, value);
@@ -163,26 +150,5 @@ Image resize(const Image& orig, uint16_t new_w, uint16_t new_h, Interpolation me
    
     return resized;//ide u bram 0
 }
-k_t bilinear_interpolate(const Image& img,  floor_ceil_t x, floor_ceil_t y, uint8_t c)
-{
-    num_t p1, p2, p3, p4, q1, q2;//regs 13, 14, 15, 16, 17, 18
-    //float p1, p2, p3, p4, q1, q2;
-    floor_ceil_t x_floor = std::floor(x), y_floor = std::floor(y);//19, 20
-    floor_ceil_t x_ceil = x_floor + 1, y_ceil = y_floor + 1;//moze preko 19 i 20
-   ;
-    p1 = img.get_pixel(x_floor, y_floor, c);
-    p2 = img.get_pixel(x_ceil, y_floor, c);
-    p3 = img.get_pixel(x_floor, y_ceil, c);
-    p4 = img.get_pixel(x_ceil, y_ceil, c);
-   //  cout << p1 << "  " << p2 << "  "<< p3 << "  " << p4 << endl;
-    q1 = (y_ceil-y)*p1 + (y-y_floor)*p3;
-    q2 = (y_ceil-y)*p2 + (y-y_floor)*p4;
-    return (x_ceil-x)*q1 + (x-x_floor)*q2;//ide u reg 10
-}
 
-k_t nn_interpolate(const Image& img, floor_ceil_t x, floor_ceil_t y, uint8_t c)
-{   
-   // cout << img.get_pixel(std::round(x), std::round(y), c) <<endl;
-    return img.get_pixel(std::round(x), std::round(y), c);//ide u reg 10
-}
 

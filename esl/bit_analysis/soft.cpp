@@ -13,8 +13,10 @@ std::vector<Keypoint> find_keypoints_and_descriptors(const Image& img, k_t sigma
 
     const Image& input = img.channels == 1 ? img : rgb_to_grayscale(img);
     
-    ScaleSpacePyramid gaussian_pyramid = generate_gaussian_pyramid(input, sigma_min, num_octaves,
+    const Image& resized_img = input.resize(input.width*2, input.height*2, Interpolation::BILINEAR);
+    ScaleSpacePyramid gaussian_pyramid = generate_gaussian_pyramid(resized_img, sigma_min, num_octaves,
                                                                    scales_per_octave);
+                                                                   
     ScaleSpacePyramid dog_pyramid = generate_dog_pyramid(gaussian_pyramid);
     std::vector<Keypoint> tmp_kps = find_keypoints(dog_pyramid, contrast_thresh, edge_thresh);
     ScaleSpacePyramid grad_pyramid = generate_gradient_pyramid(gaussian_pyramid);

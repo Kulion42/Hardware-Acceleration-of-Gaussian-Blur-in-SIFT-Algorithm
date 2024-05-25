@@ -32,11 +32,4 @@ using namespace sc_dt;
 
     Image gaussian_blur(const Image& img, sigma_prev_total_t sigma);
 
-    //floor_ceil_t map_coordinate(floor_ceil_t new_max, floor_ceil_t current_max, floor_ceil_t coord);
-
-    k_t bilinear_interpolate(const Image& img,  floor_ceil_t x, floor_ceil_t y, uint8_t c);
-
-    k_t nn_interpolate(const Image& img, floor_ceil_t x, floor_ceil_t y, uint8_t c);
-
-
 #endif

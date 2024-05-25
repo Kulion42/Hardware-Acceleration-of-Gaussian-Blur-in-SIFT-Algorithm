@@ -170,7 +170,7 @@ void Image::clamp()
 
 
 //map coordinate from 0-current_max range to 0-new_max range
-/*
+
 float map_coordinate(float new_max, float current_max, float coord)
 {
     float a = new_max / current_max;
@@ -195,9 +195,7 @@ Image Image::resize(int new_w, int new_h, Interpolation method) const
                // cout << old_y <<endl;
                 
                 if (method == Interpolation::BILINEAR)
-                    value = bilinear_interpolate(*this, old_x, old_y, c);
-                else if (method == Interpolation::NEAREST)
-                    value = nn_interpolate(*this, old_x, old_y, c);     
+                    value = bilinear_interpolate(*this, old_x, old_y, c);     
                 
                    // cout << value << endl;
                 resized.set_pixel(x, y, c, value);
@@ -221,12 +219,7 @@ float bilinear_interpolate(const Image& img,  float x, float y, int c)
     return (x_ceil-x)*q1 + (x-x_floor)*q2;
 }
 
-float nn_interpolate(const Image& img, float x, float y, int c)
-{
-    return img.get_pixel(std::round(x), std::round(y), c);
-}
 
-*/
 Image rgb_to_grayscale(const Image& img)
 {
     assert(img.channels == 3);
