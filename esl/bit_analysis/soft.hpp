@@ -52,12 +52,6 @@ const int N_HIST = 4;
 const int N_ORI = 8;
 const float LAMBDA_DESC = 6;
 
-// feature matching
-const float THRESH_ABSOLUTE = 350;
-const float THRESH_RELATIVE = 0.7;
-
-
-
 Image rgb_to_grayscale(const Image& img);
 Image grayscale_to_rgb(const Image& img);
 
@@ -85,15 +79,9 @@ std::vector<Keypoint> find_keypoints_and_descriptors(const Image& img, k_t sigma
                                                      float lambda_ori=LAMBDA_ORI,
                                                      float lambda_desc=LAMBDA_DESC);
 
-std::vector<std::pair<int, int>> find_keypoint_matches(std::vector<Keypoint>& a,
-                                                       std::vector<Keypoint>& b,
-                                                       float thresh_relative=THRESH_RELATIVE,
-                                                       float thresh_absolute=THRESH_ABSOLUTE);
 
 Image draw_keypoints(const Image& img, const std::vector<Keypoint>& kps);
 
-Image draw_matches(const Image& a, const Image& b, std::vector<Keypoint>& kps_a,
-                   std::vector<Keypoint>& kps_b, std::vector<std::pair<int, int>> matches);
                    
 
 #endif
