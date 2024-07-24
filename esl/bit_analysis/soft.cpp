@@ -5,24 +5,45 @@ using namespace std;
 
 
 std::vector<Keypoint> find_keypoints_and_descriptors(const Image& img, k_t sigma_min,
-                                                     int num_octaves, int scales_per_octave, 
+                                                     int num_octaves, int scales_per_octave, int num_of_parts,
                                                      float contrast_thresh, float edge_thresh, 
                                                      float lambda_ori, float lambda_desc)
 {
     assert(img.channels == 1 || img.channels == 3);
 
     const Image& input = img.channels == 1 ? img : rgb_to_grayscale(img);
+    const Image& resized_input = input.resize(input.width*2, input.height*2, Interpolation::BILINEAR);
+    int imgs_per_octave = scales_per_octave + 3;
+    const std::vector<Image> resized_part = image_partitions(resized_input, num_of_parts); 
+        
+    std::vector< std::vector<Image> >gaussian_pyramid_vector(num_of_parts, std::vector<Image>(num_octaves * imgs_per_octave));
+       
+    ScaleSpacePyramid gaussian_pyramid = {
+        num_octaves,
+        imgs_per_octave,
+        std::vector<Image>(num_octaves * imgs_per_octave )
+        
+    };
     
-    const Image& resized_img = input.resize(input.width*2, input.height*2, Interpolation::BILINEAR);
-    ScaleSpacePyramid gaussian_pyramid = generate_gaussian_pyramid(resized_img, sigma_min, num_octaves,
-                                                                   scales_per_octave);
-                                                                   
+    for (int i = 0; i < num_of_parts; i++){
+        std::vector<Image> tmp = generate_gaussian_pyramid_vector(resized_part[i]);
+       
+        for (int j = 0; j < num_octaves * imgs_per_octave; j++){
+            gaussian_pyramid_vector[i][j] = tmp[j];
+            
+       //    cout <<  gaussian_pyramid_vector[i][j].size << endl;
+        } 
+    }
+       // cout <<  gaussian_pyramid_vector.size() << endl;
+        //cout << "Prodje nekako odje3" << endl;
+
+    gaussian_pyramid.images = combine_partitions(gaussian_pyramid_vector) ;      
+                                                  
     ScaleSpacePyramid dog_pyramid = generate_dog_pyramid(gaussian_pyramid);
     std::vector<Keypoint> tmp_kps = find_keypoints(dog_pyramid, contrast_thresh, edge_thresh);
     ScaleSpacePyramid grad_pyramid = generate_gradient_pyramid(gaussian_pyramid);
-    
     std::vector<Keypoint> kps;
-
+    
     for (Keypoint& kp_tmp : tmp_kps) {
         std::vector<float> orientations = find_keypoint_orientations(kp_tmp, grad_pyramid,
                                                                      lambda_ori, lambda_desc);
@@ -34,6 +55,68 @@ std::vector<Keypoint> find_keypoints_and_descriptors(const Image& img, k_t sigma
     }
     return kps;
 }
+std::vector<Image> generate_gaussian_pyramid_vector(const Image& img, float sigma_min, int num_of_parts,
+                                             int num_octaves, int scales_per_octave)
+{
+
+    // assume initial sigma is 1.0 (after resizing) and smooth
+    // the image with sigma_diff to reach requried base_sigma
+    sigma_base_diff_t base_sigma;//constant
+    base_sigma = sigma_min / MIN_PIX_DIST;//constant
+  
+
+    
+    sigma_base_diff_t sigma_diff;
+    sigma_diff = std::sqrt(base_sigma*base_sigma - 1.0f);//constant
+    
+    
+    Image base_img = gaussian_blur(img, sigma_diff);//ide u bram 0 prima iz bram 0
+    
+
+    int imgs_per_octave = scales_per_octave + 3;//constant
+   // cout << imgs_per_octave << " " << num_octaves << endl;
+
+    // determine sigma values for bluring
+    k_t k;//reg constant
+    k = std::pow(2, 1.0/scales_per_octave);
+    std::vector<sigma_prev_total_t> sigma_vals {base_sigma};//
+    for (uint8_t i = 1; i < imgs_per_octave; i++) {
+   	sigma_prev_total_t sigma_prev, sigma_total;
+        sigma_prev = base_sigma * std::pow(k, i-1);
+        sigma_total = k * sigma_prev;//reg 3
+        sigma_vals.push_back(std::sqrt(sigma_total*sigma_total - sigma_prev*sigma_prev));//5 constants
+		//cout << sigma_vals[i] <<endl;
+		
+    }
+
+        std::vector<Image> pyramid_images(num_octaves*imgs_per_octave); //ide u bram glavno
+    //cout << "Jebeno mnozenje je " << num_octaves*imgs_per_octave << endl;
+    int test = 0;
+    for (int i = 0; i < num_octaves; i++) {
+      //pyramid.octaves[i].reserve(imgs_per_octave);
+      pyramid_images[i*imgs_per_octave] = (base_img); //prima iz bram 0 ide u bram glavno
+      
+      for(int j = 1; j < imgs_per_octave; j++){  
+          test++;
+         // cout << "Test= " << test << endl;
+          const Image& prev_img = pyramid_images[i*imgs_per_octave + (j-1)];//ide u bram 2
+        pyramid_images[i*imgs_per_octave + j] = (gaussian_blur(prev_img, sigma_vals[j])); //prima iz bram 2 ide u bram glavno
+          
+                 
+      }
+          
+          // prepare base image for next octave
+          const Image& next_base_img = pyramid_images[i*imgs_per_octave + (imgs_per_octave - 3)];//ide u bram 1
+          base_img = next_base_img.resize(next_base_img.width/2, next_base_img.height/2, Interpolation::NEAREST);//prima iz bram 1 ide u bram 0
+         // cout << base_img.size << endl;
+        //  cout << next_base_img.height << " " << next_base_img.width << endl;
+
+  
+    }
+  //  cout << pyramid_images.size()<<endl;
+    return pyramid_images;
+}
+
 
 Image draw_keypoints(const Image& img, const std::vector<Keypoint>& kps)
 {
@@ -47,17 +130,85 @@ Image draw_keypoints(const Image& img, const std::vector<Keypoint>& kps)
     return res;
 }
 
+std::vector<Image> image_partitions(const Image& img, int num_of_parts)
+{
+    std::vector<Image> img_part(num_of_parts);
+
+        for (int i = 1; i < num_of_parts; i++) {
+        
+        Image partition(img.width, std::ceil(img.height/num_of_parts) + 10, 1);
+            for (int x = 0; x < img.width; x++) {
+                for (int y = 0; y < std::ceil(img.height/num_of_parts) + 10; y++) {
+                        data_t val = img.get_pixel(x, (i-1)*img.height/num_of_parts + y, 0);
+                        partition.set_pixel(x, y, 0,  val);  
+                                              
+                }
+                img_part[i-1] = (partition);
+            }          
+        }
+           // cout << "Prodje nekako odje1" << endl;
+        Image last_part(img.width, int(img.height/num_of_parts), 1);
+        for (int x = 0; x < img.width; x++) {
+                for (int y = 0; y < int(img.height/num_of_parts); y++) {
+                        data_t val = img.get_pixel(x, std::ceil((num_of_parts-1)*img.height/num_of_parts + y), 0);
+                        last_part.set_pixel(x, y, 0, val);
+                                                
+                }
+            }    
+            img_part[num_of_parts - 1]= (last_part);       
+    //cout << "Prodje nekako odje2" << endl;
+    return img_part;
+}
+
+
+std::vector<Image> combine_partitions(std::vector< std::vector <Image> > img_vec, int num_of_parts, int num_octaves, 
+                                                     int scales_per_octave)
+{   
+     std::vector<Image> comb_part(num_octaves * (scales_per_octave + 3));
+         
+        for (int j = 0 ; j < img_vec[num_of_parts -1].size(); j++){
+       
+            int fixed_height = img_vec[num_of_parts - 1][j].height;
+            
+            Image combined(img_vec[num_of_parts-1][j].width, num_of_parts * fixed_height, 1); 
+            
+            
+            
+                 for (int x = 0; x < img_vec[num_of_parts - 1][j].width; x++){
+                
+                    for (int y= 0; y < fixed_height; y++){  
+                      
+                         for (int i = 0; i < num_of_parts; i++){               
+                    
+                            data_t val = img_vec[i][j].get_pixel(x, y, 0);
+                            
+                            combined.set_pixel(x, i*fixed_height + y, 0, val);      
+                             }
+                        }
+                       
+            
+                       
+                 } 
+        
+          comb_part[j]= (combined);
+         // cout << comb_part[j].size << endl;
+        
+      } 
+     
+     return comb_part; 
+}
+
 ScaleSpacePyramid generate_dog_pyramid(const ScaleSpacePyramid& img_pyramid)
 {
     ScaleSpacePyramid dog_pyramid = {
         img_pyramid.num_octaves,
-        uint8_t(img_pyramid.imgs_per_octave - 1),
+        img_pyramid.imgs_per_octave - 1,
         std::vector<Image>(img_pyramid.num_octaves*(img_pyramid.imgs_per_octave-1))
     };
-    for (uint8_t i = 0; i < dog_pyramid.num_octaves; i++) {
+    for (int i = 0; i < dog_pyramid.num_octaves; i++) {
     
         //dog_pyramid.octaves[i].reserve(dog_pyramid.imgs_per_octave);
-        for (uint8_t j = 1; j < img_pyramid.imgs_per_octave; j++) {
+        for (int j = 1; j < img_pyramid.imgs_per_octave; j++) {
             Image diff = img_pyramid.images[i*img_pyramid.imgs_per_octave + j];
             for (int pix_idx = 0; pix_idx < diff.size; pix_idx++) {
                 diff.data[pix_idx] -= img_pyramid.images[i*img_pyramid.imgs_per_octave + (j - 1)].data[pix_idx];

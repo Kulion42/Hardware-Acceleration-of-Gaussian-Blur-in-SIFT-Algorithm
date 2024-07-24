@@ -15,6 +15,13 @@
 #include "hard.hpp"
 //#include "ip_core.hpp"
 
+struct ScaleSpacePyramid {
+        int num_octaves;
+        int imgs_per_octave;
+        
+        std::vector<Image> images; 
+    };
+    
 struct Keypoint {
     // discrete coordinates
     int i;
@@ -37,11 +44,12 @@ struct Keypoint {
 
 //digital scale space configuration and keypoint detection
 const int MAX_REFINEMENT_ITERS = 5;
-//const float SIGMA_MIN = 0.8;
-//const float MIN_PIX_DIST = 0.5;
+const float SIGMA_MIN = 0.8;
+const float MIN_PIX_DIST = 0.5;
 const float SIGMA_IN = 0.5;
-//const int N_OCT = 8; //Broj oktava
-//const int N_SPO = 3;
+const int N_OCT = 4; //Broj oktava
+const int N_SPO = 3;
+const int N_IP = 64;
 const float C_DOG = 0.015;
 const float C_EDGE = 10;
 
@@ -57,7 +65,13 @@ Image grayscale_to_rgb(const Image& img);
 
 
 void draw_point(Image& img, int x, int y, int size=3);
-
+std::vector<Image> image_partitions(const Image& img, int num_of_parts = N_IP);
+std::vector<Image> combine_partitions(std::vector< std::vector<Image> > img_vec, int num_of_parts = N_IP, int num_octaves = N_OCT, 
+                                                     int scales_per_octave=N_SPO);
+                                                     
+std::vector<Image> generate_gaussian_pyramid_vector(const Image& img, float sigma_min=SIGMA_MIN, int num_of_parts = N_IP,
+                                             int num_octaves=N_OCT, int scales_per_octave=N_SPO);
+                                             
 ScaleSpacePyramid generate_dog_pyramid(const ScaleSpacePyramid& img_pyramid);
 
 std::vector<Keypoint> find_keypoints(const ScaleSpacePyramid& dog_pyramid,
@@ -74,6 +88,7 @@ void compute_keypoint_descriptor(Keypoint& kp, float theta, const ScaleSpacePyra
 std::vector<Keypoint> find_keypoints_and_descriptors(const Image& img, k_t sigma_min=SIGMA_MIN,
                                                      int num_octaves=N_OCT, 
                                                      int scales_per_octave=N_SPO, 
+                                                     int num_of_parts = N_IP,
                                                      float contrast_thresh=C_DOG,
                                                      float edge_thresh=C_EDGE,
                                                      float lambda_ori=LAMBDA_ORI,
