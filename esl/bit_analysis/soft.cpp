@@ -133,30 +133,56 @@ Image draw_keypoints(const Image& img, const std::vector<Keypoint>& kps)
 std::vector<Image> image_partitions(const Image& img, int num_of_parts)
 {
     std::vector<Image> img_part(num_of_parts);
-
-        for (int i = 1; i < num_of_parts; i++) {
+    
+    std::string resize = "resized_part_";
+    char numstr[21];
+    std::string res;
         
-        Image partition(img.width, std::ceil(img.height/num_of_parts) + 10, 1);
+        Image first_part(img.width, std::ceil(img.height/num_of_parts) + 10, 1);
             for (int x = 0; x < img.width; x++) {
                 for (int y = 0; y < std::ceil(img.height/num_of_parts) + 10; y++) {
-                        data_t val = img.get_pixel(x, (i-1)*img.height/num_of_parts + y, 0);
-                        partition.set_pixel(x, y, 0,  val);  
-                                              
-                }
-                img_part[i-1] = (partition);
-            }          
-        }
-           // cout << "Prodje nekako odje1" << endl;
-        Image last_part(img.width, int(img.height/num_of_parts), 1);
-        for (int x = 0; x < img.width; x++) {
-                for (int y = 0; y < int(img.height/num_of_parts); y++) {
-                        data_t val = img.get_pixel(x, std::ceil((num_of_parts-1)*img.height/num_of_parts + y), 0);
-                        last_part.set_pixel(x, y, 0, val);
-                                                
+                        data_t val = img.get_pixel(x, y, 0);
+                        first_part.set_pixel(x, y, 0,  val);                                    
                 }
             }    
-            img_part[num_of_parts - 1]= (last_part);       
-    //cout << "Prodje nekako odje2" << endl;
+            img_part[0] = (first_part); 
+            
+            sprintf(numstr, "%d", 1);
+            res = resize + numstr + ".jpg";
+            first_part.save(res) ;
+               
+       
+            for (int i = 1; i < num_of_parts -1; i++) {
+                Image partitions(img.width, std::ceil(img.height/num_of_parts) + 20, 1);
+                for (int x = 0; x < img.width; x++) {
+                    for (int y = i*std::ceil(img.height/num_of_parts) -10; y < (i+1)*std::ceil(img.height/num_of_parts) + 10; y++) {
+                        //cout << y << " "<< y - i*std::ceil(img.height/num_of_parts) +10 << endl;
+                            data_t val = img.get_pixel(x, y, 0);
+                            partitions.set_pixel(x, y - i*std::ceil(img.height/num_of_parts) +10, 0,  val);                                    
+                    }
+                }    
+                img_part[i] = (partitions);
+                sprintf(numstr, "%d", i+1);
+                res = resize + numstr + ".jpg";
+                partitions.save(res) ;
+            }
+          
+     
+        Image last_part(img.width, std::ceil(img.height/num_of_parts) +10, 1);
+        for (int x = 0; x < img.width; x++) {
+        
+                 for (int y = (num_of_parts -1)*std::ceil(img.height/num_of_parts) - 10; y < img.height; y++) {
+                        data_t val = img.get_pixel(x, y, 0);
+                        cout << y << " "<< y - (num_of_parts -1)*std::ceil(img.height/num_of_parts) + 10 << endl;
+                        last_part.set_pixel(x, y - (num_of_parts -1)*std::ceil(img.height/num_of_parts) + 10, 0, val);                                    
+                }
+        }   
+        
+            img_part[num_of_parts - 1]= (last_part);  
+            sprintf(numstr, "%d", num_of_parts);
+            res = resize + numstr + ".jpg";
+            last_part.save(res) ;     
+    //cout << "Dotle2" << endl;
     return img_part;
 }
 
