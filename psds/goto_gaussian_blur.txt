@@ -1,0 +1,138 @@
+int size = std::ceil(6 * sigma);
+
+check_size:
+if (size % 2 == 0)
+  size++;
+
+//-------------------------------
+
+int center = size / 2;
+Image kernel(size, 1, 1);
+
+
+float sum = 0;
+
+//-------------------------------
+
+
+//for (int k = -size/2; k <= size/2; k++)
+
+int k = -size / 2;
+kernel_init_loop_start:
+if (k > size / 2) goto kernel_init_loop_end;
+float val = std::exp(-(k * k) / (2 * sigma * sigma));
+kernel.set_pixel(center + k, 0, 0, val);
+sum += val;
+k++;
+goto kernel_init_loop_start;
+
+//-------------------------------
+
+kernel_init_loop_end:
+
+
+//for (int k = 0; k < size; k++)
+
+k = 0;
+kernel_normalization_loop_start:
+if (k >= size) goto kernel_normalization_loop_end;
+kernel.data[k] /= sum;
+k++;
+goto kernel_normalization_loop_start;
+
+//-------------------------------
+
+kernel_normalization_loop_end:
+Image tmp(img.width, img.height, 1);
+Image filtered(img.width, img.height, 1);
+
+//-------------------------------
+
+
+//for (int x = 0; x < img.width; x++)
+
+int x = 0;
+vertical_convolution_loop_start:
+if (x >= img.width) goto vertical_convolution_loop_end;
+
+
+//for (int y = 0; y < img.height; y++)
+
+int y = 0;
+vertical_convolution_inner_loop_start:
+if (y >= img.height) goto vertical_convolution_inner_loop_end;
+sum = 0;
+
+
+//for (int k = 0; k < size; k++)
+
+k = 0;
+vertical_convolution_kernel_loop_start:
+if (k >= size) goto vertical_convolution_kernel_loop_end;
+int dy = -center + k;
+sum += img.get_pixel(x, y + dy, 0) * kernel.data[k];
+k++;
+goto vertical_convolution_kernel_loop_start;
+
+//-------------------------------
+
+vertical_convolution_kernel_loop_end:
+tmp.set_pixel(x, y, 0, sum);
+y++;
+goto vertical_convolution_inner_loop_start;
+
+//-------------------------------
+
+vertical_convolution_inner_loop_end:
+x++;
+goto vertical_convolution_loop_start;
+
+//-------------------------------
+
+vertical_convolution_loop_end:
+
+
+//for (int x = 0; x < img.width; x++)
+
+x = 0;
+horizontal_convolution_loop_start:
+if (x >= img.width) goto horizontal_convolution_loop_end;
+
+
+//for (int y = 0; y < img.height; y++)
+
+y = 0;
+horizontal_convolution_inner_loop_start:
+if (y >= img.height) goto horizontal_convolution_inner_loop_end;
+sum = 0;
+
+
+//for (int k = 0; k < size; k++)
+
+k = 0;
+horizontal_convolution_kernel_loop_start:
+if (k >= size) goto horizontal_convolution_kernel_loop_end;
+int dx = -center + k;
+sum += tmp.get_pixel(x + dx, y, 0) * kernel.data[k];
+k++;
+goto horizontal_convolution_kernel_loop_start;
+
+//-------------------------------
+
+horizontal_convolution_kernel_loop_end:
+filtered.set_pixel(x, y, 0, sum);
+y++;
+goto horizontal_convolution_inner_loop_start;
+
+//-------------------------------
+
+horizontal_convolution_inner_loop_end:
+x++;
+goto horizontal_convolution_loop_start;
+
+//-------------------------------
+
+horizontal_convolution_loop_end:
+
+return filtered;
+
