@@ -137,7 +137,7 @@ bool Image::save(std::string file_path)
 void Image::set_pixel(int x, int y, int c, data_t val)
 {
     if (x >= width || x < 0 || y >= height || y < 0 || c >= channels || c < 0) {
-        std::cerr << "set_pixel() error: Index out of bounds.\n";
+        std::cerr << "set_pixel() error: Index out of bounds." << " y= " << y << " height= " << height <<"\n";
         std::exit(1);
     }
     data[c*width*height + y*width + x] = val;
@@ -187,7 +187,7 @@ Image Image::resize(int new_w, int new_h, Interpolation method) const
     for (int x = 0; x < new_w; x++) {
         for (int y = 0; y < new_h; y++) {
             for (int c = 0; c < resized.channels; c++) {
-            	floor_ceil_t old_x, old_y;
+            	float old_x, old_y;
                  old_x = map_coordinate(this->width, new_w, x);
                 // cout << old_x <<endl;
 		         

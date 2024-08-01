@@ -16,19 +16,31 @@ int sc_main(int argc, char *argv[])
     }
     Image img(argv[1]);
     img =  img.channels == 1 ? img : rgb_to_grayscale(img);
-
-    std::vector<Keypoint> kps = find_keypoints_and_descriptors(img);
-    Image result = draw_keypoints(img, kps);
-    result.save("result.jpg");
     
-    res = fopen("../log_file.txt", "a+");
+    char numstr[21];
+    string str = "result_";
+    string res_name;
     
-    if (res == NULL){
-    	std::cout << "Greska" << std::endl;
-    	return -1;
-    }
-    std::cout << "Found " << kps.size() << " keypoints. Output image is saved as result.jpg\n";
-    fprintf(res, "Using %s executable on image %s found %ld keypoints.\n", exe, name, kps.size());
-    fclose(res);
+   //for (int i = 4; i<17; i+=4){
+        
+        
+        sprintf(numstr, "%d", N_IP);
+        std::vector<Keypoint> kps = find_keypoints_and_descriptors(img);
+        Image result = draw_keypoints(img, kps);
+        res_name = str + numstr + "_parts" + ".jpg";
+        //cout << res_name << endl;
+        result.save(res_name);
+        
+        res = fopen("../log_file.txt", "a+");
+        
+        if (res == NULL){
+        	std::cout << "Greska" << std::endl;
+        	return -1;
+        }
+        std::cout << "Found " << kps.size() << " keypoints. Output image is saved as "<< res_name << "\n";
+        fprintf(res, "Using %s executable on image %s with %d parts found %ld keypoints.\n", exe, name, 4 , kps.size());
+        fclose(res);
+    
+  // }
     return 0;
 }

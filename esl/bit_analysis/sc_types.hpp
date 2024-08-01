@@ -5,11 +5,8 @@
 
 #include <systemc>
 
-typedef sc_dt::sc_ufixed_fast<16, 0> num_t;
-typedef sc_dt::sc_fixed_fast<16, 10> floor_ceil_t;
-typedef sc_dt::sc_ufixed_fast<16, 2> sigma_base_diff_t;
-typedef sc_dt::sc_ufixed_fast<16, 3> sigma_prev_total_t;
-typedef sc_dt::sc_ufixed_fast<16, 1> k_t;
+typedef sc_dt::sc_ufixed_fast<16, 1> num_t;
+typedef sc_dt::sc_ufixed_fast<32, 9> sigma_prev_total_t;
 typedef sc_dt::sc_fixed_fast<16, 2> data_t;
 
 
