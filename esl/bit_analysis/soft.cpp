@@ -102,7 +102,7 @@ std::vector<Image> generate_gaussian_pyramid_vector(const Image& img, int img_nu
     k = std::pow(2, 1.0/scales_per_octave);
     std::vector<sigma_prev_total_t> sigma_vals {base_sigma};//
     for (int i = 1; i < imgs_per_octave; i++) {
-    cout << i << endl;
+  //  cout << i << endl;
    	sigma_prev_total_t sigma_prev, sigma_total;
         sigma_prev = base_sigma * std::pow(k, i-1);      
         sigma_total = k * sigma_prev;//reg 3
@@ -223,14 +223,13 @@ std::vector<Image> combine_partitions(std::vector< std::vector <Image> > img_vec
         for (int j = 0 ; j < num_octaves * imgs_per_octave; j++){
         
             int fixed_width = img_vec[1][j].width;
-           cout << img_vec[1][j].height << endl;
+         // cout << img_vec[1][j].height << endl;
             int fixed_height = img_vec[1][j].height;
             
             Image combined(fixed_width, num_of_parts * fixed_height, 1); 
             
             for (int i = 0; i < num_of_parts ; i++){ 
-                cout << "\t"<< i  <<" " << j << " "<< num_of_parts << "\n";
-                cout<< "EEEE tu si " <<endl;
+               // cout << "\t"<< i  <<" " << j << " "<< num_of_parts << "\n";
                //  cout << img_vec[i][j].height << endl;
                 
                  for (int x = 0; x < fixed_width; x++){
