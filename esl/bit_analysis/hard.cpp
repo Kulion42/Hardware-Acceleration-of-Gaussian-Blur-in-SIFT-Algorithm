@@ -5,7 +5,7 @@ using namespace std;
 using namespace sc_dt;
 
 
-Image gaussian_blur(const Image& img, sigma_prev_total_t sigma)
+Image gaussian_blur(const Image& img, sigma_prev_total_t sigma, uint16_t offset_up , uint16_t offset_down)
 {
     assert(img.channels == 1);
 
@@ -15,41 +15,47 @@ Image gaussian_blur(const Image& img, sigma_prev_total_t sigma)
         size++;
     
     int center = size / 2;
+        
    // cout << center << endl;
     Image kernel(size, 1, 1);
     sigma_prev_total_t sum = 0;
         for (int k = -size/2; k <= size/2; k++) {
-        k_t val = std::exp(-(k*k) / (2*sigma*sigma));
+        num_t val = std::exp(-(k*k) / (2*sigma*sigma));
         //cout << val << endl;
         kernel.set_pixel(center+k, 0, 0, val);
         sum += val;
     }
    // cout << kernel.size << endl;
  //  cout << endl;
-    for (uint8_t k = 0; k < size; k++){
+    for (int k = 0; k < size; k++){
         kernel.data[k] /= sum;
       //  cout << kernel.data[k] << endl;
         }
-    Image tmp(img.width, img.height, 1);
-    Image filtered(img.width, img.height, 1);
-
+      int test = 0;
+      int test1 = 0; 
+    Image tmp(img.width, img.height-(offset_up + offset_down), 1);
+    Image filtered(img.width, img.height-(offset_up + offset_down), 1);
+    
+    //cout << tmp.height << " " << img.height << endl;
     // convolve vertical
     for (uint16_t x = 0; x < img.width; x++) {
-        for (uint16_t y = 0; y < img.height; y++) {
+        for (uint16_t y = offset_up; y < img.height - offset_down; y++) {
+       //cout << img.height - offset_down << y << endl;
             num_t sum = 0;
-            for (uint8_t k = 0; k < size; k++) {
-                int8_t dy = -center + k;
-                
+            for (int k = 0; k < size; k++) {
+                int dy = -center + k;
+               //cout << y <<" " << dy << " " << tmp.height << endl;
                 sum += img.get_pixel(x, y+dy, 0) * kernel.data[k];
                
             }
-            tmp.set_pixel(x, y, 0, sum);
-           // cout << tmp.get_pixel(x, y, 0)<<endl;
+            tmp.set_pixel(x, y-offset_up, 0, sum);
         }
     }
+     test++;
+       // cout << test << endl;
     // convolve horizontal
     for (uint16_t x = 0; x < img.width; x++) {
-        for (uint16_t y = 0; y < img.height; y++) {
+        for (uint16_t y = 0; y < tmp.height; y++) {
             num_t sum = 0;
             for (uint8_t k = 0; k < size; k++) {
                 int8_t dx = -center + k;
@@ -61,6 +67,9 @@ Image gaussian_blur(const Image& img, sigma_prev_total_t sigma)
             filtered.set_pixel(x, y, 0, sum);
         }
     }
+    test1++;
+   
+    //cout << "Izlazi hard" << endl;
     return filtered;
 }
 
