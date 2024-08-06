@@ -251,53 +251,6 @@ void grayscale_to_rgb(const Image& source_image, Image& img)
     }
 }
 
-// separable 2D gaussian blur for 1 channel image
-/*Image gaussian_blur(const Image& img, sigma_base_diff_t sigma)
-{
-    assert(img.channels == 1);
-
-    int size = std::ceil(6 * sigma);
-    if (size % 2 == 0)
-        size++;
-    int center = size / 2;
-    Image kernel(size, 1, 1);
-    sigma_prev_total_t sum = 0;
-    for (int k = -size/2; k <= size/2; k++) {
-        sigma_base_diff_t val = std::exp(-(k*k) / (2*sigma*sigma));
-        kernel.set_pixel(center+k, 0, 0, val);
-        sum += val;
-    }
-    for (int k = 0; k < size; k++)
-        kernel.data[k] /= sum;
-
-    Image tmp(img.width, img.height, 1);
-    Image filtered(img.width, img.height, 1);
-
-    // convolve vertical
-    for (int x = 0; x < img.width; x++) {
-        for (int y = 0; y < img.height; y++) {
-            sigma_base_diff_t sum = 0;
-            for (int k = 0; k < size; k++) {
-                int dy = -center + k;
-                sum += img.get_pixel(x, y+dy, 0) * kernel.data[k];
-            }
-            tmp.set_pixel(x, y, 0, sum);
-        }
-    }
-    // convolve horizontal
-    for (int x = 0; x < img.width; x++) {
-        for (int y = 0; y < img.height; y++) {
-            sigma_base_diff_t sum = 0;
-            for (int k = 0; k < size; k++) {
-                int dx = -center + k;
-                sum += tmp.get_pixel(x+dx, y, 0) * kernel.data[k];
-            }
-            filtered.set_pixel(x, y, 0, sum);
-        }
-    }
-    return filtered;
-}
-*/
 
 //koristi se za prikaz keypoint-a
 void draw_point(Image& img, int x, int y, int size)

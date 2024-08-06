@@ -34,10 +34,10 @@ const float LAMBDA_DESC = 6;
 
 //----------------SC TYPES-----------------------
 typedef sc_dt::sc_ufixed_fast<16, 1> num_t; //16 0
-typedef sc_dt::sc_fixed_fast<16, 10> floor_ceil_t; // 16 10
-typedef sc_dt::sc_ufixed_fast<24, 3> sigma_base_diff_t; //16.2 bilo, 24.3 
-typedef sc_dt::sc_ufixed_fast<32, 9> sigma_prev_total_t;// 16.3 bilo, 32.9 
-typedef sc_dt::sc_ufixed_fast<32, 10> k_t; //16.1 je bilo, 32.10
+//typedef sc_dt::sc_fixed_fast<16, 10> floor_ceil_t; // 16 10
+//typedef sc_dt::sc_ufixed_fast<24, 3> sigma_base_diff_t; //16.2 bilo, 24.3 
+typedef sc_dt::sc_ufixed_fast<24, 3> sigma_prev_total_t;// 16.3 bilo, 32.9 
+//typedef sc_dt::sc_ufixed_fast<32, 10> k_t; //16.1 je bilo, 32.10
 typedef sc_dt::sc_fixed_fast<16, 2> data_t; //16 2 je zadovoljavaljuce, najvaznije zbog ustede prostora
 //-----------------------------------------------
 

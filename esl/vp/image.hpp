@@ -19,8 +19,8 @@ struct Image {
     int size;
     float *data;
     bool save(std::string file_path);
-    void set_pixel(int x, int y, int c, float val);
-    float get_pixel(int x, int y, int c) const;
+    void set_pixel(int x, int y, int c, data_t val);
+    data_t get_pixel(int x, int y, int c) const;
     void clamp();
     Image resize(int new_w, int new_h, Interpolation method = BILINEAR) const;
 };
