@@ -16,16 +16,17 @@
 
 using namespace std;
 
-static const int DATA_WIDTH = 16;
-static const int FIXED_WIDTH = 3;
-static const int CHAR_LENGHT = 8;
-static const int CHARS_AMOUNT = DATA_WIDTH / CHAR_LENGHT;
+static const int FIXED_POINT_FRACTIONAL_BITS = 14;
 
 int toInt(unsigned char *buf);
 
-int Treshold_convert(char *buf);
+int toInt2(unsigned char *buf);
 
-void toUchar(unsigned char *buf,int val);
+void toUchar1(unsigned char *buf,int val);
+
+void toUchar2(unsigned char *buf,int val);
+
+void toUchar4(unsigned char *buf,int val);
 
 unsigned char Convert_to_UnsignedC(char val);
 
@@ -33,16 +34,8 @@ unsigned char Convert_to_UnsignedD(double val);
 
 char Convert_to_SigendC(unsigned char val);
 
-string complement2(string bin);
+void Fixed_to_Uchar(unsigned char *buf, data_t input);
 
-data_t charToData_t(unsigned char *c);
-
-sigma_prev_total_t charToSigma_t(unsigned char *c);
-
-double ucharToDouble (unsigned char *buf);
-
-void stringToChar (unsigned char *, string);
-
-void fixToChar (unsigned char *buf, data_t d);
+data_t Uchar_to_Fixed(unsigned char *buf);
 
 #endif
