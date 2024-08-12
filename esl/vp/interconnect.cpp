@@ -1,0 +1,53 @@
+#include "interconnect.hpp"
+
+using namespace std;
+
+Interconnect::Interconnect(sc_core::sc_module_name name)
+  : sc_module(name)
+  , offset(sc_core::SC_ZERO_TIME)
+{
+  cpu_socket.register_b_transport(this, &Interconnect::b_transport);
+  SC_REPORT_INFO("Interconnect", "Constructed.");
+}
+
+Interconnect::~Interconnect()
+{
+  SC_REPORT_INFO("Interconnect", "Destroyed.");
+}
+
+void Interconnect::b_transport(pl_t &pl, sc_core::sc_time &offset)
+{
+  sc_dt::uint64 addr = pl.get_address(); 
+  sc_dt::uint64 taddr = addr & 0x00FFFFFF; 
+
+	if (addr >= VP_ADDR_IP_CORE_L && addr <= VP_ADDR_IP_CORE_H)
+	{
+		pl.set_address(taddr);
+		ip_core_socket->b_transport(pl, offset);
+		pl.set_address(addr);
+	}
+	else if (addr >= VP_ADDR_MAIN_BRAM_L && addr <= VP_ADDR_MAIN_BRAM_H)
+	{
+		pl.set_address(taddr);
+		main_bram_socket->b_transport(pl, offset);
+		pl.set_address(addr);
+	}
+	else if (addr >= VP_ADDR_TMP_BRAM_L && addr <= VP_ADDR_TMP_BRAM_H)
+	{
+		pl.set_address(taddr);
+		tmp_bram_socket->b_transport(pl, offset);
+		pl.set_address(addr);
+	}
+	else if (addr >= VP_ADDR_KERNEL_BRAM_L && addr <= VP_ADDR_KERNEL_BRAM_H)
+	{
+		pl.set_address(taddr);
+		kernel_bram_socket->b_transport(pl, offset);
+		pl.set_address(addr);
+	}
+	else
+	{
+		SC_REPORT_ERROR("Interconnect", "Wrong address.");
+		pl.set_response_status ( tlm::TLM_ADDRESS_ERROR_RESPONSE );
+		offset += sc_core::sc_time(5*DELAY, sc_core::SC_NS);
+	}
+}
