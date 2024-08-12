@@ -13,35 +13,32 @@ typedef tlm::tlm_base_protocol_types::tlm_phase_type ph_t;
 #define ADDR_IMG_HEIGHT 0x01
 #define ADDR_IMG_OFFSET_UP 0x02
 #define ADDR_IMG_OFFSET_DOWN 0x03
-#define ADDR_RESET 0X04
-#define ADDR_START 0x05
-#define ADDR_READY 0x06
+#define ADDR_SIZE 0x04
+#define ADDR_RESET 0X05
+#define ADDR_START 0x06
+#define ADDR_READY 0x07
 
 //bram size is 240KB
 #define BRAM_SIZE 0x3A980
-#define KERNEL_SIZE 20
-//maximum calculated ip_core memory alocations 2155600=5*(512*512 + 256*256 + 128*128 + 64 *64 + 32*32 + 16*16 + 8*8 + 4*4)  
-//#define DATA_SIZE 0x20E450
+#define KERNEL_SIZE 0x14
 
 // macro for offset (DELAY = T = 1/f = 1/100MHz = 10ns)
 #define DELAY 10
 
-// 64-bit data bus, 8 bytes,
-#define BUS_WIDTH 8
+// 32-bit data bus, 4 bytes,
+#define BUS_WIDTH 4
 
 // locations for memory and ip 
-#define VP_ADDR_BRAM1_L 0x00000000
-#define VP_ADDR_BRAM1_H 0x00000000 + BRAM_SIZE/2
+#define VP_ADDR_MAIN_BRAM_L 0x00000000
+#define VP_ADDR_MAIN_BRAM_H 0x00000000 + BRAM_SIZE/2
 
-#define VP_ADDR_BRAM2_L 0x10000000
-#define VP_ADDR_BRAM2_H 0x10000000 + BRAM_SIZE/2 - KERNEL_SIZE
+#define VP_ADDR_TMP_BRAM_L 0x10000000
+#define VP_ADDR_TMP_BRAM_H 0x10000000 + BRAM_SIZE/2 - KERNEL_SIZE
 
-#define VP_ADDR_KERNEL_L 0x20000000
-#define VP_ADDR_KERNEL_H 0x20000000 + KERNEL_SIZE
+#define VP_ADDR_KERNEL_BRAM_L 0x20000000
+#define VP_ADDR_KERNEL_BRAM_H 0x20000000 + KERNEL_SIZE
 
-#define VP_ADDR_IP_HARD_L 0x40000000
-#define VP_ADDR_IP_HARD_H 0x40000010 
-//#define VP_ADDR_DDR_L 0x80000000
-//#define VP_ADDR_DDR_H 0x80000000 + DATA_SIZE
+#define VP_ADDR_IP_CORE_L 0x40000000
+#define VP_ADDR_IP_CORE_H 0x40000010 
 
 #endif // ADDR_HPP
