@@ -137,7 +137,7 @@ bool Image::save(std::string file_path)
 void Image::set_pixel(int x, int y, int c, data_t val)
 {
     if (x >= width || x < 0 || y >= height || y < 0 || c >= channels || c < 0) {
-        std::cerr << "set_pixel() error: Index out of bounds.\n";
+        std::cerr << "set_pixel() error: Index out of bounds." << " y= " << y << " height= " << height <<"\n";
         std::exit(1);
     }
     data[c*width*height + y*width + x] = val;
@@ -182,22 +182,16 @@ float map_coordinate(float new_max, float current_max, float coord)
 Image Image::resize(int new_w, int new_h, Interpolation method) const
 {
     Image resized(new_w, new_h, this->channels);
-    num_t value = 0;
- 
+    float value = 0;
     for (int x = 0; x < new_w; x++) {
         for (int y = 0; y < new_h; y++) {
             for (int c = 0; c < resized.channels; c++) {
-            	floor_ceil_t old_x, old_y;
-                 old_x = map_coordinate(this->width, new_w, x);
-                // cout << old_x <<endl;
-		         
-                 old_y = map_coordinate(this->height, new_h, y);
-               // cout << old_y <<endl;
-                
+                float old_x = map_coordinate(this->width, new_w, x);
+                float old_y = map_coordinate(this->height, new_h, y);
                 if (method == Interpolation::BILINEAR)
-                    value = bilinear_interpolate(*this, old_x, old_y, c);     
-                
-                   // cout << value << endl;
+                    value = bilinear_interpolate(*this, old_x, old_y, c);
+                else if (method == Interpolation::NEAREST)
+                    value = nn_interpolate(*this, old_x, old_y, c);
                 resized.set_pixel(x, y, c, value);
             }
         }
@@ -205,11 +199,11 @@ Image Image::resize(int new_w, int new_h, Interpolation method) const
     return resized;
 }
 
-float bilinear_interpolate(const Image& img,  float x, float y, int c)
+float bilinear_interpolate(const Image& img, float x, float y, int c)
 {
     float p1, p2, p3, p4, q1, q2;
     float x_floor = std::floor(x), y_floor = std::floor(y);
-    float  x_ceil = x_floor + 1, y_ceil = y_floor + 1;
+    float x_ceil = x_floor + 1, y_ceil = y_floor + 1;
     p1 = img.get_pixel(x_floor, y_floor, c);
     p2 = img.get_pixel(x_ceil, y_floor, c);
     p3 = img.get_pixel(x_floor, y_ceil, c);
@@ -219,38 +213,91 @@ float bilinear_interpolate(const Image& img,  float x, float y, int c)
     return (x_ceil-x)*q1 + (x-x_floor)*q2;
 }
 
-//prebacio u void
-void rgb_to_grayscale(const Image& source_image, Image& img)
+float nn_interpolate(const Image& img, float x, float y, int c)
 {
-    assert(source_image.channels == 3);
-    //Image gray(img.width, img.height, 1);
-    for (int x = 0; x < source_image.width; x++) {
-        for (int y = 0; y < source_image.height; y++) {
+    return img.get_pixel(std::round(x), std::round(y), c);
+}
+
+
+Image rgb_to_grayscale(const Image& img)
+{
+    assert(img.channels == 3);
+    Image gray(img.width, img.height, 1);
+    for (int x = 0; x < img.width; x++) {
+        for (int y = 0; y < img.height; y++) {
             float red, green, blue;
-            red = source_image.get_pixel(x, y, 0);
-            green = source_image.get_pixel(x, y, 1);
-            blue = source_image.get_pixel(x, y, 2);
-            img.set_pixel(x, y, 0, 0.299*red + 0.587*green + 0.114*blue);
+            red = img.get_pixel(x, y, 0);
+            green = img.get_pixel(x, y, 1);
+            blue = img.get_pixel(x, y, 2);
+            gray.set_pixel(x, y, 0, 0.299*red + 0.587*green + 0.114*blue);
         }
-	}
+    }
+    return gray;
 }
 
 //samo da bi keypointe iscrtali crvenim a ne belim tackama
-//prebacio u void
-void grayscale_to_rgb(const Image& source_image, Image& img)
+Image grayscale_to_rgb(const Image& img)
 {
-    assert(source_image.channels == 1);
-    //Image rgb(img.width, img.height, 3);
-    for (int x = 0; x < source_image.width; x++) {
-        for (int y = 0; y < source_image.height; y++) {
-            float gray_val = source_image.get_pixel(x, y, 0);
-            img.set_pixel(x, y, 0, gray_val);
-            img.set_pixel(x, y, 1, gray_val);
-            img.set_pixel(x, y, 2, gray_val);
+    assert(img.channels == 1);
+    Image rgb(img.width, img.height, 3);
+    for (int x = 0; x < img.width; x++) {
+        for (int y = 0; y < img.height; y++) {
+            float gray_val = img.get_pixel(x, y, 0);
+            rgb.set_pixel(x, y, 0, gray_val);
+            rgb.set_pixel(x, y, 1, gray_val);
+            rgb.set_pixel(x, y, 2, gray_val);
         }
     }
+    return rgb;
 }
 
+// separable 2D gaussian blur for 1 channel image
+/*Image gaussian_blur(const Image& img, sigma_base_diff_t sigma)
+{
+    assert(img.channels == 1);
+
+    int size = std::ceil(6 * sigma);
+    if (size % 2 == 0)
+        size++;
+    int center = size / 2;
+    Image kernel(size, 1, 1);
+    sigma_prev_total_t sum = 0;
+    for (int k = -size/2; k <= size/2; k++) {
+        sigma_base_diff_t val = std::exp(-(k*k) / (2*sigma*sigma));
+        kernel.set_pixel(center+k, 0, 0, val);
+        sum += val;
+    }
+    for (int k = 0; k < size; k++)
+        kernel.data[k] /= sum;
+
+    Image tmp(img.width, img.height, 1);
+    Image filtered(img.width, img.height, 1);
+
+    // convolve vertical
+    for (int x = 0; x < img.width; x++) {
+        for (int y = 0; y < img.height; y++) {
+            sigma_base_diff_t sum = 0;
+            for (int k = 0; k < size; k++) {
+                int dy = -center + k;
+                sum += img.get_pixel(x, y+dy, 0) * kernel.data[k];
+            }
+            tmp.set_pixel(x, y, 0, sum);
+        }
+    }
+    // convolve horizontal
+    for (int x = 0; x < img.width; x++) {
+        for (int y = 0; y < img.height; y++) {
+            sigma_base_diff_t sum = 0;
+            for (int k = 0; k < size; k++) {
+                int dx = -center + k;
+                sum += tmp.get_pixel(x+dx, y, 0) * kernel.data[k];
+            }
+            filtered.set_pixel(x, y, 0, sum);
+        }
+    }
+    return filtered;
+}
+*/
 
 //koristi se za prikaz keypoint-a
 void draw_point(Image& img, int x, int y, int size)
@@ -270,4 +317,5 @@ void draw_point(Image& img, int x, int y, int size)
         }
     }
 }
+
 

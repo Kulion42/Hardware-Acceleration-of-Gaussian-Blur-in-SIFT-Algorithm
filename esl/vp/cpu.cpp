@@ -1,17 +1,12 @@
 #include "cpu.hpp"
 
-#define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.hpp"
-#define STB_IMAGE_WRITE_IMPLEMENTATION
-#include "stb_image_write.hpp"
-
-char **Soft::input_arguments = nullptr;
-int Soft::argc = 0;
+char **Cpu::input_arguments = nullptr;
+int Cpu::argc = 0;
 
 
-SC_HAS_PROCESS(Soft);
+SC_HAS_PROCESS(Cpu);
 
-Cpu::Cpu(sc_core::sc_module_name name, char** strings, int arg_count) : sc_module(name)
+Cpu::Cpu(sc_core::sc_module_name name, char** strings, int arg_count) : sc_module(name), offset(sc_core::SC_ZERO_TIME)
 {
 	SC_THREAD(soft);
 	SC_REPORT_INFO("Cpu ", "Constructed.");
@@ -27,17 +22,15 @@ Cpu::~Cpu()
 }
 
 void Cpu::soft()
-{
-	std::vector<Keypoint> kps;
-	
+{	
 	
 	if (argc != 2) {
         std::cerr << "Usage: ./find_keypoints input.jpg (or .png)\n";
-        return 0;
+        exit(21);
     }
 	
 	//smesta pocetnu sliku
-	Image img(argv[1]);
+	Image img(input_arguments[1]);
 	
 	//smesta grayscale sliku
 	Image grayscale_img(img.width, img.height, img.channels);
@@ -45,7 +38,7 @@ void Cpu::soft()
     if(img.height > 256 || img.width > 256)
     {
       std::cerr << "Image can't be bigger than 256x256 pixels.\n";
-      return EXIT_FAILURE;
+      exit(21);
     } 
     
     if(img.channels == 1)
@@ -54,14 +47,17 @@ void Cpu::soft()
 	}
 	else
 	{
-		rgb_to_grayscale(img, grayscale_img);
+		grayscale_img = rgb_to_grayscale(img);
 	}
 	
 	//ScaleSpacePyramid gaussian_pyramid (pravi ovo pomocu slika iz hardvera);
 	const Image& input = img.channels == 1 ? img : rgb_to_grayscale(img);
     const Image& resized_input = input.resize(input.width*2, input.height*2, Interpolation::BILINEAR);
+    int num_octaves = N_OCT;
+    int scales_per_octave = N_SPO;
     int imgs_per_octave = scales_per_octave + 3;
-   
+    int num_of_parts = N_IP;
+    
     const std::vector<Image> resized_part = image_partitions(resized_input /*num_of_parts,*/); 
     std::vector< std::vector<Image> >gaussian_pyramid_vector(num_of_parts, std::vector<Image>(num_octaves * imgs_per_octave));
        
@@ -81,19 +77,18 @@ void Cpu::soft()
     gaussian_pyramid.images = combine_partitions(gaussian_pyramid_vector /*num_of_parts,*/ ) ;  
     	
 	ScaleSpacePyramid dog_pyramid = generate_dog_pyramid(gaussian_pyramid);
-    std::vector<Keypoint> tmp_kps = find_keypoints(dog_pyramid, contrast_thresh, edge_thresh);
+    std::vector<Keypoint> tmp_kps = find_keypoints(dog_pyramid);
     ScaleSpacePyramid grad_pyramid = generate_gradient_pyramid(gaussian_pyramid);
     
     std::vector<Keypoint> kps;
     
 	for (Keypoint& kp_tmp : tmp_kps) 
 	{
-		td::vector<float> orientations = find_keypoint_orientations(kp_tmp, grad_pyramid,
-                                                                     lambda_ori, lambda_desc);
+		std::vector<float> orientations = find_keypoint_orientations(kp_tmp, grad_pyramid);
 		for (float theta : orientations) 
 		{
             Keypoint kp = kp_tmp;
-            compute_keypoint_descriptor(kp, theta, grad_pyramid, lambda_desc);
+            compute_keypoint_descriptor(kp, theta, grad_pyramid);
             kps.push_back(kp);
         }
     }
@@ -109,15 +104,13 @@ std::vector<Image> Cpu::generate_gaussian_pyramid_vector(const Image& img, int i
                                              int num_octaves, int scales_per_octave)
 {
 
+     assert(img.channels == 1);
+     
    // sigma_prev_total_t base_sigma, sigma_diff;
     float base_sigma = sigma_min / MIN_PIX_DIST;
   
     float sigma_diff = std::sqrt(base_sigma*base_sigma - 1.0f);
-    sc_int<16> size = std::ceil(6 * sigma_diff);
   
-    if (size % 2 == 0)
-        size++;
-        
     int offset_up, offset_down;
     
     if (img_num == 0){
@@ -142,9 +135,9 @@ std::vector<Image> Cpu::generate_gaussian_pyramid_vector(const Image& img, int i
     write_hard(ADDR_IMG_WIDTH, img.width); 
 	write_hard(ADDR_IMG_HEIGHT, img.height);
 
-	write_hard(ADDR_SIZE, size); //const
-	write_hard(ADDR_OFFSET_UP, offset_up); //const
-	write_hard(ADDR_OFFSET_DOWN, offset_down) //const
+	write_hard(ADDR_NUM_IMG_OCT, 0); //const
+	write_hard(ADDR_IMG_OFFSET_UP, offset_up); //const
+	write_hard(ADDR_IMG_OFFSET_DOWN, offset_down);//const
 	
 	cout << "IP core registers initialized" << endl;
 	
@@ -154,7 +147,7 @@ std::vector<Image> Cpu::generate_gaussian_pyramid_vector(const Image& img, int i
 	for ( int x = 0; x < img.width; x++) {
         for (int y = 0; y < img.height; y++) {
           data_t val = img.get_pixel(x, y, 0);
-          write_mem(VP_ADDR_BRAM1_L  + y*img_width + x, val);
+          write_mem(VP_ADDR_MAIN_BRAM_L  + y*img.width + x, val);
         }
     }
 	cout << "Bram initialized" << endl;
@@ -173,26 +166,28 @@ std::vector<Image> Cpu::generate_gaussian_pyramid_vector(const Image& img, int i
     offset_down = 0;
     int imgs_per_octave = scales_per_octave + 3;
     
-    write_hard(ADDR_OFFSET_UP, offset_up); //const
-	write_hard(ADDR_OFFSET_DOWN, offset_down) //const
+    write_hard(ADDR_IMG_OFFSET_UP, offset_up); //const
+	write_hard(ADDR_IMG_OFFSET_DOWN, offset_down); //const
 	
+	/*
     float k;
     k = std::pow(2, 1.0/scales_per_octave);
-    std::vector<sigma_prev_total_t> sigma_vals {base_sigma};
+    std::vector<sigma_t> sigma_vals {base_sigma};
     for (int i = 1; i < imgs_per_octave; i++) {
   
-   	    sigma_prev_total_t sigma_prev, sigma_total;
+   	    sigma_t sigma_prev, sigma_total;
         sigma_prev = base_sigma * std::pow(k, i-1);      
         sigma_total = k * sigma_prev;
         sigma_vals.push_back(std::sqrt(sigma_total*sigma_total - sigma_prev*sigma_prev));
 		
     }  
+    */
     
     //------------------------------------------------
 	 cout << "Saving bram state" << endl;
         for ( int x = 0; x < base_img.width; x++) {
             for (int y = 0; y < base_img.height; y++) {
-                  data_t val = read_mem(VP_ADDR_BRAM1_L  + y*img_width + x);
+                  data_t val = read_mem(VP_ADDR_MAIN_BRAM_L  + y*base_img.width + x);
                   base_img.set_pixel(x, y, 0, val);
             }
          }
@@ -211,16 +206,13 @@ std::vector<Image> Cpu::generate_gaussian_pyramid_vector(const Image& img, int i
         for ( int x = 0; x < prev_img.width; x++) {
             for (int y = 0; y < prev_img.height; y++) {
                   data_t val = prev_img.get_pixel(x, y, 0);
-                  write_mem(VP_ADDR_MAIN_BRAM_L  + y*img_width + x, val);
+                  write_mem(VP_ADDR_MAIN_BRAM_L  + y*prev_img.width + x, val);
             }
          } 
-            sc_int<16> size = std::ceil(6 * sigma_vals[j]);
-            if (size % 2 == 0)
-                size++;
                 
             write_hard(ADDR_IMG_WIDTH, prev_img.width); 
 	        write_hard(ADDR_IMG_HEIGHT, prev_img.height);    
-            write_hard(ADDR_SIZE, size); //const
+            write_hard(ADDR_NUM_IMG_OCT, j); //const
             write_hard(ADDR_START, 1);
 	        while(read_hard(ADDR_READY));
             write_hard(ADDR_START, 0);
@@ -230,7 +222,7 @@ std::vector<Image> Cpu::generate_gaussian_pyramid_vector(const Image& img, int i
 	        
 	        for ( int x = 0; x < prev_img.width; x++) {
                 for (int y = 0; y < prev_img.height; y++) {
-                      data_t val = read_mem(VP_ADDR_MAIN_BRAM_L  + y*img_width + x);
+                      data_t val = read_mem(VP_ADDR_MAIN_BRAM_L  + y*prev_img.width + x);
                       pyramid_images[i*imgs_per_octave + j].set_pixel(x, y, 0, val);
                 }
             }
@@ -460,7 +452,7 @@ Image Cpu::draw_keypoints(const Image& img, const std::vector<Keypoint>& kps)
 
 
 
-void hists_to_vec(float histograms[N_HIST][N_HIST][N_ORI], std::array<uint8_t, 128>& feature_vec)
+void Cpu::hists_to_vec(float histograms[N_HIST][N_HIST][N_ORI], std::array<uint8_t, 128>& feature_vec)
 {
     int size = N_HIST*N_HIST*N_ORI;
     float *hist = reinterpret_cast<float *>(histograms);
@@ -482,7 +474,7 @@ void hists_to_vec(float histograms[N_HIST][N_HIST][N_ORI], std::array<uint8_t, 1
     }
 }
 
-void update_histograms(float hist[N_HIST][N_HIST][N_ORI], float x, float y,
+void Cpu::update_histograms(float hist[N_HIST][N_HIST][N_ORI], float x, float y,
                        float contrib, float theta_mn, float lambda_desc)
 {
     float x_i, y_j;
@@ -511,7 +503,7 @@ void update_histograms(float hist[N_HIST][N_HIST][N_ORI], float x, float y,
 }
 
 
-void smooth_histogram(float hist[N_BINS])
+void Cpu::smooth_histogram(float hist[N_BINS])
 {
     float tmp_hist[N_BINS];
     for (int i = 0; i < 6; i++) {
@@ -526,7 +518,7 @@ void smooth_histogram(float hist[N_BINS])
     }
 }
 
-bool point_is_extremum(const std::vector<Image>& octave, int scale, int x, int y)
+bool Cpu::point_is_extremum(const std::vector<Image>& octave, int scale, int x, int y)
 {
     const Image& img = octave[scale];
     const Image& prev = octave[scale-1];
@@ -555,7 +547,7 @@ bool point_is_extremum(const std::vector<Image>& octave, int scale, int x, int y
     return true;
 }
 
-tuple<float, float, float> fit_quadratic(Keypoint& kp,
+std::tuple<float, float, float> Cpu::fit_quadratic(Keypoint& kp,
                                               const std::vector<Image>& octave,
                                               int scale)
 {
@@ -604,7 +596,7 @@ tuple<float, float, float> fit_quadratic(Keypoint& kp,
     return {offset_s, offset_x, offset_y};
 }
 
-bool point_is_on_edge(const Keypoint& kp, const std::vector<Image>& octave, float edge_thresh=C_EDGE)
+bool Cpu::point_is_on_edge(const Keypoint& kp, const std::vector<Image>& octave, float edge_thresh)
 {
     const Image& img = octave[kp.scale];
     float h11, h12, h22;
@@ -624,16 +616,16 @@ bool point_is_on_edge(const Keypoint& kp, const std::vector<Image>& octave, floa
         return false;
 }
 
-void find_input_img_coords(Keypoint& kp, float offset_s, float offset_x, float offset_y,
-                                   float sigma_min=SIGMA_MIN,
-                                   float min_pix_dist=MIN_PIX_DIST, int n_spo=N_SPO)
+void Cpu::find_input_img_coords(Keypoint& kp, float offset_s, float offset_x, float offset_y,
+                                   float sigma_min,
+                                   float min_pix_dist, int n_spo)
 {
     kp.sigma = std::pow(2, kp.octave) * sigma_min * std::pow(2, (offset_s+kp.scale)/n_spo);
     kp.x = min_pix_dist * std::pow(2, kp.octave) * (offset_x+kp.i);
     kp.y = min_pix_dist * std::pow(2, kp.octave) * (offset_y+kp.j);
 }
 
-bool refine_or_discard_keypoint(Keypoint& kp, const std::vector<Image>& octave,
+bool Cpu::refine_or_discard_keypoint(Keypoint& kp, const std::vector<Image>& octave,
                                 float contrast_thresh, float edge_thresh)
 {
     int k = 0;
@@ -661,7 +653,7 @@ bool refine_or_discard_keypoint(Keypoint& kp, const std::vector<Image>& octave,
     return kp_is_valid;
 }
 
-std::vector<Image> image_partitions(const Image& img, int num_of_parts)
+std::vector<Image> Cpu::image_partitions(const Image& img, int num_of_parts)
 {
     std::vector<Image> img_part(num_of_parts);
     
@@ -715,7 +707,7 @@ std::vector<Image> image_partitions(const Image& img, int num_of_parts)
 }
 
 
-std::vector<Image> combine_partitions(std::vector< std::vector <Image> > img_vec, int num_of_parts, int imgs_per_octave, int num_octaves, 
+std::vector<Image> Cpu::combine_partitions(std::vector< std::vector <Image> > img_vec, int num_of_parts, int imgs_per_octave, int num_octaves, 
                                                      int scales_per_octave)
 {   
      std::vector<Image> comb_part(num_octaves * imgs_per_octave);
@@ -746,10 +738,10 @@ std::vector<Image> combine_partitions(std::vector< std::vector <Image> > img_vec
      return comb_part; 
 }
 
-void Soft::write_hard(sc_dt::sc_uint<64> addr, sc_int<16> val)
+void Cpu::write_hard(sc_dt::sc_uint<64> addr, sc_dt::sc_int<16> val)
 {
 	pl_t pl;
-	unsigned char buf[4];
+	unsigned char buf[16];
 	toUchar2(buf, val);
 	pl.set_address(addr);
 	pl.set_data_length(BUS_WIDTH); 
@@ -759,7 +751,7 @@ void Soft::write_hard(sc_dt::sc_uint<64> addr, sc_int<16> val)
 	interconnect_socket->b_transport(pl, offset);
 }
 
-int Soft::read_hard(sc_dt::sc_uint<64> addr)
+int Cpu::read_hard(sc_dt::sc_uint<64> addr)
 {
 	pl_t pl;
 	unsigned char buf;
@@ -769,23 +761,23 @@ int Soft::read_hard(sc_dt::sc_uint<64> addr)
 	pl.set_command( tlm::TLM_READ_COMMAND );
 	pl.set_response_status ( tlm::TLM_INCOMPLETE_RESPONSE );
 	interconnect_socket->b_transport(pl, offset);
-	return Toint(buf);
+	return toInt(&buf);
 }
 
-void Soft::write_mem(sc_dt::sc_uint<64> addr, data_t val)
+void Cpu::write_mem(sc_dt::sc_uint<64> addr, data_t val)
 {
 	pl_t pl;
-	unsigned char buf[2];
+	unsigned char buf[16];
 	Fixed_to_Uchar(buf, val);
 	pl.set_address(addr);
 	pl.set_data_length(BUS_WIDTH); 
 	pl.set_data_ptr(buf);
 	pl.set_command( tlm::TLM_WRITE_COMMAND );
 	pl.set_response_status ( tlm::TLM_INCOMPLETE_RESPONSE );
-	bram_socket->b_transport(pl, offset);
+	interconnect_socket->b_transport(pl, offset);
 }
 
-data_t Soft::read_mem(sc_dt::sc_uint<64> addr)
+data_t Cpu::read_mem(sc_dt::sc_uint<64> addr)
 {
 	pl_t pl;
 	unsigned char buf;
@@ -794,6 +786,6 @@ data_t Soft::read_mem(sc_dt::sc_uint<64> addr)
 	pl.set_data_ptr(&buf);
 	pl.set_command( tlm::TLM_READ_COMMAND );
 	pl.set_response_status ( tlm::TLM_INCOMPLETE_RESPONSE );
-	bram_socket->b_transport(pl, offset);
-	return Uchar_to_Fixed(buf);
+	interconnect_socket->b_transport(pl, offset);
+	return Uchar_to_Fixed(&buf);
 }

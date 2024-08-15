@@ -5,23 +5,23 @@ using namespace std;
 using namespace sc_dt;
 using namespace sc_core;
 
-Ip_core::Ip_core(sc_module_name name):
+Ip_Core::Ip_Core(sc_module_name name):
 	sc_module(name),
 	ready(1)
 	
 {
-	interconnect_socket.register_b_transport(this, &Ip_core::b_transport);
+	interconnect_socket.register_b_transport(this, &Ip_Core::b_transport);
 	
 	SC_REPORT_INFO("IP core", "Constructed.");
 }
 
-Ip_core::~Ip_core()
+Ip_Core::~Ip_Core()
 {
 	SC_REPORT_INFO("IP core", "Destroyed.");
 }
 
 
-void Ip_core::b_transport(pl_t &pl, sc_time &offset)
+void Ip_Core::b_transport(pl_t &pl, sc_time &offset)
 {
 	
 	tlm::tlm_command command = pl.get_command();
@@ -51,14 +51,14 @@ void Ip_core::b_transport(pl_t &pl, sc_time &offset)
 			  img_offset_down = toInt2(buffer);
 			  cout << "img_offset_down = " << img_offset_down << endl;
 			  break;
-			case ADDR_SIZE:
-			  size = toInt2(buffer);
-			  cout << "size = " << size << endl;
+			case ADDR_NUM_IMG_OCT:
+			  img_per_octave = toInt2(buffer);
+			  cout << "img_per_octave = " << img_per_octave << endl;
 			  break;
 			case ADDR_START:
 			  start = toInt2(buffer);
 			  cout << "start bit" << endl;
-			  gaussian_blur(sc_time& offset);
+			  gaussian_blur(offset);
 			  break;
 			case ADDR_RESET:
 			  reset = toInt2(buffer);
@@ -75,7 +75,7 @@ void Ip_core::b_transport(pl_t &pl, sc_time &offset)
 		switch(address)
 		{
 		case ADDR_READY:
-		  toUchar(buffer, ready);
+		  toUchar4(buffer, ready);
 		  break;
 		default:
 		  pl.set_response_status( tlm::TLM_ADDRESS_ERROR_RESPONSE );
@@ -90,26 +90,31 @@ void Ip_core::b_transport(pl_t &pl, sc_time &offset)
 	offset += sc_time(DELAY, SC_NS);
 }
 
-void Ip_core::gaussian_blur(sc_time offset)
+void Ip_Core::gaussian_blur(sc_core::sc_time &offset)
 {
  //  pl_t pl;
    
    if (start == 1 && ready == 1){
         cout << "Hard started" << endl;
-        ofset+=sc_time(DELAY, SC_NS);
+        offset+=sc_time(DELAY, SC_NS);
    }
 
     else if (start == 0 && ready == 0 ){
     //Start with work
     cout << "Startig gaussian_blur"<<endl;
     
-    assert(img.channels == 1);
-
+    
+    size = std::ceil(6 * sigma);
+    
+    if (size % 2 == 0)
+        size++;
     
     center = size / 2;
         
    // cout << center << endl;
   //  Image kernel(size, 1, 1);
+    sigma = read_rom(VP_ADDR_SIGMA_ROM_L + img_per_octave);
+    
     sum = 0;
         for (k = -size/2; k <= size/2; k++) {
         val = std::exp(-(k*k) / (2*sigma*sigma));
@@ -132,35 +137,37 @@ void Ip_core::gaussian_blur(sc_time offset)
     
     // convolve vertical
     for ( x = 0; x < img_width; x++) {
-        for (y = offset_up; y < img_height - offset_down; y++) {
+        for (y = img_offset_up; y < img_height - img_offset_down; y++) {
        //cout << img.height - offset_down << y << endl;
             sum = 0;
             for ( k = 0; k < size; k++) {
                  dy = -center + k;
                // sum += img.get_pixel(x, y+dy, 0) * ;
-                 sum = read_mem(VP_ADDR_MAIN_BRAM_L + (y+dy)*img_width + x) * kernel.data[k];
+                 val = read_mem(VP_ADDR_KERNEL_BRAM_L + k);
+                 sum = read_mem(VP_ADDR_MAIN_BRAM_L + (y+dy)*img_width + x) * val;
                  offset += sc_time(DELAY, SC_NS);
             }
           //  tmp.set_pixel(x, y-offset_up, 0, sum);
-          write_mem(VP_ADDR_TMP_BRAM_L + (y-offset)*img_width + x);
+          write_mem(VP_ADDR_TMP_BRAM_L + (y-img_offset_up)*img_width + x, sum);
         }
     }
     
 
     // convolve horizontal
     for ( x = 0; x < img_width; x++) {
-        for ( y = 0; y < img_height - offset_up - offset_down; y++) {
+        for ( y = 0; y < img_height - img_offset_up - img_offset_down; y++) {
              sum = 0;
             for (k = 0; k < size; k++) {
                  dx = -center + k;
                 
                 //sum += tmp.get_pixel(x+dx, y, 0) * kernel.data[k];
-                 sum = read_mem(VP_ADDR_TMP_BRAM_L + y*img_width + x+dx) * kernel.data[k];
+                 val = read_mem(VP_ADDR_KERNEL_BRAM_L + k);
+                 sum = read_mem(VP_ADDR_TMP_BRAM_L + y*img_width + x+dx) * val;
                  offset += sc_time(DELAY, SC_NS);
             }
 
            // filtered.set_pixel(x, y, 0, sum);
-           write_mem(VP_ADDR_MAIN_BRAM_L + y*img_width + x);
+           write_mem(VP_ADDR_MAIN_BRAM_L + y*img_width + x, sum);
         }
     }
    offset += sc_time(DELAY, SC_NS);
@@ -170,7 +177,7 @@ void Ip_core::gaussian_blur(sc_time offset)
    cout << " Gaussian blur finished" << endl;
 }
 
-void Ip_core::write_mem(sc_dt::sc_uint<64> addr, data_t val)
+void Ip_Core::write_mem(sc_dt::sc_uint<64> addr, data_t val)
 {
 	pl_t pl;
 	unsigned char buf[2];
@@ -180,10 +187,10 @@ void Ip_core::write_mem(sc_dt::sc_uint<64> addr, data_t val)
 	pl.set_data_ptr(buf);
 	pl.set_command( tlm::TLM_WRITE_COMMAND );
 	pl.set_response_status ( tlm::TLM_INCOMPLETE_RESPONSE );
-	bram_socket->b_transport(pl, offset);
+	mem_socket->b_transport(pl, offset);
 }
 
-data_t Ip_core::read_mem(sc_dt::sc_uint<64> addr)
+data_t Ip_Core::read_mem(sc_dt::sc_uint<64> addr)
 {
 	pl_t pl;
 	unsigned char buf;
@@ -192,6 +199,23 @@ data_t Ip_core::read_mem(sc_dt::sc_uint<64> addr)
 	pl.set_data_ptr(&buf);
 	pl.set_command( tlm::TLM_READ_COMMAND );
 	pl.set_response_status ( tlm::TLM_INCOMPLETE_RESPONSE );
-	bram_socket->b_transport(pl, offset);
-	return Uchar_to_Fixed(buf);
+	mem_socket->b_transport(pl, offset);
+	return Uchar_to_Fixed(&buf);
+}
+
+sigma_t Ip_Core::read_rom(sc_dt::sc_uint<64> addr)    
+{
+    pl_t pl;
+	unsigned char buf;
+	sc_dt::uint64 taddr = addr & 0x00FFFFFF; 
+	pl.set_address(taddr);
+	pl.set_data_length(3); 
+	pl.set_data_ptr(&buf);
+	pl.set_command( tlm::TLM_READ_COMMAND );
+	pl.set_response_status ( tlm::TLM_INCOMPLETE_RESPONSE );
+	mem_socket->b_transport(pl, offset);
+	pl.set_address(addr);
+	
+	return Uchar_to_Sigma_t(&buf);
+	
 }

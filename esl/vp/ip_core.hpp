@@ -11,32 +11,30 @@
 
 #include "addr.hpp"
 #include "functions.hpp"
-#include "image.hpp"
 #include "sc_types.hpp"
 
 using namespace std;
 using namespace sc_dt;
 
-class Ip_core:
-    public :    sc_core(sc_module)
-
+class Ip_Core: public sc_core::sc_module
 {
 public:
-    Ip_core(sc_core::sc_module_name);
-	~Ip_core();
+    Ip_Core(sc_core::sc_module_name name);
+	~Ip_Core();
 	
-	tlm_utils::simple_target_socket<Ip_core> interconnect_socket;
-	tlm_utils::simple_initiator_socket<Ip_core> bram_socket;
+	tlm_utils::simple_target_socket<Ip_Core> interconnect_socket;
+	tlm_utils::simple_initiator_socket<Ip_Core> mem_socket;
+	
 protected:
     pl_t pl;
-    sc_time offset;
+    sc_core::sc_time offset;
     
     //input parameters
     sc_int<16> img_width;
     sc_int<16> img_height;
     sc_int<16> img_offset_up;
     sc_int<16> img_offset_down;
-    sc_int<16> size;
+    sc_int<16> img_per_octave;
     sc_uint<1> reset;
     sc_uint<1> start;
     
@@ -44,17 +42,19 @@ protected:
     sc_uint<1> ready;
 
     //variables used
-    num_t sum, val;
-    sc_int<8> center, k;
+    sigma_t sigma;
+    sum_t sum, val;
+    sc_int<8> size, center, k;
     sc_int<8> dx, dy; 
     sc_int<16> x, y;
     
     void b_transport(pl_t&, sc_core::sc_time&);	
-	void gaussian_blur(sc_time offset);
-	char read_mem(sc_dt::sc_uint<64> addr);
+	void gaussian_blur(sc_core::sc_time &offset);
+	data_t read_mem(sc_dt::sc_uint<64> addr);
 	void write_mem(sc_dt::sc_uint<64> addr, data_t val);
+	sigma_t read_rom(sc_dt::sc_uint<64> addr);
     
-}   
+}  ; 
     
 
 

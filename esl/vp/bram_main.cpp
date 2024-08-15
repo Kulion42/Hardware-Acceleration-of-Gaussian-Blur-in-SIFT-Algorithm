@@ -1,17 +1,18 @@
-#include "bram.hpp"
+#include "bram_main.hpp"
 #include "functions.hpp"
 
 Main_Bram::Main_Bram(sc_core::sc_module_name name) : sc_module(name)
 {
-	bram_socket.register_b_transport(this, &Main_Bram::b_transport);
+	interconnect_socket.register_b_transport(this, &Main_Bram::b_transport);
+	
 	mem.reserve(BRAM_SIZE/2);
 
-	SC_REPORT_INFO("MAIN_BRAM", "Constructed.");
+	SC_REPORT_INFO("Main_Bram", "Constructed.");
 }
 
 Main_Bram::~Main_Bram()
 {
-	SC_REPORT_INFO("MAIN_BRAM", "Destroyed.");
+	SC_REPORT_INFO("Main_Bram", "Destroyed.");
 }
 
 void Main_Bram::b_transport(pl_t &pl, sc_core::sc_time &offset)

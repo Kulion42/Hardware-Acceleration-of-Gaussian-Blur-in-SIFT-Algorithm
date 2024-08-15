@@ -3,7 +3,7 @@
 
 Kernel_Bram::Kernel_Bram(sc_core::sc_module_name name) : sc_module(name)
 {
-	kernel_bram_socket.register_b_transport(this, &Kernel_Bram::b_transport);
+	ip_core_socket.register_b_transport(this, &Kernel_Bram::b_transport);
 	mem.reserve(KERNEL_SIZE);
 
 	SC_REPORT_INFO("KERNEL_BRAM", "Constructed.");

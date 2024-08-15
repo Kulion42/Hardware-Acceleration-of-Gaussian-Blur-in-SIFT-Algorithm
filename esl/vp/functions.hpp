@@ -1,8 +1,6 @@
 #ifndef _FUNCTIONS_HPP
 #define _FUNCTIONS_HPP
 
-#define SC_INCLUDE_FX
-
 #include <systemc>
 #include <sysc/datatypes/fx/sc_fixed.h>
 #include <iostream>
@@ -38,4 +36,5 @@ void Fixed_to_Uchar(unsigned char *buf, data_t input);
 
 data_t Uchar_to_Fixed(unsigned char *buf);
 
+sigma_t Uchar_to_Sigma_t(unsigned char *buf);
 #endif

@@ -1,9 +1,9 @@
-#include "bram.hpp"
+#include "bram_tmp.hpp"
 #include "functions.hpp"
 
 Tmp_Bram::Tmp_Bram(sc_core::sc_module_name name) : sc_module(name)
 {
-	bram_socket.register_b_transport(this, &Tmp_Bram::b_transport);
+	ip_core_socket.register_b_transport(this, &Tmp_Bram::b_transport);
 	mem.reserve(BRAM_SIZE/2 - KERNEL_SIZE);
 
 	SC_REPORT_INFO("TMP_BRAM", "Constructed.");

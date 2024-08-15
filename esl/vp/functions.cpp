@@ -50,7 +50,7 @@ char Convert_to_SigendC(unsigned char val)
 
 void Fixed_to_Uchar(unsigned char *buf, data_t input)
 {
-    double val = ((double)input / (double)(1 << FIXED_POINT_FRACTIONAL_BITS));
+    uint16_t val = int((double)input / (double)(1 << FIXED_POINT_FRACTIONAL_BITS));
     
     buf[0] = (char) (val >> 8);
     buf[1] = (char) (val);
@@ -66,3 +66,13 @@ data_t Uchar_to_Fixed(unsigned char *buf)
     return (data_t)(input * (1 << FIXED_POINT_FRACTIONAL_BITS));
 }
 
+sigma_t Uchar_to_Sigma_t(unsigned char *buf)
+{
+    uint16_t input;
+    
+    input += (buf[0]) << 16;
+    input += (buf[1]) << 8;
+    input += buf[2];
+    
+    return (sigma_t)(input * (1 << 20));
+}
