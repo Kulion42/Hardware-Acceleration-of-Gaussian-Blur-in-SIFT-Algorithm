@@ -4,14 +4,14 @@ Sigma_Rom::Sigma_Rom(sc_core::sc_module_name name) : sc_module(name)
 {
 	ip_core_socket.register_b_transport(this, &Sigma_Rom::b_transport);
 	sigrom.reserve(SIGMA_SIZE);
-	sigrom = {1.2489986419677734375, 1.2262725830078125, 1.54500675201416015625, 1.94658565521240234375, 2.452545166015625, 3.0900135040283203125 };
+	sigrom = {1.24899959564208984375, 1.22627341747283935546875, 1.5450077056884765625, 1.94658792018890380859375, 2.4525470733642578125, 3.09001576900482177734375 };
 
-	SC_REPORT_INFO("Sigma_Rom", "Constructed.");
+	SC_REPORT_INFO("Sigma ROM", "Constructed.");
 }
 
 Sigma_Rom::~Sigma_Rom()
 {
-	SC_REPORT_INFO("Sigma_Rom", "Destroyed.");
+	SC_REPORT_INFO("Sigma ROM", "Destroyed.");
 }
 
 void Sigma_Rom::b_transport(pl_t &pl, sc_core::sc_time &offset)
@@ -21,19 +21,21 @@ void Sigma_Rom::b_transport(pl_t &pl, sc_core::sc_time &offset)
 	unsigned int len = pl.get_data_length();
 	unsigned char *buf = pl.get_data_ptr(); 
 	
-	uint16_t value;
+	int32_t value;
 	
 	switch(cmd)
 	{
 		case tlm::TLM_READ_COMMAND:
-			for (unsigned int i = 0; i < len; i+=3)
-			{
-				value = (uint16_t)(sigrom[addr] << 20);
+
+				value = (int32_t)((sigrom[addr]) << 23);
 				
-		  		buf[i] = (unsigned char)(value >> 16);
-		  		buf[i+1] = (unsigned char)(value & 0xFF00);
-		  		buf[i+2] = (unsigned char)(value & 0xFF);
-			}
+				//std::cout << value  << std::endl;
+		  		buf[0] = (unsigned char)(value >> 24);
+		  		buf[1] = (unsigned char)(value >> 16);
+		  		buf[2] = (unsigned char)(value >> 8);
+		  		buf[3] = (unsigned char)(value);
+			    
+			    //std::cout << (value >> 24) << (value >> 16) << (value >> 8) << std::endl;
 			pl.set_response_status(tlm::TLM_OK_RESPONSE);
 			
 			offset += sc_core::sc_time(DELAY, sc_core::SC_NS);
