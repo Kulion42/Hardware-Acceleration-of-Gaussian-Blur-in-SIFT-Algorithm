@@ -44,9 +44,10 @@ protected:
     //variables used
     sigma_t sigma;
     sum_t sum, val;
-    sc_int<8> size, center, k;
-    sc_int<8> dx, dy; 
+    sc_int<16> size, center, k;
+    sc_int<16> dx, dy; 
     sc_int<16> x, y;
+    sc_int<16> c_x = 0, c_y = 0;
     
     void b_transport(pl_t&, sc_core::sc_time&);	
 	void gaussian_blur(sc_core::sc_time &offset);
