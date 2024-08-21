@@ -40,6 +40,7 @@ class Cpu : public sc_core::sc_module
 		static int argc;
 		
 		sc_core::sc_time offset;
+		int enable = 1;
 		void soft();
 
 
@@ -49,7 +50,7 @@ class Cpu : public sc_core::sc_module
         std::vector<Image> combine_partitions(std::vector< std::vector<Image> > img_vec, int num_of_parts= N_IP, int num_octaves = N_OCT, 
                                                      int scales_per_octave=N_SPO);
                                                      
-        std::vector<Image> generate_gaussian_pyramid_vector(const Image& img, int img_num, float sigma_min=SIGMA_MIN, int num_of_parts=N_IP,
+        std::vector<Image> generate_gaussian_pyramid_vector(const Image& img, int img_num, int& enable, float sigma_min=SIGMA_MIN, int num_of_parts=N_IP,
                                              int num_octaves=N_OCT, int scales_per_octave=N_SPO);
                                              
 		ScaleSpacePyramid generate_dog_pyramid(const ScaleSpacePyramid& img_pyramid);

@@ -4,7 +4,7 @@
 Main_Bram::Main_Bram(sc_core::sc_module_name name) : sc_module(name)
 {
 	interconnect_socket.register_b_transport(this, &Main_Bram::b_transport);
-	
+	ip_core_socket.register_b_transport(this, &Main_Bram::b_transport);
 	mem.reserve(BRAM_SIZE/2);
 
 	SC_REPORT_INFO("Main_Bram", "Constructed.");

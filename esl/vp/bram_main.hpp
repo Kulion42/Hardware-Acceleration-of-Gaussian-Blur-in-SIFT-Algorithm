@@ -15,6 +15,7 @@ class Main_Bram : public sc_core::sc_module
 		Main_Bram (sc_core::sc_module_name name);
 		~Main_Bram();
 		tlm_utils::simple_target_socket<Main_Bram> interconnect_socket;
+		tlm_utils::simple_target_socket<Main_Bram> ip_core_socket;
 	protected:
 		void b_transport(pl_t &, sc_core::sc_time &);
 		std::vector<unsigned char> mem;

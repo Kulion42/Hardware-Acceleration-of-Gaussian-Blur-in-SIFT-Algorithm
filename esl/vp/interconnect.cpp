@@ -7,7 +7,6 @@ Interconnect::Interconnect(sc_core::sc_module_name name)
   , offset(sc_core::SC_ZERO_TIME)
 {
   cpu_socket.register_b_transport(this, &Interconnect::b_transport);
-  ip_core_tsocket.register_b_transport(this, &Interconnect::b_transport);
   
   SC_REPORT_INFO("Interconnect", "Constructed.");
 }
@@ -25,7 +24,7 @@ void Interconnect::b_transport(pl_t &pl, sc_core::sc_time &offset)
 	if (addr >= VP_ADDR_IP_CORE_L && addr <= VP_ADDR_IP_CORE_H)
 	{
 		pl.set_address(taddr);
-		ip_core_isocket->b_transport(pl, offset);
+		ip_core_socket->b_transport(pl, offset);
 		pl.set_address(addr);
 	}
 	else if (addr >= VP_ADDR_MAIN_BRAM_L && addr <= VP_ADDR_MAIN_BRAM_H)
@@ -34,26 +33,9 @@ void Interconnect::b_transport(pl_t &pl, sc_core::sc_time &offset)
 		main_bram_socket->b_transport(pl, offset);
 		pl.set_address(addr);
 	}
-	else if (addr >= VP_ADDR_TMP_BRAM_L && addr <= VP_ADDR_TMP_BRAM_H)
-	{
-		pl.set_address(taddr);
-		tmp_bram_socket->b_transport(pl, offset);
-		pl.set_address(addr);
-	}
-	else if (addr >= VP_ADDR_KERNEL_BRAM_L && addr <= VP_ADDR_KERNEL_BRAM_H)
-	{
-		pl.set_address(taddr);
-		kernel_bram_socket->b_transport(pl, offset);
-		pl.set_address(addr);
-	}
-	else if (addr >= VP_ADDR_SIGMA_ROM_L && addr <= VP_ADDR_SIGMA_ROM_H)
-	{
-		pl.set_address(taddr);
-		sigma_rom_socket->b_transport(pl, offset);
-		pl.set_address(addr);
-	}
 	else
 	{
+	    std::cout << std::hex << addr << std::endl;
 		SC_REPORT_ERROR("Interconnect", "Wrong address.");
 		pl.set_response_status ( tlm::TLM_ADDRESS_ERROR_RESPONSE );
 		offset += sc_core::sc_time(5*DELAY, sc_core::SC_NS);
