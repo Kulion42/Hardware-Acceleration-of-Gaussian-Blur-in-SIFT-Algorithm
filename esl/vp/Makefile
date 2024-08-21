@@ -7,6 +7,6 @@ $(PROJECT) : $(SRC)
 	$(CC) -DSC_INCLUDE_FX -I ${SYSTEMC}/include -L${SYSTEMC}/lib-linux64 -lsystemc $(SRC) -o $(PROJECT)
 
 run:
-	./$(PROJECT) ../images/"bellingham.jpeg" 
+	./$(PROJECT) ../images/"parrot.jpeg" 
 clean:
-	rm main *.jpg
+	rm main *.jpg *.txt
