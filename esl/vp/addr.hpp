@@ -26,7 +26,7 @@ typedef tlm::tlm_base_protocol_types::tlm_phase_type ph_t;
 #define DELAY 10
 
 // 32-bit data bus, 4 bytes,
-#define BUS_WIDTH 4
+#define BUS_WIDTH 2
 
 // locations for memory and ip 
 #define VP_ADDR_MAIN_BRAM_L 0x00000000

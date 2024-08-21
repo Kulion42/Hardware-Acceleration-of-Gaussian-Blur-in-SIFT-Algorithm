@@ -96,9 +96,8 @@ void Ip_Core::gaussian_blur(sc_core::sc_time &offset)
 {
  //  pl_t pl;
    FILE *fp; 
-    std::string blur_x= "convolute_x_";
-    std::string blur_y = "convolute_y_";
-    std::string kernel_val = "kernel_state_";
+    std::string blur_x= "convolutions/convolute_x_";
+    std::string blur_y = "convolutions/convolute_y_";
     
     char numstr[21];
     std::string res;
@@ -124,9 +123,7 @@ void Ip_Core::gaussian_blur(sc_core::sc_time &offset)
         
    // cout << center << endl;
   //  Image kernel(size, 1, 1);
-    sprintf(numstr, "%d", (int)img_per_octave);
-    res = kernel_val + numstr + "_one" +".txt";
-    fp = fopen(res.c_str(), "w+");
+
     sum_t sum_kernel = 0;
         for (sc_int<16> k = -size/2; k <= size/2; k++) {
       // cout << std::hex << VP_ADDR_SIGMA_ROM_L + img_per_octave << endl;
@@ -137,16 +134,13 @@ void Ip_Core::gaussian_blur(sc_core::sc_time &offset)
         write_mem(VP_ADDR_KERNEL_BRAM_L + 2 *(center+k), (data_t)val);
         
         data_t tmp = read_mem(VP_ADDR_KERNEL_BRAM_L + 2 *(center+k));
-        fprintf(fp, "%2.14lf\n", (double)tmp);
+        
         
         sum_kernel += val;
         offset += sc_time(DELAY, SC_NS);
     }
-    fclose(fp);
+   
     
-    sprintf(numstr, "%d", (int)img_per_octave);
-    res = kernel_val + numstr + "_two" + ".txt";
-    fp = fopen(res.c_str(), "w+");
     for (sc_int<16> k = 0; k < size; k++){
        // kernel.data[k] /= sum;
        sum_t val = (sum_t)read_mem(VP_ADDR_KERNEL_BRAM_L + 2 * k) / sum_kernel;
@@ -154,11 +148,11 @@ void Ip_Core::gaussian_blur(sc_core::sc_time &offset)
        write_mem(VP_ADDR_KERNEL_BRAM_L + 2 * k, (data_t)val);
        
        data_t tmp = read_mem(VP_ADDR_KERNEL_BRAM_L + 2 *k);
-       fprintf(fp, "%2.14lf\n", (double)tmp);
+      
        
        offset += sc_time(DELAY, SC_NS);
         } 
-      fclose(fp); 
+     
  //   Image tmp(img.width, img.height-(offset_up + offset_down), 1);
    // Image filtered(img.width, img.height-(offset_up + offset_down), 1);
     sprintf(numstr, "%d", (int)img_per_octave);

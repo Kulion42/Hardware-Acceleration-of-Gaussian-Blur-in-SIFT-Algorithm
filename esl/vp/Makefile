@@ -9,4 +9,4 @@ $(PROJECT) : $(SRC)
 run:
 	./$(PROJECT) ../images/"parrot.jpeg" 
 clean:
-	rm main *.jpg *.txt
+	rm main *.jpg *.txt test/* convolutions/*

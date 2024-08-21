@@ -292,7 +292,7 @@ std::vector<Image> Cpu::generate_gaussian_pyramid_vector(const Image& img, int i
           base_img = next_base_img.resize(next_base_img.width/2, next_base_img.height/2, Interpolation::NEAREST);
 
     }
-    while(1);
+   // while(1);
     enable = 0;
     return pyramid_images;
 }
