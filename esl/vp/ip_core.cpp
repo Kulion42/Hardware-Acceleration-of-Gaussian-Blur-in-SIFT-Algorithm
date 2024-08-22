@@ -199,11 +199,6 @@ void Ip_Core::gaussian_blur(sc_core::sc_time &offset)
         }
     }
     fclose(fp);
-    
-    for (sc_dt::sc_uint<64> k = VP_ADDR_MAIN_BRAM_L; k < VP_ADDR_MAIN_BRAM_H; k+=4)
-        {
-            write_mem(k, data_t(0.0), data_t(0.0));
-        }
         
     sprintf(numstr, "%d", (int)img_per_octave);
     res = blur_x + numstr + ".txt";
