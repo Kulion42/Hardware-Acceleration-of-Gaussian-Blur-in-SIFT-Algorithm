@@ -31,14 +31,14 @@ int sc_main(int argc, char *argv[])
         //cout << res_name << endl;
         result.save(res_name);
         
-        res = fopen("../log_file.txt", "a+");
+       // res = fopen("../log_file.txt", "a+");
         
         if (res == NULL){
         	std::cout << "Greska" << std::endl;
         	return -1;
         }
         std::cout << "Found " << kps.size() << " keypoints. Output image is saved as "<< res_name << "\n";
-        fprintf(res, "Using %s executable on image %s with %d parts found %ld keypoints.\n", exe, name, 4 , kps.size());
+        //fprintf(res, "Using %s executable on image %s with %d parts found %ld keypoints.\n", exe, name, 4 , kps.size());
         fclose(res);
     
   // }
