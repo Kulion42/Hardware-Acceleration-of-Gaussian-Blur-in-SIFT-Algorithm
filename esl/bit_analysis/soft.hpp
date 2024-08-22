@@ -49,7 +49,7 @@ const float MIN_PIX_DIST = 0.5;
 const float SIGMA_IN = 0.5;
 const int N_OCT = 4; //Broj oktava
 const int N_SPO = 3;
-const int N_IP = 15;
+const int N_IP = 5;
 const float C_DOG = 0.015;
 const float C_EDGE = 10;
 
@@ -64,7 +64,6 @@ Image rgb_to_grayscale(const Image& img);
 Image grayscale_to_rgb(const Image& img);
 
 
-void draw_point(Image& img, int x, int y, int size=3);
 std::vector<Image> image_partitions(const Image& img, int num_of_parts= N_IP);
 std::vector<Image> combine_partitions(std::vector< std::vector<Image> > img_vec, int num_of_parts= N_IP, int imgs_per_octave = N_SPO+3, int num_octaves = N_OCT, 
                                                      int scales_per_octave=N_SPO);
@@ -86,7 +85,7 @@ void compute_keypoint_descriptor(Keypoint& kp, float theta, const ScaleSpacePyra
                                  float lambda_desc=LAMBDA_DESC);
 
 std::vector<Keypoint> find_keypoints_and_descriptors(const Image& img, int num_of_parts= N_IP,
-                                                     num_t sigma_min=SIGMA_MIN,
+                                                     float sigma_min=SIGMA_MIN,
                                                      int num_octaves=N_OCT, 
                                                      int scales_per_octave=N_SPO, 
                                                      float contrast_thresh=C_DOG,

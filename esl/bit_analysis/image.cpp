@@ -182,22 +182,16 @@ float map_coordinate(float new_max, float current_max, float coord)
 Image Image::resize(int new_w, int new_h, Interpolation method) const
 {
     Image resized(new_w, new_h, this->channels);
-    num_t value = 0;
- 
+    float value = 0;
     for (int x = 0; x < new_w; x++) {
         for (int y = 0; y < new_h; y++) {
             for (int c = 0; c < resized.channels; c++) {
-            	float old_x, old_y;
-                 old_x = map_coordinate(this->width, new_w, x);
-                // cout << old_x <<endl;
-		         
-                 old_y = map_coordinate(this->height, new_h, y);
-               // cout << old_y <<endl;
-                
+                float old_x = map_coordinate(this->width, new_w, x);
+                float old_y = map_coordinate(this->height, new_h, y);
                 if (method == Interpolation::BILINEAR)
-                    value = bilinear_interpolate(*this, old_x, old_y, c);     
-                
-                   // cout << value << endl;
+                    value = bilinear_interpolate(*this, old_x, old_y, c);
+                else if (method == Interpolation::NEAREST)
+                    value = nn_interpolate(*this, old_x, old_y, c);
                 resized.set_pixel(x, y, c, value);
             }
         }
@@ -205,11 +199,11 @@ Image Image::resize(int new_w, int new_h, Interpolation method) const
     return resized;
 }
 
-float bilinear_interpolate(const Image& img,  float x, float y, int c)
+float bilinear_interpolate(const Image& img, float x, float y, int c)
 {
     float p1, p2, p3, p4, q1, q2;
     float x_floor = std::floor(x), y_floor = std::floor(y);
-    float  x_ceil = x_floor + 1, y_ceil = y_floor + 1;
+    float x_ceil = x_floor + 1, y_ceil = y_floor + 1;
     p1 = img.get_pixel(x_floor, y_floor, c);
     p2 = img.get_pixel(x_ceil, y_floor, c);
     p3 = img.get_pixel(x_floor, y_ceil, c);
@@ -217,6 +211,11 @@ float bilinear_interpolate(const Image& img,  float x, float y, int c)
     q1 = (y_ceil-y)*p1 + (y-y_floor)*p3;
     q2 = (y_ceil-y)*p2 + (y-y_floor)*p4;
     return (x_ceil-x)*q1 + (x-x_floor)*q2;
+}
+
+float nn_interpolate(const Image& img, float x, float y, int c)
+{
+    return img.get_pixel(std::round(x), std::round(y), c);
 }
 
 

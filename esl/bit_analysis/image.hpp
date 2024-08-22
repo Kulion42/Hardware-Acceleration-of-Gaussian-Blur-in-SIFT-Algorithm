@@ -28,6 +28,13 @@ struct Image {
 };
 
 float bilinear_interpolate(const Image& img,  float x, float y, int c);
+float nn_interpolate(const Image& img, float x, float y, int c);
+
+Image rgb_to_grayscale(const Image& img);
+Image grayscale_to_rgb(const Image& img);
+
+void draw_point(Image& img, int x, int y, int size=3);
+
 float map_coordinate(float new_max, float current_max, float coord);
 
 
