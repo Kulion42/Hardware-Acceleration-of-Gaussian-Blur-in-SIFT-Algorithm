@@ -50,8 +50,8 @@ char Convert_to_SigendC(unsigned char val)
 
 void Fixed_to_Uchar(unsigned char *buf, data_t input1, data_t input2)
 {
-    int16_t in1 = (int16_t)((double)input1 * (double)(1 << FIXED_POINT_FRACTIONAL_BITS));
-    int16_t in2 = (int16_t)((double)input2 * (double)(1 << FIXED_POINT_FRACTIONAL_BITS));
+    int16_t in1 = (int16_t)((double)input1 * (double)(1 << FIXED_POINT_FRACTIONAL_BITS_DATA_T));
+    int16_t in2 = (int16_t)((double)input2 * (double)(1 << FIXED_POINT_FRACTIONAL_BITS_DATA_T));
     //std::cout << in1 << " "<< in2 << endl;
     buf[0] = (char) (in1 >> 8);
     buf[1] = (char) (in1);
@@ -70,8 +70,8 @@ void Uchar_to_Fixed(unsigned char *buf, data_t& output1, data_t& output2)
     out2 += ((int16_t)buf[2]) << 8;
     out2 += ((int16_t)buf[3]);
     
-    output1 = (double)(out1) / (double)(1 <<  FIXED_POINT_FRACTIONAL_BITS);
-    output2 = (double)(out2) / (double)(1 <<  FIXED_POINT_FRACTIONAL_BITS);
+    output1 = (double)(out1) / (double)(1 <<  FIXED_POINT_FRACTIONAL_BITS_DATA_T);
+    output2 = (double)(out2) / (double)(1 <<  FIXED_POINT_FRACTIONAL_BITS_DATA_T);
     //std::cout << output1 << " " << output2 << std::endl;
 }
 
@@ -86,6 +86,6 @@ sigma_t Uchar_to_Sigma_t(unsigned char *buf)
     
     //std::cout << (((int32_t)buf[0]) << 24) << (((int32_t)buf[1]) << 16) << (((int32_t)buf[2]) << 8) << std::endl;
     //std::cout << input << endl;
-    return (double)(input) / (double)(1 << 23);
+    return (double)(input) / (double)(1 << FIXED_POINT_FRACTIONAL_BITS_SIGMA_T);
 }
 

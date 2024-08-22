@@ -127,7 +127,7 @@ void Ip_Core::gaussian_blur(sc_core::sc_time &offset)
     sprintf(numstr, "%d", (int)img_per_octave);
     res = kernel_val + numstr + "_one" +".txt";
     fp = fopen(res.c_str(), "w+");
-    sum_t sum_kernel = 0;
+    sigma_t sum_kernel = 0;
         for (sc_int<16> k = -size/2; k <= size/2; k++) {
           data_t val1, val2 = 0.0;
           val1 = std::exp(-(k*k) / (2*sigma*sigma));

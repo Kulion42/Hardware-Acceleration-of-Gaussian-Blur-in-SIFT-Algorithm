@@ -14,7 +14,8 @@
 
 using namespace std;
 
-static const int FIXED_POINT_FRACTIONAL_BITS = 14;
+static const int FIXED_POINT_FRACTIONAL_BITS_DATA_T = 14;
+static const int FIXED_POINT_FRACTIONAL_BITS_SIGMA_T = 23;
 
 int toInt(unsigned char *buf);
 
@@ -38,5 +39,4 @@ void Uchar_to_Fixed(unsigned char *buf, data_t& output1, data_t& output2);
 
 sigma_t Uchar_to_Sigma_t(unsigned char *buf);
 
-void test_func();
 #endif
