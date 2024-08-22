@@ -72,8 +72,8 @@ class Cpu : public sc_core::sc_module
 	    int read_hard(sc_dt::sc_uint<64> addr);
 	    void write_hard(sc_dt::sc_uint<64> addr, sc_dt::sc_int<16> val);
 	    
-        data_t read_mem(sc_dt::sc_uint<64> addr);
-	    void write_mem(sc_dt::sc_uint<64> addr, data_t val);
+        void read_mem(sc_dt::sc_uint<64> addr, data_t& pix1, data_t& pix2);
+	    void write_mem(sc_dt::sc_uint<64> addr, data_t pix1, data_t pix2);
    
 
         void hists_to_vec(float histograms[N_HIST][N_HIST][N_ORI], std::array<uint8_t, 128>& feature_vec);

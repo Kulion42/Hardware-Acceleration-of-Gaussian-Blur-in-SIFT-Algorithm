@@ -98,6 +98,7 @@ void Ip_Core::gaussian_blur(sc_core::sc_time &offset)
    FILE *fp; 
     std::string blur_x= "convolutions/convolute_x_";
     std::string blur_y = "convolutions/convolute_y_";
+    std::string kernel_val = "test/kernel_state_";
     
     char numstr[21];
     std::string res;
@@ -123,78 +124,94 @@ void Ip_Core::gaussian_blur(sc_core::sc_time &offset)
         
    // cout << center << endl;
   //  Image kernel(size, 1, 1);
-
+    sprintf(numstr, "%d", (int)img_per_octave);
+    res = kernel_val + numstr + "_one" +".txt";
+    fp = fopen(res.c_str(), "w+");
     sum_t sum_kernel = 0;
         for (sc_int<16> k = -size/2; k <= size/2; k++) {
-      // cout << std::hex << VP_ADDR_SIGMA_ROM_L + img_per_octave << endl;
-         sum_t val = std::exp(-(k*k) / (2*sigma*sigma));
+          data_t val1, val2 = 0.0;
+          val1 = std::exp(-(k*k) / (2*sigma*sigma));
      //   cout << "Test1" << endl;
     //    kernel.set_pixel(center+k, 0, 0, val);
     
-        write_mem(VP_ADDR_KERNEL_BRAM_L + 2 *(center+k), (data_t)val);
+        write_mem(VP_ADDR_KERNEL_BRAM_L + 2 *(center+k), val1, val2);
         
-        data_t tmp = read_mem(VP_ADDR_KERNEL_BRAM_L + 2 *(center+k));
+        //data_t tmp = read_mem(VP_ADDR_KERNEL_BRAM_L + 2 *(center+k));
+        fprintf(fp, "%2.14lf\n", (double)val1);
         
-        
-        sum_kernel += val;
+        sum_kernel += val1;
         offset += sc_time(DELAY, SC_NS);
     }
-   
+    fclose(fp);
     
+    sprintf(numstr, "%d", (int)img_per_octave);
+    res = kernel_val + numstr + "_two" + ".txt";
+    fp = fopen(res.c_str(), "w+");
     for (sc_int<16> k = 0; k < size; k++){
-       // kernel.data[k] /= sum;
-       sum_t val = (sum_t)read_mem(VP_ADDR_KERNEL_BRAM_L + 2 * k) / sum_kernel;
-      // cout << val << endl;
-       write_mem(VP_ADDR_KERNEL_BRAM_L + 2 * k, (data_t)val);
+       data_t val1, val2;
+       read_mem(VP_ADDR_KERNEL_BRAM_L + 2 * k, val1, val2);
+       val1/=sum_kernel;
+       write_mem(VP_ADDR_KERNEL_BRAM_L + 2 * k, val1, val2);
        
-       data_t tmp = read_mem(VP_ADDR_KERNEL_BRAM_L + 2 *k);
-      
+       read_mem(VP_ADDR_KERNEL_BRAM_L + 2 * k, val1, val2);
+       fprintf(fp, "%2.14lf\n", (double)val1);
        
        offset += sc_time(DELAY, SC_NS);
         } 
-     
+      fclose(fp); 
  //   Image tmp(img.width, img.height-(offset_up + offset_down), 1);
    // Image filtered(img.width, img.height-(offset_up + offset_down), 1);
     sprintf(numstr, "%d", (int)img_per_octave);
     res = blur_y + numstr + ".txt";
     fp = fopen(res.c_str(), "w+");
     // convolve vertical
-    for (sc_int<16> x = 0; x < img_width; x++) {
+    for (sc_int<16> x = 0; x < img_width; x+=2) {
         for (sc_int<16> y = img_offset_up; y < img_height - img_offset_down; y++) {
        //cout << img.height - offset_down << y << endl;
-           sum_t sum = 0;
+           sum_t sum1 = 0; sum_t sum2 = 0;
             for ( sc_int<16> k = 0; k < size; k++) {
                  sc_int<16> dy = -center + k;
                  
-                 if (y+dy < img_offset_up)
+                 if (y+dy < 0 && img_offset_up == 0)
                     c_y = 0;
-                 else if (y+dy >= img_height - img_offset_down)
-                    c_y = img_height - img_offset_down - 1;
+                 else if (y+dy < img_offset_up == 10)
+                    c_y = img_offset_up + dy;                 
+                 else if (y+dy >= img_height && img_offset_down == 0)
+                    c_y = img_height - 1;
+                 else if (y+dy >= img_height-img_offset_down && img_offset_down == 10)
+                    c_y =  img_height-img_offset_down + dy;
                  else
                     c_y = y + dy;
-               // sum += img.get_pixel(x, y+dy, 0) *  kernel.data[k];
-                 sum_t val = (sum_t)read_mem(VP_ADDR_KERNEL_BRAM_L + 2 * k);
+                    
+                 data_t pix1, pix2, val1, val2;
+                 read_mem(VP_ADDR_KERNEL_BRAM_L + 2 * k, val1, val2);
                  //cout << std::hex << VP_ADDR_MAIN_BRAM_L + (y+dy)*img_width + x << endl;
-                 data_t tmp = read_mem(VP_ADDR_MAIN_BRAM_L + 2 *(c_y*img_width + x));
-                 fprintf(fp, "%2.14lf\n", (double)tmp);
-                 sum += (sum_t)read_mem(VP_ADDR_MAIN_BRAM_L + 2 *(c_y*img_width + x)) * val;
+                 read_mem(VP_ADDR_MAIN_BRAM_L + 2 *(c_y*img_width + x), pix1, pix2);
+                 fprintf(fp, "%2.14lf\t%2.14lf\n", (double)pix1, (double)pix2);
+                 sum1 += pix1 * val1;
+                 sum2 += pix2 * val1;
                  
                  //cout << sum << endl;
                  offset += sc_time(DELAY, SC_NS);
             }
           //  tmp.set_pixel(x, y-offset_up, 0, sum);
-          write_mem(VP_ADDR_TMP_BRAM_L + 2 *((y-img_offset_up)*img_width + x), (data_t)sum);
+          write_mem(VP_ADDR_TMP_BRAM_L + 2 *((y-img_offset_up)*img_width + x), sum1, sum2);
         }
     }
     fclose(fp);
     
+    for (sc_dt::sc_uint<64> k = VP_ADDR_MAIN_BRAM_L; k < VP_ADDR_MAIN_BRAM_H; k+=4)
+        {
+            write_mem(k, data_t(0.0), data_t(0.0));
+        }
+        
     sprintf(numstr, "%d", (int)img_per_octave);
     res = blur_x + numstr + ".txt";
     fp = fopen(res.c_str(), "w+");
     // convolve horizontal
-       for (sc_int<16> x = 0; x < img_width; x++) {
+       for (sc_int<16> x = 0; x < img_width; x+=2) {
            for (sc_int<16> y = 0; y < img_height - img_offset_up - img_offset_down; y++) {           
-               sum_t sum = 0;
+               sum_t sum1 = 0; sum_t sum2 = 0;
                  for (sc_int<16> k = 0; k < size; k++) {
                  sc_int<16> dx = -center + k;
                  if (x+dx < 0 )
@@ -203,17 +220,21 @@ void Ip_Core::gaussian_blur(sc_core::sc_time &offset)
                     c_x = img_width - 1;
                  else
                     c_x = x + dx;
+                data_t pix1, pix2, val1, val2;
                 //sum += tmp.get_pixel(x+dx, y, 0) * kernel.data[k];
-                 sum_t val = (sum_t)read_mem(VP_ADDR_KERNEL_BRAM_L + 2 * k);
-                 sum += (sum_t)read_mem(VP_ADDR_TMP_BRAM_L + 2 * (y*img_width + c_x)) * val;
-                 data_t tmp = read_mem(VP_ADDR_TMP_BRAM_L + 2 * (y*img_width + c_x));
-                 fprintf(fp, "%2.14lf\n", (double)tmp);
+                 read_mem(VP_ADDR_KERNEL_BRAM_L + 2 * k, val1, val2);
+                 read_mem(VP_ADDR_TMP_BRAM_L + 2 * (y*img_width + c_x), pix1, pix2);
+                 
+                 sum1 += pix1 * val1;
+                 sum2 += pix2 * val1;
+                // fprintf(fp, "%2.14lf\n", (double)tmp);
                //  cout << sum << endl;
                  offset += sc_time(DELAY, SC_NS);
+                 fprintf(fp, "%2.14lf\t%2.14lf\n", (double)pix1, (double)pix2);
             }
-
+            //fprintf(fp, "%2.14lf\n\n", (double)sum);
            // filtered.set_pixel(x, y, 0, sum);
-           write_mem(VP_ADDR_MAIN_BRAM_L + 2 * (y*img_width + x), (data_t)sum);
+           write_mem(VP_ADDR_MAIN_BRAM_L + 2 * (y*img_width + x), sum1, sum2);
         }
     }
     fclose(fp);
@@ -229,17 +250,17 @@ void Ip_Core::gaussian_blur(sc_core::sc_time &offset)
     
         ready = 0;
         
-        for (sc_dt::sc_uint<64> k = VP_ADDR_MAIN_BRAM_L; k < VP_ADDR_MAIN_BRAM_H; k+=2)
+        for (sc_dt::sc_uint<64> k = VP_ADDR_MAIN_BRAM_L; k < VP_ADDR_MAIN_BRAM_H; k+=4)
         {
-            write_mem(k, data_t(0.0));
+            write_mem(k, data_t(0.0),data_t(0.0));
         }
-        for (sc_dt::sc_uint<64> k = VP_ADDR_TMP_BRAM_L; k < VP_ADDR_TMP_BRAM_H; k+=2)
+        for (sc_dt::sc_uint<64> k = VP_ADDR_TMP_BRAM_L; k < VP_ADDR_TMP_BRAM_H; k+=4)
         {
-            write_mem(k, data_t(0.0));
+            write_mem(k, data_t(0.0), data_t(0.0));
         }
-        for (sc_dt::sc_uint<64> k = VP_ADDR_KERNEL_BRAM_L; k < VP_ADDR_KERNEL_BRAM_H; k+=2)
+        for (sc_dt::sc_uint<64> k = VP_ADDR_KERNEL_BRAM_L; k < VP_ADDR_KERNEL_BRAM_H; k+=4)
         {
-            write_mem(k, data_t(0.0));
+            write_mem(k, data_t(0.0), data_t(0.0));
         }
         
         ready = 1;
@@ -247,12 +268,12 @@ void Ip_Core::gaussian_blur(sc_core::sc_time &offset)
    
 }
 
-void Ip_Core::write_mem(sc_dt::sc_uint<64> addr, data_t val)
+void Ip_Core::write_mem(sc_dt::sc_uint<64> addr, data_t pix1, data_t pix2)
 {
 	pl_t pl;
 	sc_dt::uint64 taddr = addr & 0x00FFFFFF;
-	unsigned char buf[2];
-	Fixed_to_Uchar(buf, val);
+	unsigned char buf[4];
+	Fixed_to_Uchar(buf, pix1, pix2);
 	pl.set_data_length(BUS_WIDTH); 
 	pl.set_data_ptr(buf);
 	pl.set_command( tlm::TLM_WRITE_COMMAND );
@@ -282,13 +303,13 @@ void Ip_Core::write_mem(sc_dt::sc_uint<64> addr, data_t val)
 	}
 }
 
-data_t Ip_Core::read_mem(sc_dt::sc_uint<64> addr)
+void Ip_Core::read_mem(sc_dt::sc_uint<64> addr, data_t& pix1, data_t& pix2)
 {
 	pl_t pl;
 	sc_dt::uint64 taddr = addr & 0x00FFFFFF;
-	unsigned char buf[2];
+	unsigned char buf[4];
 	pl.set_address(addr);
-	pl.set_data_length(2); 
+	pl.set_data_length(BUS_WIDTH); 
 	pl.set_data_ptr(buf);
 	pl.set_command( tlm::TLM_READ_COMMAND );
 	pl.set_response_status ( tlm::TLM_INCOMPLETE_RESPONSE );
@@ -312,9 +333,10 @@ data_t Ip_Core::read_mem(sc_dt::sc_uint<64> addr)
 	}
 	else
 	{
+	    cout << std::hex << addr << endl;
 	    SC_REPORT_ERROR("IP_Core_Read", "Wrong address.");
 	}
-	return Uchar_to_Fixed(buf);
+	Uchar_to_Fixed(buf, pix1, pix2);
 }
 
 sigma_t Ip_Core::read_rom(sc_dt::sc_uint<64> addr)    

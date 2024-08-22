@@ -46,8 +46,8 @@ protected:
     
     void b_transport(pl_t&, sc_core::sc_time&);	
 	void gaussian_blur(sc_core::sc_time &offset);
-	data_t read_mem(sc_dt::sc_uint<64> addr);
-	void write_mem(sc_dt::sc_uint<64> addr, data_t val);
+	void read_mem(sc_dt::sc_uint<64> addr, data_t& pix1, data_t& pix2);
+	void write_mem(sc_dt::sc_uint<64> addr, data_t pix1, data_t pix2);
 	sigma_t read_rom(sc_dt::sc_uint<64> addr);
     
 }  ; 
