@@ -32,9 +32,11 @@ unsigned char Convert_to_UnsignedD(double val);
 
 char Convert_to_SigendC(unsigned char val);
 
-void Fixed_to_Uchar(unsigned char *buf, data_t input);
+void Fixed_to_Uchar(unsigned char *buf, data_t input1, data_t input2);
 
-data_t Uchar_to_Fixed(unsigned char *buf);
+void Uchar_to_Fixed(unsigned char *buf, data_t& output1, data_t& output2);
 
 sigma_t Uchar_to_Sigma_t(unsigned char *buf);
+
+void test_func();
 #endif
