@@ -10,8 +10,8 @@ Image gaussian_blur(const Image& img, sigma_t sigma, uint16_t offset_up , uint16
     assert(img.channels == 1);
      FILE *fp; 
     char numstr[21];
-    std::string blur_x= "convolutions/convolute_x_";
-    std::string blur_y = "convolutions/convolute_y_";
+    std::string blur_x= "convolute_x_";
+    std::string blur_y = "convolute_y_";
     std::string res;
     int size = std::ceil(6 * sigma);
   

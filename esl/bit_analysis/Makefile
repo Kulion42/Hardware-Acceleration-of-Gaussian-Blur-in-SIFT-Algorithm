@@ -9,4 +9,4 @@ $(PROJECT) : $(SRC)
 run:
 	./$(PROJECT) ../images/"parrot.jpeg" 
 clean:
-	rm find_keypoints_sc *.jpg
+	rm find_keypoints_sc *.jpg *.txt
