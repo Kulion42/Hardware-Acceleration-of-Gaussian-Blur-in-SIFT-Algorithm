@@ -112,7 +112,7 @@ void Ip_Core::gaussian_blur(sc_core::sc_time &offset)
     else if (start == 0 && ready == 0 && reset == 0){
     //Start with work
     cout << "Startig gaussian_blur"<<endl;
-    sc_int<16> c_y, c_x;
+    sc_int<16> c_y, c_x1, c_x2;
     sigma_t sigma = read_rom(VP_ADDR_SIGMA_ROM_L + img_per_octave);
     //cout << sigma << endl;
     sc_int<16> size = std::ceil(6 * sigma);
@@ -124,51 +124,36 @@ void Ip_Core::gaussian_blur(sc_core::sc_time &offset)
         
    // cout << center << endl;
   //  Image kernel(size, 1, 1);
+    sigma_t sigma_2 = read_rom(VP_ADDR_SIGMA_ROM_L + 6 + img_per_octave);
+    sigma_t sum_kernel_1 = read_rom(VP_ADDR_SIGMA_ROM_L + 12 + img_per_octave);
     sprintf(numstr, "%d", (int)img_per_octave);
     res = kernel_val + numstr + "_one" +".txt";
     fp = fopen(res.c_str(), "w+");
-    sigma_t sum_kernel = 0;
         for (sc_int<16> k = -size/2; k <= size/2; k++) {
-          data_t val1, val2 = 0.0;
-          val1 = std::exp(-(k*k) / (2*sigma*sigma));
+          data_t val1, val1_p, val2 = 0.0;
+          val1 = (data_t)((sigma_t)std::exp(-(k*k) * sigma_2));
+          val1_p = val1 * sum_kernel_1;
      //   cout << "Test1" << endl;
     //    kernel.set_pixel(center+k, 0, 0, val);
     
-        write_mem(VP_ADDR_KERNEL_BRAM_L + 2 *(center+k), val1, val2);
+        write_mem(VP_ADDR_KERNEL_BRAM_L + 2 *(center+k), val1_p, val2);
         
         //data_t tmp = read_mem(VP_ADDR_KERNEL_BRAM_L + 2 *(center+k));
         fprintf(fp, "%2.14lf\n", (double)val1);
         
-        sum_kernel += val1;
         offset += sc_time(DELAY, SC_NS);
     }
     fclose(fp);
     
     sprintf(numstr, "%d", (int)img_per_octave);
-    res = kernel_val + numstr + "_two" + ".txt";
-    fp = fopen(res.c_str(), "w+");
-    for (sc_int<16> k = 0; k < size; k++){
-       data_t val1, val2;
-       read_mem(VP_ADDR_KERNEL_BRAM_L + 2 * k, val1, val2);
-       val1/=sum_kernel;
-       write_mem(VP_ADDR_KERNEL_BRAM_L + 2 * k, val1, val2);
-       
-       read_mem(VP_ADDR_KERNEL_BRAM_L + 2 * k, val1, val2);
-       fprintf(fp, "%2.14lf\n", (double)val1);
-       
-       offset += sc_time(DELAY, SC_NS);
-        } 
-      fclose(fp); 
- //   Image tmp(img.width, img.height-(offset_up + offset_down), 1);
-   // Image filtered(img.width, img.height-(offset_up + offset_down), 1);
-    sprintf(numstr, "%d", (int)img_per_octave);
     res = blur_y + numstr + ".txt";
     fp = fopen(res.c_str(), "w+");
     // convolve vertical
-    for (sc_int<16> x = 0; x < img_width; x+=2) {
+    for (sc_int<16> x = 0; x < img_width; x+=4) {
         for (sc_int<16> y = img_offset_up; y < img_height - img_offset_down; y++) {
        //cout << img.height - offset_down << y << endl;
            sum_t sum1 = 0; sum_t sum2 = 0;
+           sum_t sum3 = 0; sum_t sum4 = 0;
             for ( sc_int<16> k = 0; k < size; k++) {
                  sc_int<16> dy = -center + k;
                  
@@ -183,19 +168,24 @@ void Ip_Core::gaussian_blur(sc_core::sc_time &offset)
                  else
                     c_y = y + dy;
                     
-                 data_t pix1, pix2, val1, val2;
+                 data_t pix1, pix2, pix3, pix4,  val1, val2;
                  read_mem(VP_ADDR_KERNEL_BRAM_L + 2 * k, val1, val2);
                  //cout << std::hex << VP_ADDR_MAIN_BRAM_L + (y+dy)*img_width + x << endl;
                  read_mem(VP_ADDR_MAIN_BRAM_L + 2 *(c_y*img_width + x), pix1, pix2);
-                 fprintf(fp, "%2.14lf\t%2.14lf\n", (double)pix1, (double)pix2);
+                 read_mem(VP_ADDR_MAIN_BRAM_L + 2 *(c_y*img_width + x + 2), pix3, pix4);
+                 fprintf(fp, "%2.14lf\t%2.14lf\t", (double)pix1, (double)pix2);
+                 fprintf(fp, "%2.14lf\t%2.14lf\n", (double)pix3, (double)pix4);
                  sum1 += pix1 * val1;
                  sum2 += pix2 * val1;
+                 sum3 += pix3 * val1;
+                 sum4 += pix4 * val1;
                  
                  //cout << sum << endl;
                  offset += sc_time(DELAY, SC_NS);
             }
           //  tmp.set_pixel(x, y-offset_up, 0, sum);
           write_mem(VP_ADDR_TMP_BRAM_L + 2 *((y-img_offset_up)*img_width + x), sum1, sum2);
+          write_mem(VP_ADDR_TMP_BRAM_L + 2 *((y-img_offset_up)*img_width + x + 2), sum3, sum4);
         }
     }
     fclose(fp);
@@ -204,32 +194,47 @@ void Ip_Core::gaussian_blur(sc_core::sc_time &offset)
     res = blur_x + numstr + ".txt";
     fp = fopen(res.c_str(), "w+");
     // convolve horizontal
-       for (sc_int<16> x = 0; x < img_width; x+=2) {
+       for (sc_int<16> x = 0; x < img_width; x+=4) {
            for (sc_int<16> y = 0; y < img_height - img_offset_up - img_offset_down; y++) {           
                sum_t sum1 = 0; sum_t sum2 = 0;
+               sum_t sum3 = 0; sum_t sum4 = 0;
                  for (sc_int<16> k = 0; k < size; k++) {
                  sc_int<16> dx = -center + k;
                  if (x+dx < 0 )
-                    c_x = 0;
+                    c_x1 = 0;
                  else if (x+dx >= img_width)
-                    c_x = img_width - 1;
+                    c_x1 = img_width - 1;
                  else
-                    c_x = x + dx;
-                data_t pix1, pix2, val1, val2;
+                    c_x1 = x + dx;
+                    
+                  if (x+2+dx < 0 )
+                    c_x2 = 0;
+                 else if (x+2+dx >= img_width)
+                    c_x2 = img_width - 1;
+                 else
+                    c_x2 = x + 2 + dx;
+                    
+                 data_t pix1, pix2, pix3, pix4,  val1, val2;
                 //sum += tmp.get_pixel(x+dx, y, 0) * kernel.data[k];
                  read_mem(VP_ADDR_KERNEL_BRAM_L + 2 * k, val1, val2);
-                 read_mem(VP_ADDR_TMP_BRAM_L + 2 * (y*img_width + c_x), pix1, pix2);
+                 read_mem(VP_ADDR_TMP_BRAM_L + 2 * (y*img_width + c_x1), pix1, pix2);
+                 read_mem(VP_ADDR_TMP_BRAM_L + 2 * (y*img_width + c_x2), pix3, pix4);
                  
+                 fprintf(fp, "%2.14lf\t%2.14lf\t", (double)pix1, (double)pix2);
+                 fprintf(fp, "%2.14lf\t%2.14lf\n", (double)pix3, (double)pix4);
                  sum1 += pix1 * val1;
                  sum2 += pix2 * val1;
+                 sum3 += pix3 * val1;
+                 sum4 += pix4 * val1;
                 // fprintf(fp, "%2.14lf\n", (double)tmp);
                //  cout << sum << endl;
                  offset += sc_time(DELAY, SC_NS);
-                 fprintf(fp, "%2.14lf\t%2.14lf\n", (double)pix1, (double)pix2);
+               
             }
             //fprintf(fp, "%2.14lf\n\n", (double)sum);
            // filtered.set_pixel(x, y, 0, sum);
            write_mem(VP_ADDR_MAIN_BRAM_L + 2 * (y*img_width + x), sum1, sum2);
+           write_mem(VP_ADDR_MAIN_BRAM_L + 2 * (y*img_width + x + 2), sum3, sum4);
         }
     }
     fclose(fp);
@@ -245,17 +250,29 @@ void Ip_Core::gaussian_blur(sc_core::sc_time &offset)
     
         ready = 0;
         
-        for (sc_dt::sc_uint<64> k = VP_ADDR_MAIN_BRAM_L; k < VP_ADDR_MAIN_BRAM_H; k+=4)
+        for (sc_dt::sc_uint<64> k = VP_ADDR_MAIN_BRAM_L; k < VP_ADDR_MAIN_BRAM_H; k+=16)
         {
-            write_mem(k, data_t(0.0),data_t(0.0));
+            write_mem(k, 0, 0);
+            if (k + 4 < VP_ADDR_MAIN_BRAM_H)
+            write_mem(k+4, 0, 0);
+            if (k + 8 < VP_ADDR_MAIN_BRAM_H)
+            write_mem(k+8, 0, 0);
+            if (k + 12 < VP_ADDR_MAIN_BRAM_H)
+            write_mem(k+12, 0, 0);
         }
-        for (sc_dt::sc_uint<64> k = VP_ADDR_TMP_BRAM_L; k < VP_ADDR_TMP_BRAM_H; k+=4)
+        for (sc_dt::sc_uint<64> k = VP_ADDR_TMP_BRAM_L; k < VP_ADDR_TMP_BRAM_H; k+=16)
         {
-            write_mem(k, data_t(0.0), data_t(0.0));
+            write_mem(k, 0, 0);
+            if (k + 4 < VP_ADDR_MAIN_BRAM_H)
+            write_mem(k+4, 0, 0);
+            if (k + 8 < VP_ADDR_MAIN_BRAM_H)
+            write_mem(k+8, 0, 0);
+            if (k + 12 < VP_ADDR_MAIN_BRAM_H)
+            write_mem(k+12, 0, 0);
         }
         for (sc_dt::sc_uint<64> k = VP_ADDR_KERNEL_BRAM_L; k < VP_ADDR_KERNEL_BRAM_H; k+=4)
         {
-            write_mem(k, data_t(0.0), data_t(0.0));
+            write_mem(k, 0, 0);
         }
         
         ready = 1;
