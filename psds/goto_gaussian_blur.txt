@@ -1,7 +1,16 @@
-if (start == 1 && ready == 1 && reset == 0)
-ready = 0;
+starting_label_start_1:
+if (start == 1 && ready == 1 && reset == 0){
+    ready = 0;
+    go to starting_label_end_1;
+}
+else if (start ==0)
+    goto starting_label_start_1;
 
+starting_label_end_1:
+
+starting_label_start_0:
 else if (start == 0 && ready == 0 && reset == 0){
+
 sigma_t sigma = read_rom(VP_ADDR_SIGMA_ROM_L + img_per_octave);
 int size = std::ceil(6 * sigma);
 
@@ -13,8 +22,8 @@ if (size % 2 == 0)
 
 int center = size / 2;
 
-
-sigm_t sum_kernel = 0;
+sigma_t sig_2 = read_rom(VP_ADDR_SIGMA_ROM_L + N_SPO + img_per_octave);
+sigma_t sum_kernel_1 = read_rom(VP_ADDR_SIGMA_ROM_L + 2*N_SPO + img_per_octave);
 
 //-------------------------------
 
@@ -24,10 +33,9 @@ sigm_t sum_kernel = 0;
 int k = -size / 2;
 kernel_init_loop_start:
 if (k > size / 2) goto kernel_init_loop_end;
-data_t val1 = std::exp(-(k * k) / (2 * sigma * sigma));
-data_t val2 = 0;
+data_t val1 = std::exp(-(k * k) * sig_2) * sum_kernel_1;
+data_t val2 = 0; 
 write_mem(VP_ADDR_KERNEL_BRAM_L + 2 *(center+k), val1, val2);
-sum_kernel += val1;
 k++;
 goto kernel_init_loop_start;
 
@@ -36,25 +44,10 @@ goto kernel_init_loop_start;
 kernel_init_loop_end:
 
 
-//for (int k = 0; k < size; k++)
-
-k = 0;
-kernel_normalization_loop_start:
-if (k >= size) goto kernel_normalization_loop_end;
-data_t val1, val2;
-read_mem(VP_ADDR_KERNEL_BRAM_L + 2 * k, val1, val2);
-val1/=sum_kernel;
-write_mem(VP_ADDR_KERNEL_BRAM_L + 2 * k, val1, val2);
-k++;
-goto kernel_normalization_loop_start;
 
 //-------------------------------
 
-kernel_normalization_loop_end:
-
-//-------------------------------
-
-
+int c_x, c_y1, c_y2;
 //for (int x = 0; x < img.width; x++)
 
 int x = 0;
@@ -67,18 +60,17 @@ if (x >= img.width) goto vertical_convolution_loop_end;
 int y =  img_offset_up;
 vertical_convolution_inner_loop_start:
 if (y >= img.height -  img_offset_down) goto vertical_convolution_inner_loop_end;
-sum = 0;
 
 sum_t sum1= 0; sum_t sum2 = 0;
+sum_t sum3= 0; sum_t sum4 = 0;
 //for (int k = 0; k < size; k++)
 
 k = 0;
 vertical_convolution_kernel_loop_start:
 if (k >= size) goto vertical_convolution_kernel_loop_end;
-int c_y;
 if (y+dy < 0 && img_offset_up == 0)
    c_y = 0;
-else if (y+dy < img_offset_up == 10)
+else if (y+dy < img_offset_up && img_offset_up == 10)
    c_y = img_offset_up + dy;                 
 else if (y+dy >= img_height && img_offset_down == 0)
    int c_y = img_height - 1;
@@ -87,13 +79,17 @@ else if (y+dy >= img_height-img_offset_down && img_offset_down == 10)
 else
    c_y = y + dy;
    
-data_t pix1, pix2, val1, val2;
+data_t pix1, pix2, pix3, pix4, val1, val2;
 
 read_mem(VP_ADDR_KERNEL_BRAM_L + 2 * k, val1, val2);
 
 read_mem(VP_ADDR_MAIN_BRAM_L + 2 *(c_y*img_width + x), pix1, pix2);
+read_mem(VP_ADDR_MAIN_BRAM_L + 2 *(c_y*img_width + x +2), pix3, pix4);
+
 sum1 += pix1 * val1;
 sum2 += pix2 * val1;
+sum3 += pix3 * val1;
+sum4 += pix4 * val1;
 
 k++;
 goto vertical_convolution_kernel_loop_start;
@@ -102,13 +98,14 @@ goto vertical_convolution_kernel_loop_start;
 
 vertical_convolution_kernel_loop_end:
 write_mem(VP_ADDR_TMP_BRAM_L + 2 *((y-img_offset_up)*img_width + x), sum1, sum2);
+write_mem(VP_ADDR_TMP_BRAM_L + 2 *((y-img_offset_up)*img_width + x + 2), sum1, sum2);
 y++;
 goto vertical_convolution_inner_loop_start;
 
 //-------------------------------
 
 vertical_convolution_inner_loop_end:
-x+=2;
+x+=4;
 goto vertical_convolution_loop_start;
 
 //-------------------------------
@@ -128,7 +125,7 @@ y = 0;
 horizontal_convolution_inner_loop_start:
 if (y >= img.height- img_offset_up - img_offset_down) goto horizontal_convolution_inner_loop_end;
 sum_t sum1 = 0; sum_t sum2 = 0;
-
+sum_t sum3 = 0; sum_t sum4 = 0;
 
 //for (int k = 0; k < size; k++)
 
@@ -136,20 +133,30 @@ k = 0;
 horizontal_convolution_kernel_loop_start:
 if (k >= size) goto horizontal_convolution_kernel_loop_end;
 int dx = -center + k;
-int c_x;
 if (x+dx < 0 )
-  c_x = 0;
+  c_x1 = 0;
 else if (x+dx >= img_width)
-  c_x = img_width - 1;
+  c_x1 = img_width - 1;
 else
-  c_x = x + dx;
+  c_x1 = x + dx;
+  
+if (x+2+dx < 0 )
+    c_x2 = 0;
+else if (x+2+dx >= img_width)
+    c_x2 = img_width - 1;
+else
+    c_x2 = x + 2 + dx;
 data_t pix1, pix2, val1, val2;
 read_mem(VP_ADDR_KERNEL_BRAM_L + 2 * k, val1, val2);
 
-read_mem(VP_ADDR_TMP_BRAM_L + 2 * (y*img_width + c_x), pix1, pix2);
+read_mem(VP_ADDR_TMP_BRAM_L + 2 * (y*img_width + c_x1), pix1, pix2);
+
+read_mem(VP_ADDR_TMP_BRAM_L + 2 * (y*img_width + c_x2), pix1, pix2);
                  
 sum1 += pix1 * val1;
 sum2 += pix2 * val1;
+sum3 += pix3 * val1;
+sum4 += pix4 * val1;
  
 k++;
 goto horizontal_convolution_kernel_loop_start;
@@ -158,13 +165,14 @@ goto horizontal_convolution_kernel_loop_start;
 
 horizontal_convolution_kernel_loop_end:
 write_mem(VP_ADDR_MAIN_BRAM_L + 2 * (y*img_width + x), sum1, sum2);
+write_mem(VP_ADDR_MAIN_BRAM_L + 2 * (y*img_width + x + 2), sum1, sum2);
 y++;
 goto horizontal_convolution_inner_loop_start;
 
 //-------------------------------
 
 horizontal_convolution_inner_loop_end:
-x+=2;
+x+=4;
 goto horizontal_convolution_loop_start;
 
 //-------------------------------
@@ -173,15 +181,24 @@ goto horizontal_convolution_loop_start;
 horizontal_convolution_loop_end:
 
 ready = 1;
-}
 
+goto starting_label_end_0;
+
+}
+else if (start == 1)
+goto starting_label_start_0;
+
+stating_label_end_0:
+
+reset_label:
 else if (reset==1){
+
 ready = 0;
 
-sc_dt::sc_uint<64> k = VP_ADDR_MAIN_BRAM_L;
+sc_dt::sc_uint<64> k = 0;
 
 main_bram_empty_start:
-if (k < VP_ADDR_MAIN_BRAM_H)  goto main_bram_empty_end;      
+if (k < MAIN_BRAM_SIZE)  goto main_bram_empty_end;      
 
 write_mem(k, data_t(0.0),data_t(0.0));
 
@@ -190,10 +207,10 @@ goto main_bram_empty_start;
 
 main_bram_empty_end;
 //-----------------------------------
-sc_dt::sc_uint<64> k = VP_ADDR_TMP_BRAM_L;
+sc_dt::sc_uint<64> k = 0;
 
 tmp_bram_empty_start:
-if (k < VP_ADDR_MAIN_BRAM_H)  goto tmp_bram_empty_end;      
+if (k < TMP_BRAM_SIZE)  goto tmp_bram_empty_end;      
 
 write_mem(k, data_t(0.0),data_t(0.0));
 
@@ -202,10 +219,10 @@ goto tmp_bram_empty_start;
 
 main_tmp_empty_end;
 //---------------------------------------
-sc_dt::sc_uint<64> k = VP_ADDR_KERNEL_BRAM_L;
+sc_dt::sc_uint<64> k = 0;
 
 kernel_bram_empty_start:
-if (k < VP_ADDR_MAIN_BRAM_H)  goto kernel_bram_empty_end;      
+if (k < KERNEL_BRAM_SIZE)  goto kernel_bram_empty_end;      
 
 write_mem(k, data_t(0.0),data_t(0.0));
 
@@ -216,6 +233,9 @@ kernel_bram_empty_end;
 
   
    ready = 1;
-   }    
-}
+  goto starting_label_start_1;
+} 
+   
+goto starting_label_start_1; 
+
 
