@@ -85,6 +85,9 @@ Port (
 end convolute_loops;
 
 architecture Mixed of convolute_loops is
+    attribute use_dsp : string;
+    attribute use_dsp of Mixed : architecture is "yes";
+    
 component dsp_unit_mac_shift is
     generic (WIDTH1: natural := 16;
              WIDTH2: natural := 16;
@@ -104,6 +107,7 @@ signal pix1, pix2, pix3, pix4: unsigned(DATA_WIDTH -1 downto 0);
 signal val1: unsigned(DATA_WIDTH -1 downto 0);
 signal sum1_reg, sum2_reg, sum3_reg, sum4_reg: std_logic_vector(DATA_WIDTH -1  downto 0); 
 signal sum1_next, sum2_next, sum3_next, sum4_next: std_logic_vector(DATA_WIDTH - 1 downto 0);
+signal r_addr_a_b1, r_addr_b_b1, w_addr_a_b2, w_addr_b_b2: std_logic_vector(DATA_WIDTH -1 downto 0);
 
 signal img_w : signed(DATA_WIDTH -1 downto 0) := TO_SIGNED(IMG_WIDTH, DATA_WIDTH);
 signal img_h : signed(DATA_WIDTH -1 downto 0) := TO_SIGNED(IMG_HEIGHT, DATA_WIDTH);
@@ -173,7 +177,58 @@ mac4: dsp_unit_mac_shift
          in_3 => sum4_reg,
          out_res => sum4_next
          );
-                              
+addr_gen_1 : dsp_unit_mac_shift
+    generic map(
+         WIDTH1 => DATA_WIDTH,
+         WIDTH2 => DATA_WIDTH,
+         WIDTH3 => DATA_WIDTH)
+    port map(
+         clk => clk,
+         rst => reset,
+         in_1 => std_logic_vector(c_y),
+         in_2 => std_logic_vector(TO_UNSIGNED(IMG_WIDTH, 16)),
+         in_3 => std_logic_vector(c_x1),
+         out_res => r_addr_a_b1
+         );
+addr_gen_2 : dsp_unit_mac_shift
+    generic map(
+         WIDTH1 => DATA_WIDTH,
+         WIDTH2 => DATA_WIDTH,
+         WIDTH3 => DATA_WIDTH)
+    port map(
+         clk => clk,
+         rst => reset,
+         in_1 => std_logic_vector(c_y),
+         in_2 => std_logic_vector(TO_UNSIGNED(IMG_WIDTH, 16)),
+         in_3 => std_logic_vector(c_x2),
+         out_res => r_addr_b_b1
+         );    
+addr_gen_3 : dsp_unit_mac_shift
+    generic map(
+         WIDTH1 => DATA_WIDTH,
+         WIDTH2 => DATA_WIDTH,
+         WIDTH3 => DATA_WIDTH)
+    port map(
+         clk => clk,
+         rst => reset,
+         in_1 => std_logic_vector(y),
+         in_2 => std_logic_vector(TO_UNSIGNED(IMG_WIDTH, 16)),
+         in_3 => std_logic_vector(x),
+         out_res => w_addr_a_b2
+         );    
+addr_gen_4 : dsp_unit_mac_shift
+    generic map(
+         WIDTH1 => DATA_WIDTH,
+         WIDTH2 => DATA_WIDTH,
+         WIDTH3 => DATA_WIDTH)
+    port map(
+         clk => clk,
+         rst => reset,
+         in_1 => std_logic_vector(y),
+         in_2 => std_logic_vector(TO_UNSIGNED(IMG_WIDTH, 16)),
+         in_3 => std_logic_vector(x + TO_SIGNED(2, 16)),
+         out_res => w_addr_b_b2
+         );                                     
 next_state_process: process(clk, reset) is
 
 begin
@@ -349,11 +404,9 @@ begin
         when bram_read_1 =>
             
             kernel_bram_raddr <= std_logic_vector(TO_UNSIGNED(TO_INTEGER(k), 5));
-            bram1_a_raddr <= std_logic_vector(TO_UNSIGNED(TO_INTEGER(c_y * IMG_WIDTH + c_x1), 16));
-            bram1_b_raddr <= std_logic_vector(TO_UNSIGNED(TO_INTEGER(c_y * IMG_WIDTH + c_x2), 16));
+            bram1_a_raddr <= r_addr_a_b1;
+            bram1_b_raddr <= r_addr_b_b1;
                        
-            bram1_a_we <= "0000";
-            bram1_b_we <= "0000";
             state_next <= bram_read_2;
         
         when bram_read_2 =>
@@ -368,11 +421,8 @@ begin
            
         when bram_write =>
             
-            bram2_a_we <= "1111";
-            bram2_b_we <= "1111";
-            
-            bram2_a_waddr <= std_logic_vector(TO_UNSIGNED(TO_INTEGER(y * IMG_WIDTH + x), 16));
-            bram2_b_waddr <= std_logic_vector(TO_UNSIGNED(TO_INTEGER(y * IMG_WIDTH + x + 2), 16));
+            bram2_a_waddr <= w_addr_a_b2;
+            bram2_b_waddr <= w_addr_b_b2;
             
             bram2_a_wdata <= sum1_reg&sum2_reg;
             bram2_b_wdata <= sum3_reg&sum4_reg;
