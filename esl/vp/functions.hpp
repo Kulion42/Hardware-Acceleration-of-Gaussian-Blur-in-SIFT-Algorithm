@@ -39,4 +39,6 @@ void Uchar_to_Fixed(unsigned char *buf, data_t& output1, data_t& output2);
 
 sigma_t Uchar_to_Sigma_t(unsigned char *buf);
 
+uint16_t to_Uint16_t(data_t val);
+
 #endif

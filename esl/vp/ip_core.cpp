@@ -173,8 +173,14 @@ void Ip_Core::gaussian_blur(sc_core::sc_time &offset)
                  //cout << std::hex << VP_ADDR_MAIN_BRAM_L + (y+dy)*img_width + x << endl;
                  read_mem(VP_ADDR_MAIN_BRAM_L + 2 *(c_y*img_width + x), pix1, pix2);
                  read_mem(VP_ADDR_MAIN_BRAM_L + 2 *(c_y*img_width + x + 2), pix3, pix4);
-                 fprintf(fp, "%2.14lf\t%2.14lf\t", (double)pix1, (double)pix2);
-                 fprintf(fp, "%2.14lf\t%2.14lf\n", (double)pix3, (double)pix4);
+                 uint16_t p1, p2, p3, p4;
+                 p1 = to_Uint16_t(pix1);
+                 p2 = to_Uint16_t(pix2);
+                 p3 = to_Uint16_t(pix3);
+                 p4 = to_Uint16_t(pix4);
+                 
+                 fprintf(fp, "%X\t%X\n", (unsigned int)p1, (unsigned int)p2);
+                 fprintf(fp, "%X\t%X\n", (unsigned int)p3, (unsigned int)p4);
                  sum1 += pix1 * val1;
                  sum2 += pix2 * val1;
                  sum3 += pix3 * val1;
@@ -220,8 +226,14 @@ void Ip_Core::gaussian_blur(sc_core::sc_time &offset)
                  read_mem(VP_ADDR_TMP_BRAM_L + 2 * (y*img_width + c_x1), pix1, pix2);
                  read_mem(VP_ADDR_TMP_BRAM_L + 2 * (y*img_width + c_x2), pix3, pix4);
                  
-                 fprintf(fp, "%2.14lf\t%2.14lf\t", (double)pix1, (double)pix2);
-                 fprintf(fp, "%2.14lf\t%2.14lf\n", (double)pix3, (double)pix4);
+                 uint16_t p1, p2, p3, p4;
+                 p1 = to_Uint16_t(pix1);
+                 p2 = to_Uint16_t(pix2);
+                 p3 = to_Uint16_t(pix3);
+                 p4 = to_Uint16_t(pix4);
+                 
+                 fprintf(fp, "%X\t%X\n", (unsigned int)p1, (unsigned int)p2);
+                 fprintf(fp, "%X\t%X\n", (unsigned int)p3, (unsigned int)p4);
                  sum1 += pix1 * val1;
                  sum2 += pix2 * val1;
                  sum3 += pix3 * val1;
