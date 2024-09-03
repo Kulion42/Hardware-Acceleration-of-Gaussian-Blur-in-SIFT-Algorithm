@@ -113,7 +113,7 @@ std::vector<Image> Cpu::generate_gaussian_pyramid_vector(const Image& img, int i
     assert(img.channels == 1);
     
     FILE *fp;
-    std::string bram_str = "test/bram_state_";
+    std::string bram_str = "test/bram_init/bram_state_";
     std::string resize = "generate_img_";
     char numstr[21];
     std::string res;
