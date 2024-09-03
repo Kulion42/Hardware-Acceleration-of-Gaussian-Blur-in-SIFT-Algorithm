@@ -96,9 +96,9 @@ void Ip_Core::gaussian_blur(sc_core::sc_time &offset)
 {
  //  pl_t pl;
    FILE *fp; 
-    std::string blur_x= "convolutions/convolute_x_";
-    std::string blur_y = "convolutions/convolute_y_";
-    std::string kernel_val = "test/kernel_state_";
+    std::string blur_x= "test/convolutions/convolute_x_";
+    std::string blur_y = "test/convolutions/convolute_y_";
+    std::string kernel_val = "test/kernel_bram/kernel_state_";
     
     char numstr[21];
     std::string res;

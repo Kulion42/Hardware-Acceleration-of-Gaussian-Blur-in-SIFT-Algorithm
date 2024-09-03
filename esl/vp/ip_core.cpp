@@ -96,9 +96,9 @@ void Ip_Core::gaussian_blur(sc_core::sc_time &offset)
 {
  //  pl_t pl;
    FILE *fp; 
-    std::string blur_x= "convolutions/convolute_x_";
-    std::string blur_y = "convolutions/convolute_y_";
-    std::string kernel_val = "test/kernel_state_";
+    std::string blur_x= "test/convolutions/convolute_x_";
+    std::string blur_y = "test/convolutions/convolute_y_";
+    std::string kernel_val = "test/kernel_bram/kernel_state_";
     
     char numstr[21];
     std::string res;
@@ -127,7 +127,7 @@ void Ip_Core::gaussian_blur(sc_core::sc_time &offset)
     sigma_t sigma_2 = read_rom(VP_ADDR_SIGMA_ROM_L + 6 + img_per_octave);
     sigma_t sum_kernel_1 = read_rom(VP_ADDR_SIGMA_ROM_L + 12 + img_per_octave);
     sprintf(numstr, "%d", (int)img_per_octave);
-    res = kernel_val + numstr + "_one" +".txt";
+    res = kernel_val + numstr  +".txt";
     fp = fopen(res.c_str(), "w+");
         for (sc_int<16> k = -size/2; k <= size/2; k++) {
           data_t val1, val1_p, val2 = 0.0;
@@ -137,9 +137,9 @@ void Ip_Core::gaussian_blur(sc_core::sc_time &offset)
     //    kernel.set_pixel(center+k, 0, 0, val);
     
         write_mem(VP_ADDR_KERNEL_BRAM_L + 2 *(center+k), val1_p, val2);
-        
+        uint16_t p = to_Uint16_t(val1_p);
         //data_t tmp = read_mem(VP_ADDR_KERNEL_BRAM_L + 2 *(center+k));
-        fprintf(fp, "%2.14lf\n", (double)val1);
+        fprintf(fp, "%X\n", (unsigned int)p);
         
         offset += sc_time(DELAY, SC_NS);
     }
@@ -173,8 +173,14 @@ void Ip_Core::gaussian_blur(sc_core::sc_time &offset)
                  //cout << std::hex << VP_ADDR_MAIN_BRAM_L + (y+dy)*img_width + x << endl;
                  read_mem(VP_ADDR_MAIN_BRAM_L + 2 *(c_y*img_width + x), pix1, pix2);
                  read_mem(VP_ADDR_MAIN_BRAM_L + 2 *(c_y*img_width + x + 2), pix3, pix4);
-                 fprintf(fp, "%2.14lf\t%2.14lf\t", (double)pix1, (double)pix2);
-                 fprintf(fp, "%2.14lf\t%2.14lf\n", (double)pix3, (double)pix4);
+                 uint16_t p1, p2, p3, p4;
+                 p1 = to_Uint16_t(pix1);
+                 p2 = to_Uint16_t(pix2);
+                 p3 = to_Uint16_t(pix3);
+                 p4 = to_Uint16_t(pix4);
+                 
+                 fprintf(fp, "%X\t%X\n", (unsigned int)p1, (unsigned int)p2);
+                 fprintf(fp, "%X\t%X\n", (unsigned int)p3, (unsigned int)p4);
                  sum1 += pix1 * val1;
                  sum2 += pix2 * val1;
                  sum3 += pix3 * val1;
@@ -220,8 +226,14 @@ void Ip_Core::gaussian_blur(sc_core::sc_time &offset)
                  read_mem(VP_ADDR_TMP_BRAM_L + 2 * (y*img_width + c_x1), pix1, pix2);
                  read_mem(VP_ADDR_TMP_BRAM_L + 2 * (y*img_width + c_x2), pix3, pix4);
                  
-                 fprintf(fp, "%2.14lf\t%2.14lf\t", (double)pix1, (double)pix2);
-                 fprintf(fp, "%2.14lf\t%2.14lf\n", (double)pix3, (double)pix4);
+                 uint16_t p1, p2, p3, p4;
+                 p1 = to_Uint16_t(pix1);
+                 p2 = to_Uint16_t(pix2);
+                 p3 = to_Uint16_t(pix3);
+                 p4 = to_Uint16_t(pix4);
+                 
+                 fprintf(fp, "%X\t%X\n", (unsigned int)p1, (unsigned int)p2);
+                 fprintf(fp, "%X\t%X\n", (unsigned int)p3, (unsigned int)p4);
                  sum1 += pix1 * val1;
                  sum2 += pix2 * val1;
                  sum3 += pix3 * val1;

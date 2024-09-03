@@ -113,7 +113,7 @@ std::vector<Image> Cpu::generate_gaussian_pyramid_vector(const Image& img, int i
     assert(img.channels == 1);
     
     FILE *fp;
-    std::string bram_str = "test/bram_state_";
+    std::string bram_str = "test/bram_init/bram_state_";
     std::string resize = "generate_img_";
     char numstr[21];
     std::string res;
@@ -172,17 +172,20 @@ std::vector<Image> Cpu::generate_gaussian_pyramid_vector(const Image& img, int i
     }
     fclose(fp);
     
-    /*fp = fopen("read_bram.txt", "w");
+    fp = fopen("read_bram.txt", "w");
     for ( int x = 0; x < img.width; x+=2) {    
         for (int y = 0; y < img.height; y++) {
           data_t pix1, pix2;
+          uint16_t p1,p2;
           read_mem(VP_ADDR_MAIN_BRAM_L  + 2 *(y*img.width + x), pix1, pix2);
-          fprintf(fp, "%2.14lf\t%2.14lf\n" , (double)pix1, (double)pix2);
+          p1 = to_Uint16_t(pix1);
+          p2 = to_Uint16_t(pix2);
+          fprintf(fp, "%X\t%X\n" , (unsigned int)p1, (unsigned int)p2);
           
         }
     }
     fclose(fp);
-    */
+    
 	cout << "Bram initialized" << endl;
 	
 	//------------------------------------------------
@@ -264,20 +267,23 @@ std::vector<Image> Cpu::generate_gaussian_pyramid_vector(const Image& img, int i
          
          }
          	cout << "Bram initialized" << endl;
-         	/*
+         	
          	sprintf(numstr, "%d", i*imgs_per_octave + j);
          	res = bram_str + numstr + "_init" + ".txt";
          	fp = fopen(res.c_str(), "w+");
         for ( int x = 0; x < prev_img.width; x+=2) {    
             for (int y = 0; y < prev_img.height; y++) {
-                data_t pix1, pix2;
-                read_mem(VP_ADDR_MAIN_BRAM_L  + 2 *(y*prev_img.width + x), pix1, pix2);
-                fprintf(fp, "%2.14lf\t%2.14lf\n" , (double)pix1, (double)pix2);
+                  data_t pix1, pix2;
+                  uint16_t p1,p2;
+                  read_mem(VP_ADDR_MAIN_BRAM_L  + 2 *(y*img.width + x), pix1, pix2);
+                  p1 = to_Uint16_t(pix1);
+                  p2 = to_Uint16_t(pix2);
+                  fprintf(fp, "%X\t%X\n" , (unsigned int)p1, (unsigned int)p2);
           
              }
     }
     fclose(fp);
-    */
+    
 	//------------------------------------------------
 	        cout << endl;
 	        

@@ -89,3 +89,6 @@ sigma_t Uchar_to_Sigma_t(unsigned char *buf)
     return (double)(input) / (double)(1 << FIXED_POINT_FRACTIONAL_BITS_SIGMA_T);
 }
 
+uint16_t to_Uint16_t(data_t val){
+    return (uint16_t)((double)val * (double)(1 << FIXED_POINT_FRACTIONAL_BITS_DATA_T));
+}
