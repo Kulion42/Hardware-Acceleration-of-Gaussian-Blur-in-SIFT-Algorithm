@@ -224,11 +224,43 @@ combinational_logic_process: process(start, state_reg, state_next, img_w, img_h,
 val1, pix1, pix2, pix3, pix4, sum1_reg, sum2_reg, sum3_reg, sum4_reg, sum1_next, sum2_next, sum3_next, sum4_next, kernel_bram_rdata, bram1_a_rdata, bram1_b_rdata) is
 
 begin
-
+    kernel_bram_en <= '1';
+    kernel_bram_we <= "0000";
+    kernel_bram_raddr <= (others => '0');
+    
+    bram1_a_en <= '1';
+    bram1_a_we <= (others => '0');
+    bram1_a_raddr <= (others => '0');
+    
+    bram1_b_en <= '1';
+    bram1_b_we <= (others => '0');
+    bram1_b_raddr <= (others => '0');
+    
+    bram2_a_en <= '1';
+    bram2_a_we <= (others => '1');
+    bram2_a_waddr <= (others => '0');
+    bram2_a_wdata <= (others => '0');
+    
+    bram2_b_en <= '1';
+    bram2_b_we <= (others => '1');
+    bram2_b_waddr <= (others => '0');
+    bram2_b_wdata <= (others => '0');
+    
+    val1 <= (others => '0');
+    
+    pix1 <= (others => '0');
+    pix2 <= (others => '0');
+    pix3 <= (others => '0');
+    pix4 <= (others => '0');
+    
     x_next <= x;
     y_next <= y;
     k_next <= k;
     
+    c_y_next <= c_y; 
+    c_x1_next <= c_x1;
+    c_x2_next <= c_x2;
+        
     dx_next <= dx;
     dy_next <= dy;
     
@@ -310,18 +342,19 @@ begin
                         c_y_next <= y + dy;
             end if;
             
-            c_x1 <= x; 
-            c_x2 <= x + 2;    
+            c_x1_next <= x; 
+            c_x2_next <= x + 2;    
             state_next <= bram_read_1;
         
         when bram_read_1 =>
-            kernel_bram_en <= '1';
-            bram1_a_en <= '1';
-            bram1_b_en <= '1';
             
             kernel_bram_raddr <= std_logic_vector(TO_UNSIGNED(TO_INTEGER(k), 5));
             bram1_a_raddr <= std_logic_vector(TO_UNSIGNED(TO_INTEGER(c_y * IMG_WIDTH + c_x1), 16));
             bram1_b_raddr <= std_logic_vector(TO_UNSIGNED(TO_INTEGER(c_y * IMG_WIDTH + c_x2), 16));
+                       
+            bram1_a_we <= "0000";
+            bram1_b_we <= "0000";
+            state_next <= bram_read_2;
         
         when bram_read_2 =>
             val1 <= unsigned(kernel_bram_rdata(DATA_WIDTH -1 downto 0));
@@ -334,8 +367,6 @@ begin
             state_next <= bram_write;
            
         when bram_write =>
-            bram2_a_en <= '1';
-            bram2_b_en <= '1';
             
             bram2_a_we <= "1111";
             bram2_b_we <= "1111";
