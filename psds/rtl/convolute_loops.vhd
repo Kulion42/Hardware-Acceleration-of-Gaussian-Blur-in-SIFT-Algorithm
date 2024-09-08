@@ -63,10 +63,9 @@ Port (
     bram1_b_raddr: out std_logic_vector(log2c(BRAM1_SIZE) - 1 downto 0);
     bram1_b_rdata: in std_logic_vector(2 *DATA_WIDTH -1 downto 0);
     
-    kernel_bram_en: out std_logic;
-    kernel_bram_we: out std_logic_vector(3 downto 0);
-    kernel_bram_raddr: out std_logic_vector(log2c(KERNEL_BRAM_SIZE) - 1 downto 0);
-    kernel_bram_rdata: in std_logic_vector(DATA_WIDTH -1 downto 0);
+    kernel_rom_en: out std_logic;
+    kernel_rom_addr: out std_logic_vector(log2c(KERNEL_BRAM_SIZE) - 1 downto 0);
+    kernel_rom_data: in std_logic_vector(DATA_WIDTH -1 downto 0);
     
     
     bram2_a_en: out std_logic;
@@ -102,6 +101,7 @@ component dsp_unit_mac_shift is
 end component;
 
 signal x, y, k, dy, dx, c_y, c_x1, c_x2 : signed(DATA_WIDTH -1 downto 0);
+signal x_add_2: signed(DATA_WIDTH - 1 downto 0);
 signal x_next, y_next, k_next, dx_next, dy_next, c_y_next, c_x1_next, c_x2_next : signed(DATA_WIDTH - 1 downto 0);
 signal pix1, pix2, pix3, pix4: unsigned(DATA_WIDTH -1 downto 0);
 signal val1: unsigned(DATA_WIDTH -1 downto 0);
@@ -116,7 +116,7 @@ signal img_off_down : signed(DATA_WIDTH -1 downto 0) := TO_SIGNED(IMG_OFFSET_DOW
 signal sigma_s : signed(DATA_WIDTH -1 downto 0) := TO_SIGNED(SIGMA_SIZE, DATA_WIDTH);
 signal sigma_c : signed(DATA_WIDTH -1 downto 0) := TO_SIGNED(-SIGMA_CENTER, DATA_WIDTH);
 
-type state_t is (idle, loops_start, x_loop_end, y_loop_end, k_loop_end, x_addr_gen, y_addr_gen, bram_read_1, bram_read_2, bram_write);
+type state_t is (idle, loops_start, x_loop_end, y_loop_end, k_loop_end, x_addr_gen, y_addr_gen, bram_read_1, bram_read_2);
 signal state_reg, state_next : state_t;
 
 begin
@@ -226,7 +226,7 @@ addr_gen_4 : dsp_unit_mac_shift
          rst => reset,
          in_1 => std_logic_vector(y),
          in_2 => std_logic_vector(TO_UNSIGNED(IMG_WIDTH, 16)),
-         in_3 => std_logic_vector(x + TO_SIGNED(2, 16)),
+         in_3 => std_logic_vector(x_add_2),
          out_res => w_addr_b_b2
          );                                     
 next_state_process: process(clk, reset) is
@@ -276,12 +276,11 @@ begin
 end process;
 
 combinational_logic_process: process(start, state_reg, state_next, img_w, img_h, img_off_up, img_off_down, sigma_s, sigma_c, x, x_next, y, y_next, k, k_next, dx, dy, dx_next, dy_next, c_x1, c_x2, c_y, 
-val1, pix1, pix2, pix3, pix4, sum1_reg, sum2_reg, sum3_reg, sum4_reg, sum1_next, sum2_next, sum3_next, sum4_next, kernel_bram_rdata, bram1_a_rdata, bram1_b_rdata) is
+val1, pix1, pix2, pix3, pix4, sum1_reg, sum2_reg, sum3_reg, sum4_reg, sum1_next, sum2_next, sum3_next, sum4_next, kernel_rom_data, bram1_a_rdata, bram1_b_rdata) is
 
 begin
-    kernel_bram_en <= '1';
-    kernel_bram_we <= "0000";
-    kernel_bram_raddr <= (others => '0');
+    kernel_rom_en <= '1';
+    kernel_rom_addr <= (others => '0');
     
     bram1_a_en <= '1';
     bram1_a_we <= (others => '0');
@@ -358,7 +357,7 @@ begin
                     dy_next <= sigma_c +k;
                     state_next <= y_addr_gen;
                 end if;
-            
+            x_add_2 <= x + TO_SIGNED(2, 16);
             end if; 
         when x_addr_gen =>
             if x < dx  then
@@ -371,10 +370,10 @@ begin
             
             if x + 2 < dx then
                 c_x2_next <= (others => '0');
-            elsif x + dx + 2 > img_w then 
+            elsif x_add_2 + dx > img_w then 
                 c_x2_next <= img_w -1;
             else
-                c_x2_next <= x + dx + 2;
+                c_x2_next <= x_add_2 + dx;
             end if;
             
             c_y_next <= y;
@@ -398,39 +397,36 @@ begin
             end if;
             
             c_x1_next <= x; 
-            c_x2_next <= x + 2;    
+            c_x2_next <= x_add_2;    
             state_next <= bram_read_1;
         
         when bram_read_1 =>
             
-            kernel_bram_raddr <= std_logic_vector(TO_UNSIGNED(TO_INTEGER(k), 5));
+            kernel_rom_addr <= std_logic_vector(TO_UNSIGNED(TO_INTEGER(k), 5));
             bram1_a_raddr <= r_addr_a_b1;
             bram1_b_raddr <= r_addr_b_b1;
                        
             state_next <= bram_read_2;
         
         when bram_read_2 =>
-            val1 <= unsigned(kernel_bram_rdata(DATA_WIDTH -1 downto 0));
+            val1 <= unsigned(kernel_rom_data(DATA_WIDTH -1 downto 0));
             
             pix1 <= unsigned(bram1_a_rdata(2 * DATA_WIDTH -1 downto DATA_WIDTH));
             pix2 <= unsigned(bram1_a_rdata(DATA_WIDTH -1  downto 0));
             pix3 <= unsigned(bram1_b_rdata(2 * DATA_WIDTH -1 downto DATA_WIDTH));
             pix4 <= unsigned(bram1_b_rdata(DATA_WIDTH -1 downto 0));
             
-            state_next <= bram_write;
-           
-        when bram_write =>
+            k_next <= k + 1;
+            state_next <= loops_start;
             
+        when k_loop_end =>
+        
             bram2_a_waddr <= w_addr_a_b2;
             bram2_b_waddr <= w_addr_b_b2;
             
             bram2_a_wdata <= sum1_reg&sum2_reg;
             bram2_b_wdata <= sum3_reg&sum4_reg;
             
-            k_next <= k + 1;
-            state_next <= loops_start;
-            
-        when k_loop_end =>
             k_next <= (others => '0');
             y_next <= y + 1;
             state_next <= loops_start;       
