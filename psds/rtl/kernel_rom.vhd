@@ -28,26 +28,30 @@ use work.utils_pkg.ALL;
 entity kernel_rom is
 Generic (
     DATA_WIDTH : natural := 16; -- FIXED
-    IMG_NUM : integer := 0;
-    SIGMA_ROM_SIZE : natural := 76 --FIXED     
+    KERNEL_ROM_SIZE : natural := 76 --FIXED     
 );
 Port ( 
     clk: in std_logic;
     reset: in std_logic;
+    start: in std_logic;
       
-    sigma_rom_a_en: in std_logic;
-    sigma_rom_a_addr: in std_logic_vector(log2c(SIGMA_ROM_SIZE) downto 0);
-    sigma_rom_b_en: in std_logic;
-    sigma_rom_b_addr: in std_logic_vector(log2c(SIGMA_ROM_SIZE) downto 0);
+    img_number: in std_logic_vector(DATA_WIDTH- 1 downto 0);
     
-    sigma_rom_a_data: out std_logic_vector(DATA_WIDTH -1 downto 0); 
-    sigma_rom_b_data: out std_logic_vector(DATA_WIDTH -1 downto 0); 
+    kernel_rom_a_en: in std_logic;
+    kernel_rom_a_addr: in std_logic_vector(log2c(KERNEL_ROM_SIZE) -1 downto 0);
+    kernel_rom_b_en: in std_logic;
+    kernel_rom_b_addr: in std_logic_vector(log2c(KERNEL_ROM_SIZE) -1 downto 0);
     
-    sigma_rom_addr_off_prev: in std_logic_vector(DATA_WIDTH/2 -1 downto 0);
-    sigma_rom_addr_off_next: out std_logic_vector(DATA_WIDTH/2 -1 downto 0);
-    sigma_size: out std_logic_vector(DATA_WIDTH/2 -1 downto 0)
+    kernel_rom_a_data: out std_logic_vector(DATA_WIDTH -1 downto 0); 
+    kernel_rom_b_data: out std_logic_vector(DATA_WIDTH -1 downto 0); 
     
-    --ready: out std_logic
+    kernel_rom_addr_off_prev: in std_logic_vector(DATA_WIDTH/2 -1 downto 0);
+    kernel_rom_addr_off_next: out std_logic_vector(DATA_WIDTH/2 -1 downto 0);
+    
+    sigma_size: out std_logic_vector(DATA_WIDTH/2 -1 downto 0);
+    
+    
+    ready: out std_logic
 );
 end kernel_rom;
 
@@ -94,7 +98,7 @@ signal size_s: unsigned(DATA_WIDTH/2 -1 downto 0);
 signal add1_in1, add1_in2 : unsigned(2*DATA_WIDTH -1 downto 0);
 signal add1_out: std_logic_vector(2*DATA_WIDTH -1 downto 0);
 signal addr_a_out, addr_b_out: std_logic_vector(DATA_WIDTH/2 -1 downto 0);
-type rom_type is array (0 to SIGMA_ROM_SIZE-1) of unsigned(DATA_WIDTH -1 downto 0);
+type rom_type is array (0 to KERNEL_ROM_SIZE-1) of unsigned(DATA_WIDTH -1 downto 0);
 signal ROM: rom_type := (
                             X"001E", X"0124", X"05AC", X"0ED7", X"1472", X"0ED7", X"05AC", X"0124", X"001E", 
                             X"001A", X"010B", X"0581", X"0EEF", X"14D3", X"0EEF", X"0581", X"010B", X"001A", 
@@ -108,24 +112,25 @@ begin
 
 clk_proc: process(clk, reset)
 begin
+ready <= '0';
     if (reset = '1') then
-        sigma_rom_a_data <= (others => '0');
-        sigma_rom_b_data <= (others => '0');
+        kernel_rom_a_data <= (others => '0');
+        kernel_rom_b_data <= (others => '0');
     
     elsif (rising_edge(clk)) then
-         if ( sigma_rom_a_en= '1') then
-                sigma_rom_a_data <= std_logic_vector(ROM(to_integer(unsigned(addr_a_out))));
+         if ( kernel_rom_a_en= '1') then
+                kernel_rom_a_data <= std_logic_vector(ROM(to_integer(unsigned(addr_a_out))));
         end if;
-        if ( sigma_rom_b_en= '1') then
-                sigma_rom_b_data <= std_logic_vector(ROM(to_integer(unsigned(addr_b_out))));
+        if ( kernel_rom_b_en= '1') then
+                kernel_rom_b_data <= std_logic_vector(ROM(to_integer(unsigned(addr_b_out))));
         end if;
-      
+        ready <= '1';
     
     end if;
 
 end process;
-add1_in1 <= SIGMA_VALS(IMG_NUM)(2*DATA_WIDTH -2 downto 0) & '0';
-add1_in2 <= SIGMA_VALS(IMG_NUM)(2*DATA_WIDTH -3 downto 0) & "00";
+add1_in1 <= SIGMA_VALS(TO_INTEGER(unsigned(img_number)))(2*DATA_WIDTH -2 downto 0) & '0';
+add1_in2 <= SIGMA_VALS(TO_INTEGER(unsigned(img_number)))(2*DATA_WIDTH -3 downto 0) & "00";
 
 size_gen: dsp_unit_add 
     generic map(
@@ -146,26 +151,26 @@ size_s <= unsigned(add1_out(30 downto 23)) or X"01" when add1_out(23) = '0' else
 addr1_gen: dsp_unit_add 
     generic map(
           WIDTH1 => DATA_WIDTH/2 ,
-          WIDTH2 => DATA_WIDTH/2 
+          WIDTH2 => log2c(KERNEL_ROM_SIZE) 
          )
     port map(
           clk => clk,
           rst => reset,
-          in_1 => sigma_rom_addr_off_prev,
-          in_2 => std_logic_vector(sigma_rom_a_addr),
+          in_1 => kernel_rom_addr_off_prev,
+          in_2 => std_logic_vector(kernel_rom_a_addr),
           out_res => addr_a_out
            );
            
 addr2_gen: dsp_unit_add 
     generic map(
           WIDTH1 => DATA_WIDTH/2 ,
-          WIDTH2 => DATA_WIDTH/2 
+          WIDTH2 => log2c(KERNEL_ROM_SIZE) 
          )
     port map(
           clk => clk,
           rst => reset,
-          in_1 => sigma_rom_addr_off_prev,
-          in_2 => std_logic_vector(sigma_rom_b_addr),
+          in_1 => kernel_rom_addr_off_prev,
+          in_2 => std_logic_vector(kernel_rom_b_addr),
           out_res => addr_b_out
            );
            
@@ -177,9 +182,9 @@ next_off_gen: dsp_unit_add
     port map(
           clk => clk,
           rst => reset,
-          in_1 => sigma_rom_addr_off_prev,
+          in_1 => kernel_rom_addr_off_prev,
           in_2 => std_logic_vector(size_s),
-          out_res => sigma_rom_addr_off_next
+          out_res => kernel_rom_addr_off_next
            );
               
 sigma_size <= std_logic_vector(size_s);
