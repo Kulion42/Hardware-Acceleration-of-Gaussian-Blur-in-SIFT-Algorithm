@@ -1,0 +1,3 @@
+--tcl command
+
+vivado -mode tcl -nolog -nojournal -source project.tcl
