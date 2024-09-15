@@ -173,6 +173,8 @@ signal rom_en, start_x_conv, start_y_conv: std_logic;
 signal rom_addr: std_logic_vector(log2c(KERNEL_ROM_SIZE) -1 downto 0);
 signal rom_data: std_logic_vector(DATA_WIDTH -1 downto 0);
 signal next_blur_offset, rom_addr_off, size: std_logic_vector(DATA_WIDTH/2 -1 downto 0);
+signal write1_a_addr, read1_a_addr, write1_b_addr, read1_b_addr: std_logic_vector(log2c(BRAM_SIZE) - 1 downto 0);
+signal write2_a_addr, read2_a_addr, write2_b_addr, read2_b_addr: std_logic_vector(log2c(BRAM_SIZE) - 1 downto 0);
 begin
 
 kernel_rom_gen: kernel_rom 
@@ -222,15 +224,15 @@ y_conv_gen: convolute_loops
         
         sigma_size => size,
         
-        bram1_a_en => main_bram_a_en,
+        --bram1_a_en => main_bram_a_en,
         bram1_a_we => open,
-        bram1_a_addr => main_bram_a_addr,
+        bram1_a_addr => read1_a_addr,
         bram1_a_rdata => main_bram_a_rdata,
         bram1_a_wdata => open,
         
-        bram1_b_en => main_bram_b_en,
+        --bram1_b_en => main_bram_b_en,
         bram1_b_we => open,
-        bram1_b_addr => main_bram_b_addr,
+        bram1_b_addr => read1_b_addr,
         bram1_b_rdata => main_bram_b_rdata,
         bram1_b_wdata => open,
          
@@ -239,15 +241,15 @@ y_conv_gen: convolute_loops
         kernel_rom_data => rom_data,
         
         
-        bram2_a_en => tmp_bram_a_en,
+        --bram2_a_en => tmp_bram_a_en,
         bram2_a_we => tmp_bram_a_we,
-        bram2_a_addr => tmp_bram_a_addr,
+        bram2_a_addr => write2_a_addr,
         bram2_a_rdata => (others => '0'),
         bram2_a_wdata => tmp_bram_a_wdata,
         
-        bram2_b_en => tmp_bram_b_en,
+        --bram2_b_en => tmp_bram_b_en,
         bram2_b_we => tmp_bram_b_we,
-        bram2_b_addr => tmp_bram_b_addr,
+        bram2_b_addr => write2_b_addr,
         bram2_b_rdata => (others => '0'),
         bram2_b_wdata => tmp_bram_b_wdata,
         
@@ -274,15 +276,15 @@ x_conv_gen: convolute_loops
         
         sigma_size => size,
         
-        bram1_a_en => tmp_bram_a_en,
+        --bram1_a_en => tmp_bram_a_en,
         bram1_a_we => open,
-        bram1_a_addr => tmp_bram_a_addr,
+        bram1_a_addr => read2_a_addr,
         bram1_a_rdata => tmp_bram_a_rdata,
         bram1_a_wdata => open,
         
-        bram1_b_en => tmp_bram_b_en,
+        --bram1_b_en => tmp_bram_b_en,
         bram1_b_we => open,
-        bram1_b_addr => tmp_bram_b_addr,
+        bram1_b_addr => read2_b_addr,
         bram1_b_rdata => tmp_bram_b_rdata,
         bram1_b_wdata => open,
         
@@ -291,19 +293,36 @@ x_conv_gen: convolute_loops
         kernel_rom_data => rom_data,
         
         
-        bram2_a_en => main_bram_a_en,
+        --bram2_a_en => main_bram_a_en,
         bram2_a_we => main_bram_a_we,
-        bram2_a_addr => main_bram_a_addr,
+        bram2_a_addr => write1_a_addr,
         bram2_a_rdata => (others => '0'),
         bram2_a_wdata => main_bram_a_wdata,
         
-        bram2_b_en => main_bram_b_en,
+        --bram2_b_en => main_bram_b_en,
         bram2_b_we => main_bram_b_we,
-        bram2_b_addr => main_bram_b_addr,
+        bram2_b_addr => write1_b_addr,
         bram2_b_rdata => (others => '0'),
         bram2_b_wdata => main_bram_b_wdata,
         
         ready => ready
     );
     rom_addr_off_next <= rom_addr_off;
+    
+    main_bram_a_addr <= read1_a_addr when start_y_conv = '1'
+                        else write1_a_addr when start_x_conv = '1'
+                        else (others => '0');
+    main_bram_b_addr <= read1_b_addr when start_y_conv = '1'
+                        else write1_b_addr when start_x_conv = '1'
+                        else (others => '0');                    
+    tmp_bram_a_addr <= read2_a_addr when start_x_conv = '1'
+                        else write2_a_addr when start_y_conv = '1'
+                        else (others => '0');
+    tmp_bram_b_addr <= read2_b_addr when start_x_conv = '1'
+                        else write2_b_addr when start_y_conv = '1'
+                        else (others => '0');     
+    main_bram_a_en <= '1';
+    main_bram_b_en <= '1';
+    tmp_bram_a_en <= '1';
+    tmp_bram_b_en <= '1';                   
 end Mixed;
