@@ -19,6 +19,7 @@ class Vp :  public sc_core::sc_module
 		~Vp();
 
 	protected:
+	
 		Cpu cpu;
 		Interconnect interconnect;
 		Ip_Core ip_core;

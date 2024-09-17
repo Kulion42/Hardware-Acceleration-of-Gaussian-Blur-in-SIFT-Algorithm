@@ -1,5 +1,7 @@
 #include "vp.hpp"
 
+ sc_core::sc_time offset_system;
+
 Vp:: Vp (sc_core::sc_module_name name, char** strings, int argc): 
 	sc_module (name),
 	cpu("Cpu", strings, argc),
