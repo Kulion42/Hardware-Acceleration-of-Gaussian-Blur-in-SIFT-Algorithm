@@ -75,18 +75,16 @@ void Uchar_to_Fixed(unsigned char *buf, data_t& output1, data_t& output2)
     //std::cout << output1 << " " << output2 << std::endl;
 }
 
-sigma_t Uchar_to_Sigma_t(unsigned char *buf)
+data_t Uchar_to_Data_t(unsigned char *buf)
 {
-    int32_t input = 0;
+    uint16_t input = 0;
     
-    input += ((int32_t)buf[0]) << 24;
-    input += ((int32_t)buf[1]) << 16;
-    input += ((int32_t)buf[2]) << 8;
-    input += ((int32_t)buf[3]);
+    input += ((uint16_t)buf[0]) << 8;
+    input += ((uint16_t)buf[1]);
     
     //std::cout << (((int32_t)buf[0]) << 24) << (((int32_t)buf[1]) << 16) << (((int32_t)buf[2]) << 8) << std::endl;
     //std::cout << input << endl;
-    return (double)(input) / (double)(1 << FIXED_POINT_FRACTIONAL_BITS_SIGMA_T);
+    return (double)(input) / (double)(1 << FIXED_POINT_FRACTIONAL_BITS_DATA_T);
 }
 
 uint16_t to_Uint16_t(data_t val){

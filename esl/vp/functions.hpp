@@ -17,6 +17,8 @@ using namespace std;
 static const int FIXED_POINT_FRACTIONAL_BITS_DATA_T = 14;
 static const int FIXED_POINT_FRACTIONAL_BITS_SIGMA_T = 23;
 
+extern sc_core::sc_time offset_system;
+
 int toInt(unsigned char *buf);
 
 int toInt2(unsigned char *buf);
@@ -37,7 +39,7 @@ void Fixed_to_Uchar(unsigned char *buf, data_t input1, data_t input2);
 
 void Uchar_to_Fixed(unsigned char *buf, data_t& output1, data_t& output2);
 
-sigma_t Uchar_to_Sigma_t(unsigned char *buf);
+data_t Uchar_to_Data_t(unsigned char *buf);
 
 uint16_t to_Uint16_t(data_t val);
 
