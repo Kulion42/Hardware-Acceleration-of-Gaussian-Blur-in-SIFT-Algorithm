@@ -19,7 +19,7 @@ public:
 	
 protected:
 	void b_transport(pl_t&, sc_core::sc_time&);
-	std::vector<sigma_t> sigrom;
+	std::vector<data_t> sigrom;
 };
 
 #endif

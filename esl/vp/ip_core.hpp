@@ -29,8 +29,7 @@ public:
 	tlm_utils::simple_initiator_socket<Ip_Core> sigma_rom_socket;	
 	
 protected:
-    pl_t pl;
-    sc_core::sc_time offset;
+    sc_core::sc_time offset_hard;
     
     //input parameters
     sc_int<16> img_width;
@@ -44,11 +43,15 @@ protected:
     //output signal
     sc_uint<1> ready;
     
+    sc_int<16> addr_off;
+    vector <sigma_t> sigma_vals;
+    
     void b_transport(pl_t&, sc_core::sc_time&);	
-	void gaussian_blur(sc_core::sc_time &offset);
+	void gaussian_blur(sc_core::sc_time&);
 	void read_mem(sc_dt::sc_uint<64> addr, data_t& pix1, data_t& pix2);
 	void write_mem(sc_dt::sc_uint<64> addr, data_t pix1, data_t pix2);
-	sigma_t read_rom(sc_dt::sc_uint<64> addr);
+	data_t read_rom(sc_dt::sc_uint<64> addr);
+	
     
 }  ; 
     

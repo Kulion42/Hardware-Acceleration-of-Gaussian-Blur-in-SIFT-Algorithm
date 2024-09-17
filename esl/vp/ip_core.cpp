@@ -5,13 +5,17 @@ using namespace std;
 using namespace sc_dt;
 using namespace sc_core;
 
+
 Ip_Core::Ip_Core(sc_module_name name):
 	sc_module(name),
+	offset_hard(sc_core::SC_ZERO_TIME),
 	ready(1)
 	
 {
+    sigma_vals = {
+         1.24899959564208984375,     1.22627341747283935546875,  1.5450077056884765625,      1.94658792018890380859375,  2.4525470733642578125,      3.09001576900482177734375
+    };
 	interconnect_socket.register_b_transport(this, &Ip_Core::b_transport);
-	
 	SC_REPORT_INFO("IP Core", "Constructed.");
 }
 
@@ -37,11 +41,11 @@ void Ip_Core::b_transport(pl_t &pl, sc_time &offset)
         	{
 			case ADDR_IMG_WIDTH:
 			  img_width = toInt2(buffer);  
-              cout << "img_width = " << img_width << endl;
+              //cout << "img_width = " << img_width << endl;
 			  break;
 			case ADDR_IMG_HEIGHT:
 			  img_height = toInt2(buffer);
-			  cout << "img_height = " << img_height << endl;
+			  //cout << "img_height = " << img_height << endl;
 			  break;
 			case ADDR_IMG_OFFSET_UP:
 			  img_offset_up = toInt2(buffer);
@@ -77,7 +81,7 @@ void Ip_Core::b_transport(pl_t &pl, sc_time &offset)
 		switch(address)
 		{
 		case ADDR_READY:
-		  toUchar4(buffer, ready);
+		  toUchar2(buffer, ready);
 		  break;
 		default:
 		  pl.set_response_status( tlm::TLM_ADDRESS_ERROR_RESPONSE );
@@ -92,13 +96,14 @@ void Ip_Core::b_transport(pl_t &pl, sc_time &offset)
 	offset += sc_time(DELAY, SC_NS);
 }
 
-void Ip_Core::gaussian_blur(sc_core::sc_time &offset)
+void Ip_Core::gaussian_blur(sc_core::sc_time& offset)
 {
  //  pl_t pl;
    FILE *fp; 
     std::string blur_x= "test/convolutions/convolute_x_";
     std::string blur_y = "test/convolutions/convolute_y_";
     std::string kernel_val = "test/kernel_bram/kernel_state_";
+
     
     char numstr[21];
     std::string res;
@@ -106,14 +111,14 @@ void Ip_Core::gaussian_blur(sc_core::sc_time &offset)
     if (start == 1 && ready == 1 && reset == 0){
        // cout << "Hard started" << endl;
         ready = 0;
-        offset+=sc_time(DELAY, SC_NS);
+        offset_hard+=sc_time(DELAY, SC_NS);
    }
 
     else if (start == 0 && ready == 0 && reset == 0){
     //Start with work
     cout << "Startig gaussian_blur"<<endl;
     sc_int<16> c_y, c_x1, c_x2;
-    sigma_t sigma = read_rom(VP_ADDR_SIGMA_ROM_L + img_per_octave);
+    sigma_t sigma = sigma_vals[img_per_octave];
     //cout << sigma << endl;
     sc_int<16> size = std::ceil(6 * sigma);
     
@@ -121,30 +126,34 @@ void Ip_Core::gaussian_blur(sc_core::sc_time &offset)
         size++;
    // cout << size << endl;
     sc_int<16> center = size / 2;
-        
+    
+    if (img_per_octave == 0)
+    addr_off=0;
+    
+    else if(img_per_octave == 1)
+    addr_off=size;
+       
    // cout << center << endl;
   //  Image kernel(size, 1, 1);
-    sigma_t sigma_2 = read_rom(VP_ADDR_SIGMA_ROM_L + 6 + img_per_octave);
-    sigma_t sum_kernel_1 = read_rom(VP_ADDR_SIGMA_ROM_L + 12 + img_per_octave);
-    sprintf(numstr, "%d", (int)img_per_octave);
-    res = kernel_val + numstr  +".txt";
+  /*  sprintf(numstr, "%d", (int)img_per_octave);
+    res = kernel_val + numstr + "_one" +".txt";
     fp = fopen(res.c_str(), "w+");
         for (sc_int<16> k = -size/2; k <= size/2; k++) {
           data_t val1, val1_p, val2 = 0.0;
-          val1 = (data_t)((sigma_t)std::exp(-(k*k) * sigma_2));
-          val1_p = val1 * sum_kernel_1;
+          val1 = read_rom(VP_ADDR_SIGMA_ROM_L + addr_off + k);
      //   cout << "Test1" << endl;
     //    kernel.set_pixel(center+k, 0, 0, val);
     
         write_mem(VP_ADDR_KERNEL_BRAM_L + 2 *(center+k), val1_p, val2);
-        uint16_t p = to_Uint16_t(val1_p);
+        uint16_t p1 = to_Uint16_t(val1_p);
+        uint16_t p2 = to_Uint16_t(val1);
         //data_t tmp = read_mem(VP_ADDR_KERNEL_BRAM_L + 2 *(center+k));
-        fprintf(fp, "%X\n", (unsigned int)p);
+        fprintf(fp, "%X\n", (unsigned int)p2);
         
-        offset += sc_time(DELAY, SC_NS);
+        offset_hard += sc_time(DELAY, SC_NS);
     }
     fclose(fp);
-    
+    */
     sprintf(numstr, "%d", (int)img_per_octave);
     res = blur_y + numstr + ".txt";
     fp = fopen(res.c_str(), "w+");
@@ -168,8 +177,8 @@ void Ip_Core::gaussian_blur(sc_core::sc_time &offset)
                  else
                     c_y = y + dy;
                     
-                 data_t pix1, pix2, pix3, pix4,  val1, val2;
-                 read_mem(VP_ADDR_KERNEL_BRAM_L + 2 * k, val1, val2);
+                 data_t pix1, pix2, pix3, pix4,  val1;
+                 val1 = read_rom(VP_ADDR_SIGMA_ROM_L + addr_off + k);
                  //cout << std::hex << VP_ADDR_MAIN_BRAM_L + (y+dy)*img_width + x << endl;
                  read_mem(VP_ADDR_MAIN_BRAM_L + 2 *(c_y*img_width + x), pix1, pix2);
                  read_mem(VP_ADDR_MAIN_BRAM_L + 2 *(c_y*img_width + x + 2), pix3, pix4);
@@ -187,14 +196,17 @@ void Ip_Core::gaussian_blur(sc_core::sc_time &offset)
                  sum4 += pix4 * val1;
                  
                  //cout << sum << endl;
-                 offset += sc_time(DELAY, SC_NS);
+                 offset_hard += sc_time(DELAY, SC_NS);
             }
           //  tmp.set_pixel(x, y-offset_up, 0, sum);
           write_mem(VP_ADDR_TMP_BRAM_L + 2 *((y-img_offset_up)*img_width + x), sum1, sum2);
           write_mem(VP_ADDR_TMP_BRAM_L + 2 *((y-img_offset_up)*img_width + x + 2), sum3, sum4);
+          offset_hard += sc_time(DELAY, SC_NS);
         }
+        offset_hard += sc_time(DELAY, SC_NS);
     }
     fclose(fp);
+    offset_hard += sc_time(DELAY, SC_NS);
         
     sprintf(numstr, "%d", (int)img_per_octave);
     res = blur_x + numstr + ".txt";
@@ -220,9 +232,9 @@ void Ip_Core::gaussian_blur(sc_core::sc_time &offset)
                  else
                     c_x2 = x + 2 + dx;
                     
-                 data_t pix1, pix2, pix3, pix4,  val1, val2;
-                //sum += tmp.get_pixel(x+dx, y, 0) * kernel.data[k];
-                 read_mem(VP_ADDR_KERNEL_BRAM_L + 2 * k, val1, val2);
+                 data_t pix1, pix2, pix3, pix4,  val1;
+                 val1 = read_rom(VP_ADDR_SIGMA_ROM_L + addr_off + k);
+                 
                  read_mem(VP_ADDR_TMP_BRAM_L + 2 * (y*img_width + c_x1), pix1, pix2);
                  read_mem(VP_ADDR_TMP_BRAM_L + 2 * (y*img_width + c_x2), pix3, pix4);
                  
@@ -240,19 +252,23 @@ void Ip_Core::gaussian_blur(sc_core::sc_time &offset)
                  sum4 += pix4 * val1;
                 // fprintf(fp, "%2.14lf\n", (double)tmp);
                //  cout << sum << endl;
-                 offset += sc_time(DELAY, SC_NS);
+                 offset_hard += sc_time(DELAY, SC_NS);
                
             }
             //fprintf(fp, "%2.14lf\n\n", (double)sum);
            // filtered.set_pixel(x, y, 0, sum);
            write_mem(VP_ADDR_MAIN_BRAM_L + 2 * (y*img_width + x), sum1, sum2);
            write_mem(VP_ADDR_MAIN_BRAM_L + 2 * (y*img_width + x + 2), sum3, sum4);
+           offset_hard += sc_time(DELAY, SC_NS);
         }
+        offset_hard += sc_time(DELAY, SC_NS);
     }
     fclose(fp);
-   offset += sc_time(DELAY, SC_NS);
+   offset_hard += sc_time(DELAY, SC_NS);
    
-
+   addr_off+=size;
+   //cout << "Time used in hardware--> " << offset_hard << endl;
+      cout << "Adress offset is " << addr_off << endl;
    cout << "Gaussian blur finished" << endl;
    cout << endl;
       ready = 1;
@@ -261,7 +277,6 @@ void Ip_Core::gaussian_blur(sc_core::sc_time &offset)
     else if (reset == 1){
     
         ready = 0;
-        
         for (sc_dt::sc_uint<64> k = VP_ADDR_MAIN_BRAM_L; k < VP_ADDR_MAIN_BRAM_H; k+=16)
         {
             write_mem(k, 0, 0);
@@ -290,6 +305,10 @@ void Ip_Core::gaussian_blur(sc_core::sc_time &offset)
         ready = 1;
    }
    
+   //after this in CPU is added with software time
+   offset_system = offset_hard;
+   //cout << "Time used in HW is " << offset_system << endl;
+
 }
 
 void Ip_Core::write_mem(sc_dt::sc_uint<64> addr, data_t pix1, data_t pix2)
@@ -306,19 +325,19 @@ void Ip_Core::write_mem(sc_dt::sc_uint<64> addr, data_t pix1, data_t pix2)
 	if (addr >= VP_ADDR_MAIN_BRAM_L && addr <= VP_ADDR_MAIN_BRAM_H)
 	{
 		pl.set_address(taddr);
-		main_bram_socket->b_transport(pl, offset);
+		main_bram_socket->b_transport(pl, offset_hard);
 		pl.set_address(addr);
 	}
 	else if (addr >= VP_ADDR_TMP_BRAM_L && addr <= VP_ADDR_TMP_BRAM_H)
 	{
 		pl.set_address(taddr);
-		tmp_bram_socket->b_transport(pl, offset);
+		tmp_bram_socket->b_transport(pl, offset_hard);
 		pl.set_address(addr);
 	}
 	else if (addr >= VP_ADDR_KERNEL_BRAM_L && addr <= VP_ADDR_KERNEL_BRAM_H)
 	{
 		pl.set_address(taddr);
-		kernel_bram_socket->b_transport(pl, offset);
+		kernel_bram_socket->b_transport(pl, offset_hard);
 		pl.set_address(addr);
 	}
 	else
@@ -340,19 +359,19 @@ void Ip_Core::read_mem(sc_dt::sc_uint<64> addr, data_t& pix1, data_t& pix2)
 	if (addr >= VP_ADDR_MAIN_BRAM_L && addr <= VP_ADDR_MAIN_BRAM_H)
 	{
 		pl.set_address(taddr);
-		main_bram_socket->b_transport(pl, offset);
+		main_bram_socket->b_transport(pl, offset_hard);
 		pl.set_address(addr);
 	}
 	else if (addr >= VP_ADDR_TMP_BRAM_L && addr <= VP_ADDR_TMP_BRAM_H)
 	{
 		pl.set_address(taddr);
-		tmp_bram_socket->b_transport(pl, offset);
+		tmp_bram_socket->b_transport(pl, offset_hard);
 		pl.set_address(addr);
 	}
 	else if (addr >= VP_ADDR_KERNEL_BRAM_L && addr <= VP_ADDR_KERNEL_BRAM_H)
 	{
 		pl.set_address(taddr);
-		kernel_bram_socket->b_transport(pl, offset);
+		kernel_bram_socket->b_transport(pl, offset_hard);
 		pl.set_address(addr);
 	}
 	else
@@ -363,7 +382,7 @@ void Ip_Core::read_mem(sc_dt::sc_uint<64> addr, data_t& pix1, data_t& pix2)
 	Uchar_to_Fixed(buf, pix1, pix2);
 }
 
-sigma_t Ip_Core::read_rom(sc_dt::sc_uint<64> addr)    
+data_t Ip_Core::read_rom(sc_dt::sc_uint<64> addr)    
 {
     pl_t pl;
     sc_dt::uint64 taddr = addr & 0x00FFFFFF;
@@ -373,7 +392,9 @@ sigma_t Ip_Core::read_rom(sc_dt::sc_uint<64> addr)
 	pl.set_data_ptr(buf);
 	pl.set_command( tlm::TLM_READ_COMMAND );
 	pl.set_response_status ( tlm::TLM_INCOMPLETE_RESPONSE );
-	sigma_rom_socket->b_transport(pl, offset);
-	return Uchar_to_Sigma_t(buf);
+	sigma_rom_socket->b_transport(pl, offset_hard);
+	return Uchar_to_Data_t(buf);
 	
 }
+
+
