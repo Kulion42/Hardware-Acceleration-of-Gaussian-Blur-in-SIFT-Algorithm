@@ -6,7 +6,7 @@ int Cpu::argc = 0;
 
 SC_HAS_PROCESS(Cpu);
 
-Cpu::Cpu(sc_core::sc_module_name name, char** strings, int arg_count) : sc_module(name), offset(sc_core::SC_ZERO_TIME)
+Cpu::Cpu(sc_core::sc_module_name name, char** strings, int arg_count) : sc_module(name), offset_soft(sc_core::SC_ZERO_TIME)
 {
 	SC_THREAD(soft);
 	SC_REPORT_INFO("Cpu ", "Constructed.");
@@ -102,7 +102,12 @@ void Cpu::soft()
     result.save("result.jpg");
     
     std::cout << "Found " << kps.size() << " keypoints. Output image is saved as result.jpg\n";
-    std::cout << "Time used " << offset << endl; 
+    
+    offset_system += offset_soft;
+    
+    std::cout << "Time used in whole system is " << offset_system << endl;
+    
+    //std::cout << "Time used in software--> " << offset_soft << endl; 
     
 }
 
@@ -152,7 +157,7 @@ std::vector<Image> Cpu::generate_gaussian_pyramid_vector(const Image& img, int i
 	cout << "IP core registers initialized" << endl;
 	cout << endl;
 	//------------------------------------------------
-	cout << "Bram initialzation 0" << endl;
+	//cout << "Bram initialzation 0" << endl;
 
 	fp = fopen("write_bram.txt", "w");
     for ( int x = 0; x < img.width; x+=4) {    
@@ -186,7 +191,7 @@ std::vector<Image> Cpu::generate_gaussian_pyramid_vector(const Image& img, int i
     }
     fclose(fp);
     
-	cout << "Bram initialized" << endl;
+	//cout << "Bram initialized" << endl;
 	
 	//------------------------------------------------
 	cout << endl;
@@ -205,7 +210,7 @@ std::vector<Image> Cpu::generate_gaussian_pyramid_vector(const Image& img, int i
     int imgs_per_octave = scales_per_octave + 3;
     
     //------------------------------------------------
-	 cout << "Saving bram state" << endl;
+	// cout << "Saving bram state" << endl;
        // fp = fopen("read_bram.txt", "w");
 
         for ( int x = 0; x < base_img.width; x+=4) {    
@@ -224,7 +229,7 @@ std::vector<Image> Cpu::generate_gaussian_pyramid_vector(const Image& img, int i
             }
          }
          
-     cout << "Bram state saved" << endl;
+   //  cout << "Bram state saved" << endl;
      cout << endl;
      
  
@@ -235,10 +240,6 @@ std::vector<Image> Cpu::generate_gaussian_pyramid_vector(const Image& img, int i
     for (int i = 0; i < num_octaves; i++) { 
          
       pyramid_images[i*imgs_per_octave] = (base_img);
-      
-        write_hard(ADDR_RESET, 1);
-        while(!read_hard(ADDR_READY));
-        write_hard(ADDR_RESET, 0);
         
       for(int j = 1; j < imgs_per_octave; j++){  
           
@@ -247,7 +248,7 @@ std::vector<Image> Cpu::generate_gaussian_pyramid_vector(const Image& img, int i
           
     //------------------------------------------------
         
-	    cout << "Bram initialzation " << endl;
+	   // cout << "Bram initialzation " << endl;
 	
        for ( int x = 0; x < prev_img.width; x+=4) { 
          for (int y = 0; y < prev_img.height; y++) {
@@ -266,7 +267,7 @@ std::vector<Image> Cpu::generate_gaussian_pyramid_vector(const Image& img, int i
          } 
          
          }
-         	cout << "Bram initialized" << endl;
+         	//cout << "Bram initialized" << endl;
          	
          	sprintf(numstr, "%d", i*imgs_per_octave + j);
          	res = bram_str + numstr + "_init" + ".txt";
@@ -293,14 +294,14 @@ std::vector<Image> Cpu::generate_gaussian_pyramid_vector(const Image& img, int i
 	        write_hard(ADDR_IMG_OFFSET_DOWN, offset_down);     
             write_hard(ADDR_NUM_IMG_OCT, j); 
             write_hard(ADDR_START, 1);
-	        cout << "IP core activated " <<  i*imgs_per_octave + j << endl;
+	        cout << "IP core activated " <<  i*(imgs_per_octave-1) + j << endl;
 	        cout << endl;
             write_hard(ADDR_START, 0);
 		        
 	        while(!read_hard(ADDR_READY));
 	        
 	//------------------------------------------------
-	        cout << "Saving bram state " << endl;
+	       // cout << "Saving bram state " << endl;
 	        sprintf(numstr, "%d", i*imgs_per_octave + j);
 	        res = bram_str + numstr + "_save" + ".txt";
 	        
@@ -320,7 +321,7 @@ std::vector<Image> Cpu::generate_gaussian_pyramid_vector(const Image& img, int i
                   tmp.set_pixel(x+3, y, 0, pix4);
                 }
             }
-              cout << "Bram state saved" << endl;
+             // cout << "Bram state saved" << endl;
 	//------------------------------------------------ 
 	   fclose(fp);
 	      for (sc_dt::sc_uint<64> j = VP_ADDR_MAIN_BRAM_L; j < VP_ADDR_MAIN_BRAM_H; j+=4)
@@ -336,7 +337,10 @@ std::vector<Image> Cpu::generate_gaussian_pyramid_vector(const Image& img, int i
       
           const Image& next_base_img = pyramid_images[i*imgs_per_octave + (imgs_per_octave - 3)];
           base_img = next_base_img.resize(next_base_img.width/2, next_base_img.height/2, Interpolation::NEAREST);
-
+          
+        write_hard(ADDR_RESET, 1);
+        while(!read_hard(ADDR_READY));
+        write_hard(ADDR_RESET, 0);
     }
     //while(1);
     enable = 0;
@@ -863,7 +867,7 @@ void Cpu::write_hard(sc_dt::sc_uint<64> addr, sc_dt::sc_int<16> val)
 	pl.set_data_ptr(buf);
 	pl.set_command( tlm::TLM_WRITE_COMMAND );
 	pl.set_response_status ( tlm::TLM_INCOMPLETE_RESPONSE );
-	interconnect_socket->b_transport(pl, offset);
+	interconnect_socket->b_transport(pl, offset_soft);
 }
 
 int Cpu::read_hard(sc_dt::sc_uint<64> addr)
@@ -875,12 +879,13 @@ int Cpu::read_hard(sc_dt::sc_uint<64> addr)
 	pl.set_data_ptr(&buf);
 	pl.set_command( tlm::TLM_READ_COMMAND );
 	pl.set_response_status ( tlm::TLM_INCOMPLETE_RESPONSE );
-	interconnect_socket->b_transport(pl, offset);
+	interconnect_socket->b_transport(pl, offset_soft);
 	return toInt(&buf);
 }
 
 void Cpu::write_mem(sc_dt::sc_uint<64> addr, data_t pix1, data_t pix2)
 {
+    offset_soft += sc_core::sc_time(10*DELAY , sc_core::SC_NS);	
 	pl_t pl;
 	unsigned char buf[4];
 	Fixed_to_Uchar(buf, pix1, pix2);
@@ -889,11 +894,12 @@ void Cpu::write_mem(sc_dt::sc_uint<64> addr, data_t pix1, data_t pix2)
 	pl.set_data_ptr(buf);
 	pl.set_command( tlm::TLM_WRITE_COMMAND );
 	pl.set_response_status ( tlm::TLM_INCOMPLETE_RESPONSE );
-	interconnect_socket->b_transport(pl, offset);
+	interconnect_socket->b_transport(pl, offset_soft);
 }
 
 void Cpu::read_mem(sc_dt::sc_uint<64> addr, data_t& pix1, data_t& pix2)
 {
+    offset_soft += sc_core::sc_time(10*DELAY , sc_core::SC_NS);	
 	pl_t pl;
 	unsigned char buf[4];
 	pl.set_address(addr);
@@ -901,6 +907,7 @@ void Cpu::read_mem(sc_dt::sc_uint<64> addr, data_t& pix1, data_t& pix2)
 	pl.set_data_ptr(buf);
 	pl.set_command( tlm::TLM_READ_COMMAND );
 	pl.set_response_status ( tlm::TLM_INCOMPLETE_RESPONSE );
-	interconnect_socket->b_transport(pl, offset);
+	interconnect_socket->b_transport(pl, offset_soft);
 	Uchar_to_Fixed(buf, pix1, pix2);
 }
+

@@ -39,7 +39,7 @@ class Cpu : public sc_core::sc_module
 		static char **input_arguments;
 		static int argc;
 		
-		sc_core::sc_time offset;
+		sc_core::sc_time offset_soft;
 		int enable = 1;
 		void soft();
 
@@ -94,6 +94,8 @@ class Cpu : public sc_core::sc_module
                                    
         bool refine_or_discard_keypoint(Keypoint& kp, const std::vector<Image>& octave,
                                 float contrast_thresh, float edge_thresh);
+                                
+                                
        } ;
        
 #endif     
