@@ -22,8 +22,8 @@ typedef tlm::tlm_base_protocol_types::tlm_phase_type ph_t;
 #define KERNEL_SIZE 0x14 * 2
 #define SIGMA_SIZE 0x06
 
-// macro for offset (DELAY = T = 1/f = 1/100MHz = 10ns)
-#define DELAY 10
+// macro for offset (DELAY = T = 1/f = 1/111MHz = 9ns)
+#define DELAY 9
 
 // 32-bit data bus, 4 bytes,
 #define BUS_WIDTH 4
