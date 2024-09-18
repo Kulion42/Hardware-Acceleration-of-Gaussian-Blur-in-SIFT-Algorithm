@@ -70,8 +70,6 @@ Port (
     tmp_bram_b_rdata: in std_logic_vector(2 *DATA_WIDTH -1 downto 0);
     tmp_bram_b_wdata: out std_logic_vector(2 *DATA_WIDTH -1 downto 0);
     
-    rom_addr_off_prev: in std_logic_vector(DATA_WIDTH/2 -1 downto 0);
-    rom_addr_off_next: out std_logic_vector(DATA_WIDTH/2 -1 downto 0);
     
     ready: out std_logic
     
@@ -172,9 +170,10 @@ end component;
 signal rom_en, start_x_conv, start_y_conv: std_logic;
 signal rom_addr: std_logic_vector(log2c(KERNEL_ROM_SIZE) -1 downto 0);
 signal rom_data: std_logic_vector(DATA_WIDTH -1 downto 0);
-signal next_blur_offset, rom_addr_off, size: std_logic_vector(DATA_WIDTH/2 -1 downto 0);
+signal rom_addr_off_prev, rom_addr_off, size: std_logic_vector(DATA_WIDTH/2 -1 downto 0);
 signal write1_a_addr, read1_a_addr, write1_b_addr, read1_b_addr: std_logic_vector(log2c(BRAM_SIZE) - 1 downto 0);
 signal write2_a_addr, read2_a_addr, write2_b_addr, read2_b_addr: std_logic_vector(log2c(BRAM_SIZE) - 1 downto 0);
+
 begin
 
 kernel_rom_gen: kernel_rom 
@@ -308,7 +307,6 @@ x_conv_gen: convolute_loops
         ready => ready
     );
     
-    rom_addr_off_next <= rom_addr_off;
     
     main_bram_a_addr <= read1_a_addr when start_y_conv = '1' and start_x_conv = '0'
                         else write1_a_addr when start_x_conv = '1' and start_y_conv = '1'
@@ -322,7 +320,11 @@ x_conv_gen: convolute_loops
     tmp_bram_b_addr <= read2_b_addr when start_x_conv = '1' and start_y_conv = '1'
                         else write2_b_addr when start_y_conv = '1' and start_x_conv = '0'
                         else (others => '1');    
-                         
+rom_offset: process(rom_addr_off)
+begin
+     rom_addr_off_prev <= rom_addr_off;   
+end process;  
+             
     main_bram_a_en <= '1';
     main_bram_b_en <= '1';
     tmp_bram_a_en <= '1';

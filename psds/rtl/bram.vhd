@@ -21,7 +21,7 @@ entity bram is
 end bram;
 
 architecture Behavioral of bram is
-    type ram_type is array(SIZE-1 downto 0) of std_logic_vector(2*WIDTH-1 downto 0);
+    type ram_type is array(SIZE/2-1 downto 0) of std_logic_vector(2*WIDTH-1 downto 0);
     signal RAM: ram_type;
     
     attribute ram_style: string;

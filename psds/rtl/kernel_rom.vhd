@@ -97,7 +97,7 @@ signal vals_lut_data: unsigned(LUT_WIDTH -1 downto 0);
 signal size_s: unsigned(DATA_WIDTH/2 -1 downto 0);
 signal add1_in1, add1_in2 : unsigned(2*DATA_WIDTH -1 downto 0);
 signal add1_out: std_logic_vector(2*DATA_WIDTH -1 downto 0);
-signal addr_a_out, addr_b_out: std_logic_vector(DATA_WIDTH/2 -1 downto 0);
+signal addr_a_out, addr_b_out, kernel_rom_addr_off_next_s: std_logic_vector(DATA_WIDTH/2 -1 downto 0);
 type rom_type is array (0 to KERNEL_ROM_SIZE-1) of unsigned(DATA_WIDTH -1 downto 0);
 signal ROM: rom_type := (
                             X"001E", X"0124", X"05AC", X"0ED7", X"1472", X"0ED7", X"05AC", X"0124", X"001E", 
@@ -117,7 +117,7 @@ ready <= '0';
         kernel_rom_a_data <= (others => '0');
         kernel_rom_b_data <= (others => '0');
     
-    elsif (rising_edge(clk)) then
+    elsif (rising_edge(clk) and start = '1') then
          if ( kernel_rom_a_en= '1') then
                 kernel_rom_a_data <= std_logic_vector(ROM(to_integer(unsigned(addr_a_out))));
         end if;
@@ -184,8 +184,12 @@ next_off_gen: dsp_unit_add
           rst => reset,
           in_1 => kernel_rom_addr_off_prev,
           in_2 => std_logic_vector(size_s),
-          out_res => kernel_rom_addr_off_next
+          out_res => kernel_rom_addr_off_next_s
            );
               
 sigma_size <= std_logic_vector(size_s);
+
+kernel_rom_addr_off_next <= (others => '0') when TO_INTEGER(unsigned(img_number)) = 4
+                            else std_logic_vector(size_s) when TO_INTEGER(unsigned(img_number)) = 0
+                            else kernel_rom_addr_off_next_s;
 end Mixed;
