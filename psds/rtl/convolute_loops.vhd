@@ -36,7 +36,7 @@ Generic(
     HORIZONTAL: boolean := true;
     
     --SIZE OF BRAMS AND ROM
-    KERNEL_ROM_SIZE : natural := 20; --FIXED 
+    KERNEL_ROM_SIZE : natural := 76; --FIXED 
     BRAM_SIZE : natural := 60000 --FIXED
 
 );
@@ -114,7 +114,7 @@ signal sum1_reg, sum2_reg, sum3_reg, sum4_reg: std_logic_vector(DATA_WIDTH -1  d
 signal sum1_next, sum2_next, sum3_next, sum4_next: std_logic_vector(DATA_WIDTH - 1 downto 0);
 signal r_addr_a_b1, r_addr_b_b1, w_addr_a_b2, w_addr_b_b2: std_logic_vector(DATA_WIDTH -1 downto 0);
 
-type state_t is (idle, loops_start, x_loop_end, y_loop_end, k_loop_end, x_addr_gen, y_addr_gen, bram_read_1, bram_read_2);
+type state_t is (idle, loops_start, y_loop_end, k_loop_end, x_addr_gen, y_addr_gen, bram_read_1, bram_read_2);
 signal state_reg, state_next : state_t;
 
 begin
@@ -344,8 +344,7 @@ begin
             
         when loops_start =>
             if x>= signed(img_width) then
-                ready <= '1';
-                state_next <= x_loop_end;
+                state_next <= idle;
             
             elsif (HORIZONTAL = false and y>= signed(img_height) - signed(img_offset_down)) or (HORIZONTAL = true and y>= signed(img_height) - signed(img_offset_down)) then
          
@@ -442,12 +441,7 @@ begin
             y_next <= (others => '0');
             x_next <= x + 4;
             state_next <= loops_start;
-        
-        
-        when x_loop_end =>
-            state_next <= idle;
-           
-        
+            
         when others => 
             state_next <= idle;
     
