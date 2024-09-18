@@ -1,18 +1,20 @@
 set PROJECT_NAME              gaussian_blur_rtl
-set PROJECT_CONSTRAINT_FILE ./constraints/Zybo-Z7-Master.xdc
+set PROJECT_CONSTRAINT_FILE ./Zybo-Z7-Master.xdc
 
-set DIR_OUTPUT project
+set DIR_OUTPUT project_gaussian_blur
             
 file mkdir ${DIR_OUTPUT}
 
 create_project ${PROJECT_NAME} ${DIR_OUTPUT}/${PROJECT_NAME} -part xc7z010clg400-1 -force
 
-add_files {rtl/dsp_unit_add.vhd}
-add_files {rtl/dsp_unit_mac_shift.vhd}
-add_files {rtl/utils_pkg.vhd}
-add_files {rtl/kernel_rom.vhd}
-add_files {rtl/convolute_loops.vhd}
-add_files {rtl/top.vhd}
+add_files -norecurse {dsp_unit_add.vhd}
+add_files -norecurse {dsp_unit_mac_shift.vhd}
+add_files -norecurse {utils_pkg.vhd}
+add_files -norecurse {kernel_rom.vhd}
+add_files -norecurse {convolute_loops.vhd}
+add_files -norecurse {bram.vhd}
+add_files -norecurse {gaussian_blur.vhd}
+add_files -norecurse {top_model.vhd}
 
 import_files -force
 
