@@ -93,7 +93,6 @@ component dsp_unit_add is
           out_res: out std_logic_vector(WIDTH1 - 1 downto 0));
 end component;
 
-signal vals_lut_data: unsigned(LUT_WIDTH -1 downto 0);
 signal size_s: unsigned(DATA_WIDTH/2 -1 downto 0);
 signal add1_in1, add1_in2 : unsigned(2*DATA_WIDTH -1 downto 0);
 signal add1_out: std_logic_vector(2*DATA_WIDTH -1 downto 0);

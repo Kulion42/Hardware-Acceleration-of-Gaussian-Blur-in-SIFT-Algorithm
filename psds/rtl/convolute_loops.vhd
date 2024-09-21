@@ -112,7 +112,8 @@ signal pix1, pix2, pix3, pix4: unsigned(DATA_WIDTH -1 downto 0);
 signal val1: unsigned(DATA_WIDTH -1 downto 0);
 signal sum1_reg, sum2_reg, sum3_reg, sum4_reg: std_logic_vector(DATA_WIDTH -1  downto 0); 
 signal sum1_next, sum2_next, sum3_next, sum4_next: std_logic_vector(DATA_WIDTH - 1 downto 0);
-signal r_addr_a_b1, r_addr_b_b1, w_addr_a_b2, w_addr_b_b2: std_logic_vector(DATA_WIDTH -1 downto 0);
+signal addr_a_b1, addr_b_b1, addr_a_b2, addr_b_b2: std_logic_vector(DATA_WIDTH -1 downto 0);
+
 
 type state_t is (idle, loops_start, y_loop_end, k_loop_end, x_addr_gen, y_addr_gen, bram_read_1, bram_read_2);
 signal state_reg, state_next : state_t;
@@ -186,7 +187,7 @@ addr_gen_1 : dsp_unit_mac_shift
          in_1 => std_logic_vector(c_y),
          in_2 => img_width,
          in_3 => std_logic_vector(c_x1),
-         out_res => r_addr_a_b1
+         out_res => addr_a_b1
          );
 addr_gen_2 : dsp_unit_mac_shift
     generic map(
@@ -199,7 +200,7 @@ addr_gen_2 : dsp_unit_mac_shift
          in_1 => std_logic_vector(c_y),
          in_2 => img_width,
          in_3 => std_logic_vector(c_x2),
-         out_res => r_addr_b_b1
+         out_res => addr_b_b1
          );    
 addr_gen_3 : dsp_unit_mac_shift
     generic map(
@@ -212,7 +213,7 @@ addr_gen_3 : dsp_unit_mac_shift
          in_1 => std_logic_vector(y),
          in_2 => img_width,
          in_3 => std_logic_vector(x),
-         out_res => w_addr_a_b2
+         out_res => addr_a_b2
          );    
 addr_gen_4 : dsp_unit_mac_shift
     generic map(
@@ -225,7 +226,7 @@ addr_gen_4 : dsp_unit_mac_shift
          in_1 => std_logic_vector(y),
          in_2 => img_width,
          in_3 => std_logic_vector(x_add_2),
-         out_res => w_addr_b_b2
+         out_res => addr_b_b2
          );                                     
 next_state_process: process(clk, reset) is
 
@@ -281,35 +282,23 @@ combinational_logic_process: process(start, state_reg, state_next, img_width, im
 val1, pix1, pix2, pix3, pix4, sum1_reg, sum2_reg, sum3_reg, sum4_reg, sum1_next, sum2_next, sum3_next, sum4_next, kernel_rom_data, bram1_a_rdata, bram1_b_rdata) is
 
 begin
+   
     kernel_rom_en <= '1';
-    kernel_rom_addr <= (others => '0');
     
-    bram1_a_en <= '1';
+    bram1_a_en <= '0';
     bram1_a_we <= (others => '0');
-    bram1_a_addr <= (others => '0');
-    bram1_a_wdata <= (others => '0');
+
     
-    bram1_b_en <= '1';
+    bram1_b_en <= '0';
     bram1_b_we <= (others => '0');
-    bram1_b_addr <= (others => '0');
-    bram1_b_wdata <= (others => '0');
+
     
-    bram2_a_en <= '1';
-    bram2_a_we <= (others => '1');
-    bram2_a_addr <= (others => '0');
-    bram2_a_wdata <= (others => '0');
+    bram2_a_en <= '0';
+    bram2_a_we <= (others => '0');
+
     
-    bram2_b_en <= '1';
-    bram2_b_we <= (others => '1');
-    bram2_b_addr <= (others => '0');
-    bram2_b_wdata <= (others => '0');
-    
-    val1 <= (others => '0');
-    
-    pix1 <= (others => '0');
-    pix2 <= (others => '0');
-    pix3 <= (others => '0');
-    pix4 <= (others => '0');
+    bram2_b_en <= '0';
+    bram2_b_we <= (others => '0');
     
     x_next <= x;
     y_next <= y;
@@ -403,14 +392,17 @@ begin
             end if;
             
             c_x1_next <= x; 
-            c_x2_next <= x_add_2;    
+            c_x2_next <= x_add_2;
+            kernel_rom_en <= '1';  
+            kernel_rom_addr <= std_logic_vector(TO_UNSIGNED(TO_INTEGER(k), log2c(KERNEL_ROM_SIZE)));  
             state_next <= bram_read_1;
         
         when bram_read_1 =>
+            bram1_a_en <= '1';
+            bram1_b_en <= '1';
             
-            kernel_rom_addr <= std_logic_vector(TO_UNSIGNED(TO_INTEGER(k), log2c(KERNEL_ROM_SIZE)));
-            bram1_a_addr <= r_addr_a_b1;
-            bram1_b_addr <= r_addr_b_b1;
+            bram1_a_addr <= addr_a_b1;
+            bram1_b_addr <= addr_b_b1;
                        
             state_next <= bram_read_2;
         
@@ -426,9 +418,14 @@ begin
             state_next <= loops_start;
             
         when k_loop_end =>
-        
-            bram2_a_addr <= w_addr_a_b2;
-            bram2_b_addr <= w_addr_b_b2;
+            bram2_a_en <= '1';
+            bram2_b_en <= '1';
+            
+            bram2_a_we <= "1111";
+            bram2_b_we <= "1111";
+            
+            bram2_a_addr <= addr_a_b2;
+            bram2_b_addr <= addr_b_b2;
             
             bram2_a_wdata <= sum1_reg&sum2_reg;
             bram2_b_wdata <= sum3_reg&sum4_reg;
