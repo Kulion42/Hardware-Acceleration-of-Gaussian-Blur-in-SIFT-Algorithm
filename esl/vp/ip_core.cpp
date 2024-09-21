@@ -188,8 +188,13 @@ void Ip_Core::gaussian_blur(sc_core::sc_time& offset)
                  p3 = to_Uint16_t(pix3);
                  p4 = to_Uint16_t(pix4);
                  
-                 fprintf(fp, "%X\t%X\n", (unsigned int)p1, (unsigned int)p2);
-                 fprintf(fp, "%X\t%X\n", (unsigned int)p3, (unsigned int)p4);
+                 std::string p1_b = std::bitset<16>((unsigned int)p1).to_string(); //to binary
+                 std::string p2_b = std::bitset<16>((unsigned int)p2).to_string(); //to binary
+                 fprintf(fp, "%s%s\n" , p1_b.c_str(), p2_b.c_str());
+                 std::string p3_b = std::bitset<16>((unsigned int)p3).to_string(); //to binary
+                 std::string p4_b = std::bitset<16>((unsigned int)p4).to_string(); //to binary
+                 fprintf(fp, "%s%s\n" , p3_b.c_str(), p4_b.c_str());
+
                  sum1 += pix1 * val1;
                  sum2 += pix2 * val1;
                  sum3 += pix3 * val1;
@@ -244,8 +249,13 @@ void Ip_Core::gaussian_blur(sc_core::sc_time& offset)
                  p3 = to_Uint16_t(pix3);
                  p4 = to_Uint16_t(pix4);
                  
-                 fprintf(fp, "%X\t%X\n", (unsigned int)p1, (unsigned int)p2);
-                 fprintf(fp, "%X\t%X\n", (unsigned int)p3, (unsigned int)p4);
+                 std::string p1_b = std::bitset<16>((unsigned int)p1).to_string(); //to binary
+                 std::string p2_b = std::bitset<16>((unsigned int)p2).to_string(); //to binary
+                 fprintf(fp, "%s%s\n" , p1_b.c_str(), p2_b.c_str());
+                 std::string p3_b = std::bitset<16>((unsigned int)p3).to_string(); //to binary
+                 std::string p4_b = std::bitset<16>((unsigned int)p4).to_string(); //to binary
+                 fprintf(fp, "%s%s\n" , p3_b.c_str(), p4_b.c_str());
+                 
                  sum1 += pix1 * val1;
                  sum2 += pix2 * val1;
                  sum3 += pix3 * val1;

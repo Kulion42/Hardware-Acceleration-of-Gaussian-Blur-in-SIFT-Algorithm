@@ -185,7 +185,9 @@ std::vector<Image> Cpu::generate_gaussian_pyramid_vector(const Image& img, int i
           read_mem(VP_ADDR_MAIN_BRAM_L  + 2 *(y*img.width + x), pix1, pix2);
           p1 = to_Uint16_t(pix1);
           p2 = to_Uint16_t(pix2);
-          fprintf(fp, "%X\t%X\n" , (unsigned int)p1, (unsigned int)p2);
+          std::string p1_b = std::bitset<16>((unsigned int)p1).to_string(); //to binary
+          std::string p2_b = std::bitset<16>((unsigned int)p2).to_string(); //to binary
+          fprintf(fp, "%s%s\n" , p1_b.c_str(), p2_b.c_str());
           
         }
     }
@@ -279,7 +281,9 @@ std::vector<Image> Cpu::generate_gaussian_pyramid_vector(const Image& img, int i
                   read_mem(VP_ADDR_MAIN_BRAM_L  + 2 *(y*img.width + x), pix1, pix2);
                   p1 = to_Uint16_t(pix1);
                   p2 = to_Uint16_t(pix2);
-                  fprintf(fp, "%X\t%X\n" , (unsigned int)p1, (unsigned int)p2);
+                  std::string p1_b = std::bitset<16>((unsigned int)p1).to_string(); //to binary
+                  std::string p2_b = std::bitset<16>((unsigned int)p2).to_string(); //to binary
+                  fprintf(fp, "%s%s\n" , p1_b.c_str(), p2_b.c_str());
           
              }
     }
