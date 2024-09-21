@@ -111,19 +111,17 @@ begin
 
 clk_proc: process(clk, reset)
 begin
-ready <= '0';
     if (reset = '1') then
         kernel_rom_a_data <= (others => '0');
         kernel_rom_b_data <= (others => '0');
     
-    elsif (rising_edge(clk) and start = '1') then
+    elsif (rising_edge(clk)) then
          if ( kernel_rom_a_en= '1') then
                 kernel_rom_a_data <= std_logic_vector(ROM(to_integer(unsigned(addr_a_out))));
         end if;
         if ( kernel_rom_b_en= '1') then
                 kernel_rom_b_data <= std_logic_vector(ROM(to_integer(unsigned(addr_b_out))));
         end if;
-        ready <= '1';
     
     end if;
 
@@ -191,4 +189,6 @@ sigma_size <= std_logic_vector(size_s);
 kernel_rom_addr_off_next <= (others => '0') when TO_INTEGER(unsigned(img_number)) = 4
                             else std_logic_vector(size_s) when TO_INTEGER(unsigned(img_number)) = 0
                             else kernel_rom_addr_off_next_s;
+ready <= '0' when kernel_rom_addr_off_prev = kernel_rom_addr_off_next_s
+            else '1';                             
 end Mixed;

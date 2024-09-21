@@ -236,7 +236,7 @@ begin
         state_reg <= idle;
         
         x <= (others => '0');
-        y <= signed(img_offset_up);
+        y <= (others => '0');
         k <= (others => '0');
         
         dx <= (others => '0');
@@ -284,21 +284,6 @@ val1, pix1, pix2, pix3, pix4, sum1_reg, sum2_reg, sum3_reg, sum4_reg, sum1_next,
 begin
    
     kernel_rom_en <= '1';
-    
-    bram1_a_en <= '0';
-    bram1_a_we <= (others => '0');
-
-    
-    bram1_b_en <= '0';
-    bram1_b_we <= (others => '0');
-
-    
-    bram2_a_en <= '0';
-    bram2_a_we <= (others => '0');
-
-    
-    bram2_b_en <= '0';
-    bram2_b_we <= (others => '0');
     
     x_next <= x;
     y_next <= y;
@@ -398,11 +383,6 @@ begin
             state_next <= bram_read_1;
         
         when bram_read_1 =>
-            bram1_a_en <= '1';
-            bram1_b_en <= '1';
-            
-            bram1_a_addr <= addr_a_b1;
-            bram1_b_addr <= addr_b_b1;
                        
             state_next <= bram_read_2;
         
@@ -418,14 +398,6 @@ begin
             state_next <= loops_start;
             
         when k_loop_end =>
-            bram2_a_en <= '1';
-            bram2_b_en <= '1';
-            
-            bram2_a_we <= "1111";
-            bram2_b_we <= "1111";
-            
-            bram2_a_addr <= addr_a_b2;
-            bram2_b_addr <= addr_b_b2;
             
             bram2_a_wdata <= sum1_reg&sum2_reg;
             bram2_b_wdata <= sum3_reg&sum4_reg;
@@ -445,5 +417,23 @@ begin
     end case;
 
 end process;
-
+            bram1_a_en <= '1';
+            bram1_b_en <= '1';
+            
+            bram1_a_we <= "0000";
+            bram1_a_we <= "0000";
+            
+            bram1_a_addr <= addr_a_b1;
+            bram1_b_addr <= addr_b_b1;
+            
+            bram2_a_en <= '1';
+            bram2_b_en <= '1';
+            
+            bram2_a_we <= "1111" when state_reg = k_loop_end
+                            else "0000";
+            bram2_b_we <= "1111"when state_reg = k_loop_end
+                            else "0000";
+            
+            bram2_a_addr <= addr_a_b2;
+            bram2_b_addr <= addr_b_b2;
 end Mixed;
