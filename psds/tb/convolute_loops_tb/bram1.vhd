@@ -10,7 +10,6 @@ use work.txt_util.all;
 
 entity bram1 is
     generic (WIDTH: positive := 16;
-             W_R_BYTES: positive := 4;
              SIZE: positive := 60000);
     port (clk_a : in std_logic;
           clk_b : in std_logic;
@@ -20,38 +19,42 @@ entity bram1 is
           we_b: in std_logic_vector(3 downto 0);
           addr_a: in std_logic_vector(log2c(SIZE) -1 downto 0);
           addr_b: in std_logic_vector(log2c(SIZE) -1 downto 0);
-          data_a_i: in std_logic_vector(log2c(W_R_BYTES) *WIDTH-1 downto 0);
-          data_b_i: in std_logic_vector(log2c(W_R_BYTES) *WIDTH-1 downto 0);
-          data_a_o: out std_logic_vector(log2c(W_R_BYTES) *WIDTH-1 downto 0);
-          data_b_o: out std_logic_vector(log2c(W_R_BYTES) *WIDTH-1 downto 0));
+          data_a_i: in std_logic_vector(2 *WIDTH-1 downto 0);
+          data_b_i: in std_logic_vector(2 *WIDTH-1 downto 0);
+          data_a_o: out std_logic_vector(2*WIDTH-1 downto 0);
+          data_b_o: out std_logic_vector(2 *WIDTH-1 downto 0));
           
 end bram1;
 
 architecture Behavioral of bram1 is
  
-    type ram_type is array(SIZE-1 downto 0) of std_logic_vector(WIDTH-1 downto 0);
+    type ram_type is array(SIZE/2-1 downto 0) of std_logic_vector(2*WIDTH-1 downto 0);
     signal RAM: ram_type;
     
-    --attribute ram_style: string;
-    --attribute ram_style of RAM: signal is "block";      
+    attribute ram_style: string;
+    attribute ram_style of RAM: signal is "block";      
     
 begin
 
-    initial_process:process
+initial_process:process
     
-    variable line_content : line;
+    variable line_content_a, line_content_b : line;
     variable i : natural := 0;
-    variable temp_data : std_logic_vector(WIDTH-1 downto 0);
-    file bram_data_file: text open read_mode is "../../psds/tb/bram_init1.txt";
+    variable temp_data_a, temp_data_b : std_logic_vector(WIDTH-1 downto 0);
+    file bram_data_file: text open read_mode is "/home/luka/sift-cpp-master/psds/tb/convolute_loops_tb/bram_state_1_init.txt";
     
-    begin
-        
+    begin     
         
         while not endfile(bram_data_file) loop
-            readline(bram_data_file, line_content);
-            hread(line_content, temp_data);
-            RAM(i) <= temp_data;
-            i := i + 1;
+            readline(bram_data_file, line_content_a);
+            hread(line_content_a, temp_data_a);
+            RAM(i/2)(2 * WIDTH -1 downto WIDTH) <= temp_data_a;
+            report "Temp_data_a = " & to_hstring(temp_data_a) & "h"; 
+            readline(bram_data_file, line_content_b);
+            hread(line_content_b, temp_data_b);
+            RAM(i/2)(WIDTH -1 downto 0) <= temp_data_b;
+            report "Temp_data_b = " & to_hstring(temp_data_b) & "h";            
+            i := i + 2;
         end loop;
         file_close(bram_data_file);
         wait;
@@ -61,35 +64,19 @@ begin
     begin
         if (rising_edge(clk_a)) then
             if (en_a = '1') then
-                if W_R_BYTES = 4 then
-                    data_a_o <= RAM(to_integer(unsigned(addr_a))) & RAM(to_integer(unsigned(addr_a) +1));
-                    if (we_a /= "0000") then
-                        RAM(to_integer(unsigned(addr_a))) <= data_a_i(2*WIDTH -1 downto WIDTH);
-                        RAM(to_integer(unsigned(addr_a) +1)) <= data_a_i(WIDTH -1 downto 0);
-                    end if;
-                elsif W_R_BYTES = 2 then
                     data_a_o <= RAM(to_integer(unsigned(addr_a)));
                     if (we_a /= "0000") then
-                        RAM(to_integer(unsigned(addr_a))) <= data_a_i(WIDTH -1 downto 0);
+                        RAM(to_integer(unsigned(addr_a))) <= data_a_i;
                     end if;
-                end if;
             end if;
         end if;
         
         if (rising_edge(clk_b)) then
-            if (en_b = '1') then
-                    if W_R_BYTES = 4 then
-                    data_b_o <= RAM(to_integer(unsigned(addr_b))) & RAM(to_integer(unsigned(addr_b) +1));
-                    if (we_b /= "0000") then
-                        RAM(to_integer(unsigned(addr_b))) <= data_b_i(2*WIDTH -1 downto WIDTH);
-                        RAM(to_integer(unsigned(addr_b) +1)) <= data_b_i(WIDTH -1 downto 0);
-                    end if;
-                elsif W_R_BYTES = 2 then
+            if (en_b = '1') then                   
                     data_b_o <= RAM(to_integer(unsigned(addr_b)));
                     if (we_b /= "0000") then
-                        RAM(to_integer(unsigned(addr_b))) <= data_b_i(WIDTH -1 downto 0);
-                    end if;
-                end if;    
+                        RAM(to_integer(unsigned(addr_b))) <= data_b_i;
+                    end if;                   
             end if;
         end if;
     end process;

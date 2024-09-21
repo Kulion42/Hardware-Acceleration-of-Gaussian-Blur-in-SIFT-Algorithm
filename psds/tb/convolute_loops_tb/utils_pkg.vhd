@@ -3,7 +3,7 @@ use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
 
 package utils_pkg is
-    function log2c (n: integer) return integer;  
+    function log2c (n: integer) return integer;
 end utils_pkg;
 
 package body utils_pkg is

@@ -21,9 +21,14 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
+use IEEE.std_logic_textio.ALL;
 use std.textio.all;
 use work.txt_util.all;
 use work.utils_pkg.all;
+
+library std;
+use std.textio.all;
+use work.txt_util.all;
 
 -- Uncomment the following library declaration if using
 -- arithmetic functions with Signed or Unsigned values
@@ -39,62 +44,56 @@ entity check_convolution_tb is
 end check_convolution_tb;
 
 architecture Behavioral of check_convolution_tb is
-
-    file BRAM1_txt : text open read_mode is "../../esl/vp/test/bram_init/bram_init.txt";
-    file BRAM2_txt : text open write_mode is "../../esl/vp/test/bram_init/bram_init.txt";
-    file KERNEL_BRAM_txt : text open read_mode is "../../esl/vp/test/kernel_bram/kernel_state_0.txt";
-
-    --WIDTH OF DATA
-    constant DATA_WIDTH : natural := 16; -- FIXED
+    constant DATA_WIDTH : integer :=16;
+    constant BRAM_SIZE : integer :=60000;
+    constant KERNEL_ROM_SIZE : integer :=76;
     
-    --IMAGE ELEMENTS
-    constant IMG_WIDTH : natural := 450; -- VARIABLE 
-    constant IMG_HEIGHT : natural := 100; -- VARIABLE 
-    constant IMG_OFFSET_UP : natural := 10; -- VARIABLE 
-    constant IMG_OFFSET_DOWN : natural := 10; -- VARIABLE 
-    constant SIGMA_SIZE : natural := 19; --VARIABLE -- ALWAYS ODD -- MAX = KERNEL_BRAM_SIZE
-    constant SIGMA_CENTER: natural := 10; --VARIABLE --ROUND(SIGMA_SIZE/2)
-    
-    --SIZE OF BRAMS
-    constant KERNEL_BRAM_SIZE : natural := 20; --FIXED 
-    constant BRAM1_SIZE : natural := 60000; --FIXED
-    constant BRAM2_SIZE : natural := 59980; -- FIXED
-    
-    --BRAM
-    constant WIDTH: positive := 16;
-    constant W_R_BYTES: positive := 4;
+    file BRAM1_txt : text open read_mode is "bram_state_1_init.txt";
+    file BRAM2_txt : text open write_mode is "bram_state_1_save.txt";
 
     --signali
-    signal clk_s : std_logic := '0';
+    signal clk_s : std_logic ;
     signal reset_s : std_logic;
-    signal start_s : std_logic;
+    signal start_s, start_main : std_logic;
     signal ready_s : std_logic;
     
-    signal bram1_a_en: std_logic;
-    signal bram1_a_we: std_logic_vector(3 downto 0);
-    signal bram1_a_raddr: std_logic_vector(log2c(BRAM1_SIZE) - 1 downto 0);
-    signal bram1_a_rdata: std_logic_vector(2 *DATA_WIDTH -1 downto 0); 
+    signal img_height_s: std_logic_vector(DATA_WIDTH -1 downto 0);
+    signal img_width_s: std_logic_vector(DATA_WIDTH -1 downto 0);
+    signal img_offset_up_s: std_logic_vector(DATA_WIDTH -1 downto 0); 
+    signal img_offset_down_s: std_logic_vector(DATA_WIDTH -1 downto 0);
+    signal img_per_octave_s: std_logic_vector(DATA_WIDTH -1 downto 0);
     
-    signal bram1_b_en: std_logic;
-    signal bram1_b_we: std_logic_vector(3 downto 0);
-    signal bram1_b_raddr: std_logic_vector(log2c(BRAM1_SIZE) - 1 downto 0);
-    signal bram1_b_rdata: std_logic_vector(2 *DATA_WIDTH -1 downto 0);
+    signal sigma_size_s: std_logic_vector(DATA_WIDTH/2 -1 downto 0);
     
-    signal kernel_bram_en: std_logic;
-    signal kernel_bram_we: std_logic_vector(3 downto 0);
-    signal kernel_bram_raddr: std_logic_vector(log2c(KERNEL_BRAM_SIZE) - 1 downto 0);
-    signal kernel_bram_rdata: std_logic_vector(DATA_WIDTH -1 downto 0);
+    signal bram1_a_en_s: std_logic;
+    signal bram1_a_we_s: std_logic_vector(3 downto 0);
+    signal bram1_a_addr_s: std_logic_vector(log2c(BRAM_SIZE) - 1 downto 0);
+    signal bram1_a_rdata_s: std_logic_vector(2 *DATA_WIDTH -1 downto 0); 
+    signal bram1_a_wdata_s: std_logic_vector(2 *DATA_WIDTH -1 downto 0);
     
+    signal bram1_b_en_s: std_logic;
+    signal bram1_b_we_s: std_logic_vector(3 downto 0);
+    signal bram1_b_addr_s: std_logic_vector(log2c(BRAM_SIZE) - 1 downto 0);
+    signal bram1_b_rdata_s: std_logic_vector(2 *DATA_WIDTH -1 downto 0);
+    signal bram1_b_wdata_s: std_logic_vector(2 *DATA_WIDTH -1 downto 0);
     
-    signal bram2_a_en: std_logic;
-    signal bram2_a_we: std_logic_vector(3 downto 0);
-    signal bram2_a_waddr: std_logic_vector(log2c(BRAM2_SIZE) - 1 downto 0);
-    signal bram2_a_wdata: std_logic_vector(2 *DATA_WIDTH -1 downto 0);
+    signal kernel_rom_en_s: std_logic;
+    signal kernel_rom_addr_s: std_logic_vector(log2c(KERNEL_ROM_SIZE) - 1 downto 0);
+    signal kernel_rom_data_s: std_logic_vector(DATA_WIDTH -1 downto 0);
+     
+    signal bram2_a_en_s: std_logic;
+    signal bram2_a_we_s: std_logic_vector(3 downto 0);
+    signal bram2_a_addr_s: std_logic_vector(log2c(BRAM_SIZE) - 1 downto 0);
+    signal bram2_a_rdata_s: std_logic_vector(2 *DATA_WIDTH -1 downto 0);
+    signal bram2_a_wdata_s: std_logic_vector(2 *DATA_WIDTH -1 downto 0);
     
-    signal bram2_b_en: std_logic;
-    signal bram2_b_we: std_logic_vector(3 downto 0);
-    signal bram2_b_waddr: std_logic_vector(log2c(BRAM2_SIZE) - 1 downto 0);
-    signal bram2_b_wdata: std_logic_vector(2 *DATA_WIDTH -1 downto 0);
+    signal bram2_b_en_s: std_logic;
+    signal bram2_b_we_s: std_logic_vector(3 downto 0);
+    signal bram2_b_addr_s: std_logic_vector(log2c(BRAM_SIZE) - 1 downto 0);
+    signal bram2_b_rdata_s: std_logic_vector(2 *DATA_WIDTH -1 downto 0);
+    signal bram2_b_wdata_s: std_logic_vector(2 *DATA_WIDTH -1 downto 0);
+    
+    signal rom_addr_off_next_s: std_logic_vector(DATA_WIDTH/2 -1 downto 0);
     
     
 
@@ -104,109 +103,170 @@ begin
     --konvolucija koja se radi u VP.
     --U ovoj konvoluciji se cita iz BRAM1 i KERNEL_BRAM a upisuje u BRAM2.
     convolution_HW: entity work.convolute_loops(Mixed)
-        generic map(DATA_WIDTH => DATA_WIDTH,
-                    IMG_WIDTH => IMG_WIDTH,
-                    IMG_HEIGHT => IMG_HEIGHT,
-                    IMG_OFFSET_UP => IMG_OFFSET_UP,
-                    IMG_OFFSET_DOWN => IMG_OFFSET_DOWN,
-                    SIGMA_SIZE => SIGMA_SIZE,
-                    SIGMA_CENTER => SIGMA_CENTER,
+        generic map(DATA_WIDTH => DATA_WIDTH,                
                     HORIZONTAL => false,
-                    KERNEL_BRAM_SIZE => KERNEL_BRAM_SIZE,
-                    BRAM1_SIZE => BRAM1_SIZE,
-                    BRAM2_SIZE => BRAM2_SIZE)
+                    KERNEL_ROM_SIZE => KERNEL_ROM_SIZE,
+                    BRAM_SIZE => BRAM_SIZE)
         port map(clk => clk_s,
                  reset => reset_s,
                  start => start_s,
                  
-                 bram1_a_en => bram1_a_en,
-                 bram1_a_we => bram1_a_we,
-                 bram1_a_raddr => bram1_a_raddr,
-                 bram1_a_rdata => bram1_a_rdata,
+                 img_height => img_height_s,
+                 img_width => img_width_s,
+                 img_offset_up => img_offset_up_s,
+                 img_offset_down => img_offset_down_s,
+                 img_per_octave => img_per_octave_s,
+                
+                 sigma_size => sigma_size_s,
                  
-                 bram1_b_en => bram1_b_en,
-                 bram1_b_we => bram1_b_we,
-                 bram1_b_raddr => bram1_b_raddr,
-                 bram1_b_rdata => bram1_b_rdata,
+                 --bram1_a_en => bram1_a_en_s,
+                 --bram1_a_we => bram1_a_we_s,
+                 bram1_a_addr => bram1_a_addr_s,
+                 bram1_a_rdata => bram1_a_rdata_s,
+                 bram1_a_wdata => bram1_a_wdata_s,
                  
-                 kernel_bram_en => kernel_bram_en,
-                 kernel_bram_we => kernel_bram_we,
-                 kernel_bram_raddr => kernel_bram_raddr,
-                 kernel_bram_rdata => kernel_bram_rdata,
+                 --bram1_b_en => bram1_b_en_s,
+                 --bram1_b_we => bram1_b_we_s,
+                 bram1_b_addr => bram1_b_addr_s,
+                 bram1_b_rdata => bram1_b_rdata_s,
+                 bram1_b_wdata => bram1_b_wdata_s,
                  
-                 bram2_a_en => bram2_a_en,
-                 bram2_a_we => bram2_a_we,
-                 bram2_a_waddr => bram2_a_waddr,
-                 bram2_a_wdata => bram2_a_wdata,
+                 kernel_rom_en => kernel_rom_en_s,
+                 kernel_rom_addr => kernel_rom_addr_s,
+                 kernel_rom_data => kernel_rom_data_s,
                  
-                 bram2_b_en => bram2_b_en,
-                 bram2_b_we => bram2_b_we,
-                 bram2_b_waddr => bram2_b_waddr,
-                 bram2_b_wdata => bram2_b_wdata,
+                 --bram2_a_en => bram2_a_en_s,
+                 --bram2_a_we => bram2_a_we_s,
+                 bram2_a_addr => bram2_a_addr_s,
+                 bram2_a_rdata => bram2_a_rdata_s,
+                 bram2_a_wdata => bram2_a_wdata_s,
+                 
+                 --bram2_b_en => bram2_b_en_s,
+                 --bram2_b_we => bram2_b_we_s,
+                 bram2_b_addr => bram2_b_addr_s,
+                 bram2_b_rdata => bram2_b_rdata_s,
+                 bram2_b_wdata => bram2_b_wdata_s,
                  
                  ready => ready_s);
                  
     --iz ovog brama se iscitava orignal slika
     BRAM1: entity work.bram1(Behavioral)
-        generic map(WIDTH => WIDTH,
-                    W_R_BYTES => W_R_BYTES,
-                    SIZE => BRAM1_SIZE)
+        generic map(WIDTH => DATA_WIDTH,
+                    SIZE => BRAM_SIZE)
         port map(clk_a => clk_s,
                  clk_b => clk_s,
                  
-                 en_a => bram1_a_en,
-                 we_a => bram1_a_we,
-                 addr_a => bram1_a_raddr,
-                 data_a_o => bram1_a_rdata,
-                 data_a_i => open,
+                 en_a => '1',
+                 we_a => "0000",
+                 addr_a => bram1_a_addr_s,
+                 data_a_o => bram1_a_rdata_s,
+                 data_a_i => bram1_a_wdata_s,
                  
-                 en_b => bram1_b_en,
-                 we_b => bram1_b_we,
-                 addr_b => bram1_b_raddr,
-                 data_b_o => bram1_b_rdata,
-                 data_b_i => open);
+                 en_b => '1',
+                 we_b => "0000",
+                 addr_b => bram1_b_addr_s,
+                 data_b_o => bram1_b_rdata_s,
+                 data_b_i => bram1_b_wdata_s  );
        
     --u ovaj bram se upisuje tmp slika 
-    BRAM2: entity work.bram2(Behavioral)
-        generic map(WIDTH => WIDTH,
-                    W_R_BYTES => W_R_BYTES,
-                    SIZE => BRAM2_SIZE)
+    BRAM2: entity work.bram(Behavioral)
+        generic map(WIDTH => DATA_WIDTH,
+                    SIZE => BRAM_SIZE)
         port map(clk_a => clk_s,
                  clk_b => clk_s,
                  
-                 en_a => bram2_a_en,
-                 we_a => bram2_a_we,
-                 addr_a => bram2_a_waddr,
-                 data_a_i => bram2_a_wdata,
-                 data_a_o => open,
+                 en_a => '1',
+                 we_a => bram2_a_we_s,
+                 addr_a => bram2_a_addr_s,
+                 data_a_i => bram2_a_wdata_s,
+                 data_a_o => bram2_a_rdata_s,
                  
-                 en_b => bram2_b_en,
-                 we_b => bram2_b_we,
-                 addr_b => bram2_b_waddr,
-                 data_b_i => bram2_b_wdata,
-                 data_b_o => open); 
+                 en_b => '1',
+                 we_b => bram2_b_we_s,
+                 addr_b => bram2_b_addr_s,
+                 data_b_i => bram2_b_wdata_s,
+                 data_b_o => bram2_a_rdata_s); 
                  
     --iz ovog brama se iscitava kernel                     
-    KERNEL_BRAM: entity work.bram_kernel(Behavioral)
-        generic map(WIDTH => WIDTH,
-                    W_R_BYTES => W_R_BYTES,
-                    SIZE => BRAM2_SIZE)
-        port map(clk_a => clk_s,
-                 clk_b => open,
+    KERNEL_ROM: entity work.kernel_rom(Mixed)
+        generic map(DATA_WIDTH => DATA_WIDTH,
+                    KERNEL_ROM_SIZE => KERNEL_ROM_SIZE)
+        port map(clk => clk_s,
+                 reset => reset_s,
+                 start => start_main,
                  
-                 en_a => kernel_bram_en,
-                 we_a => kernel_bram_we,
-                 addr_a => kernel_bram_raddr,
-                 data_a_o => kernel_bram_rdata,
-                 data_a_i => open,
-                 
-                 en_b => open,
-                 we_b => open,
-                 addr_b => open,
-                 data_b_o => open,
-                 data_b_i => open);  
-                 
- 
+                 img_number => img_per_octave_s,
     
+                 kernel_rom_a_en => kernel_rom_en_s,
+                 kernel_rom_a_addr => kernel_rom_addr_s,
+                 kernel_rom_b_en => '0',
+                 kernel_rom_b_addr => (others => '0') ,
+                
+                 kernel_rom_a_data => kernel_rom_data_s,
+                 kernel_rom_b_data => open ,
+                
+                 kernel_rom_addr_off_prev => (others => '0') ,
+                 kernel_rom_addr_off_next => rom_addr_off_next_s,
+                
+                 sigma_size => sigma_size_s,
+                 
+                 ready => start_s);  
+                 
+    
+clk_gen: process
+begin
+    clk_s <= '0','1' after 9 ns;
+    wait for 18 ns;
+end process;
+
+stim_gen: process
+begin
+    reset_s <= '1';
+    wait for 45 ns;
+    reset_s <= '0';
+    kernel_rom_en_s <= '1'; 
+    wait until falling_edge(clk_s);
+    --bram2_a_we_s <= "1111";
+    --bram2_b_we_s <= "1111";
+    start_main <= '0';
+           
+    img_height_s <= std_logic_vector(TO_SIGNED(110, 16));
+    img_width_s <= std_logic_vector(TO_SIGNED(450, 16));
+    img_offset_up_s <= std_logic_vector(TO_SIGNED(10, 16));
+    img_offset_down_s <= std_logic_vector(TO_SIGNED(10, 16));
+    img_per_octave_s <= std_logic_vector(TO_SIGNED(1, 16));               
+    
+    start_main <= '1';
+    
+    
+    wait until ready_s <= '1';
+    --bram2_a_we_s <= "0000";
+    --bram2_b_we_s <= "0000";
+wait;
+end process;
+                 
+final_process:process
+    
+    variable line_content_a, line_content_b : line;
+    variable i : natural := 0;
+    variable temp_data : std_logic_vector(2*DATA_WIDTH-1 downto 0);
+    file bram_data_file: text open write_mode is "/home/luka/sift-cpp-master/psds/tb/convolute_loops_tb/bram_state_1_save.txt";
+    
+    begin
+    
+        wait until bram2_a_we_s = "0000" ;
+        while i < TO_INTEGER(unsigned(img_width_s)) * TO_INTEGER(unsigned(img_height_s)) loop
+            
+            bram2_a_addr_s <= std_logic_vector(TO_UNSIGNED(i, log2c(BRAM_SIZE)));
+            wait until rising_edge(clk_s);
+            hwrite(line_content_a, bram2_a_rdata_s);
+            writeline(bram_data_file, line_content_a);                     
+            i := i + 1;
+        end loop;
+        file_close(bram_data_file);
+        wait;
+    end process; 
+    
+
 
 end Behavioral;
