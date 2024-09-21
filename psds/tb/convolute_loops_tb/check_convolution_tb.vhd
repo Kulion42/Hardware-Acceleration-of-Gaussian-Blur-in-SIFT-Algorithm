@@ -160,13 +160,13 @@ begin
                  we_a => "0000",
                  addr_a => bram1_a_addr_s,
                  data_a_o => bram1_a_rdata_s,
-                 data_a_i => bram1_a_wdata_s,
+                 data_a_i => (others => '0'),
                  
                  en_b => '1',
                  we_b => "0000",
                  addr_b => bram1_b_addr_s,
                  data_b_o => bram1_b_rdata_s,
-                 data_b_i => bram1_b_wdata_s  );
+                 data_b_i => (others => '0')  );
        
     --u ovaj bram se upisuje tmp slika 
     BRAM2: entity work.bram(Behavioral)
@@ -176,13 +176,13 @@ begin
                  clk_b => clk_s,
                  
                  en_a => '1',
-                 we_a => bram2_a_we_s,
+                 we_a => "1111",
                  addr_a => bram2_a_addr_s,
                  data_a_i => bram2_a_wdata_s,
                  data_a_o => bram2_a_rdata_s,
                  
                  en_b => '1',
-                 we_b => bram2_b_we_s,
+                 we_b => "1111",
                  addr_b => bram2_b_addr_s,
                  data_b_i => bram2_b_wdata_s,
                  data_b_o => bram2_a_rdata_s); 
@@ -205,7 +205,7 @@ begin
                  kernel_rom_a_data => kernel_rom_data_s,
                  kernel_rom_b_data => open ,
                 
-                 kernel_rom_addr_off_prev => (others => '0') ,
+                 kernel_rom_addr_off_prev => "00001001" ,
                  kernel_rom_addr_off_next => rom_addr_off_next_s,
                 
                  sigma_size => sigma_size_s,
@@ -245,27 +245,27 @@ begin
 wait;
 end process;
                  
-final_process:process
+--final_process:process
     
-    variable line_content_a, line_content_b : line;
-    variable i : natural := 0;
-    variable temp_data : std_logic_vector(2*DATA_WIDTH-1 downto 0);
-    file bram_data_file: text open write_mode is "/home/luka/sift-cpp-master/psds/tb/convolute_loops_tb/bram_state_1_save.txt";
+ --   variable line_content_a, line_content_b : line;
+ --   variable i : natural := 0;
+  --  variable temp_data : std_logic_vector(2*DATA_WIDTH-1 downto 0);
+  --  file bram_data_file: text open write_mode is "/home/luka/sift-cpp-master/psds/tb/convolute_loops_tb/bram_state_1_save.txt";
     
-    begin
+  --  begin
     
-        wait until bram2_a_we_s = "0000" ;
-        while i < TO_INTEGER(unsigned(img_width_s)) * TO_INTEGER(unsigned(img_height_s)) loop
+  --      wait until bram2_a_we_s = "0000" ;
+  --      while i < TO_INTEGER(unsigned(img_width_s)) * TO_INTEGER(unsigned(img_height_s)) loop
             
-            bram2_a_addr_s <= std_logic_vector(TO_UNSIGNED(i, log2c(BRAM_SIZE)));
-            wait until rising_edge(clk_s);
-            hwrite(line_content_a, bram2_a_rdata_s);
-            writeline(bram_data_file, line_content_a);                     
-            i := i + 1;
-        end loop;
-        file_close(bram_data_file);
-        wait;
-    end process; 
+  --          bram2_a_addr_s <= std_logic_vector(TO_UNSIGNED(i, log2c(BRAM_SIZE)));
+  --          wait until rising_edge(clk_s);
+  --          hwrite(line_content_a, bram2_a_rdata_s);
+  --          writeline(bram_data_file, line_content_a);                     
+   --         i := i + 1;
+   --     end loop;
+   --     file_close(bram_data_file);
+  --      wait;
+  --  end process; 
     
 
 

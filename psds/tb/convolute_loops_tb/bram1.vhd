@@ -28,56 +28,46 @@ end bram1;
 
 architecture Behavioral of bram1 is
  
-    type ram_type is array(SIZE/2-1 downto 0) of std_logic_vector(2*WIDTH-1 downto 0);
-    signal RAM: ram_type;
-    
+    type ram_type is array(SIZE/2-1 downto 0) of bit_vector(2*WIDTH-1 downto 0);     
+    impure function InitRamFromFile(RamFileName : in string) return ram_type is
+        FILE RamFile : text is in RamFileName;
+        variable RamFileLine : line;
+        variable RAM : ram_type;
+        --variable i : integer;
+    begin
+        for i in ram_type'range loop
+        readline(RamFile, RamFileLine);
+        read(RamFileLine, RAM(i));
+    end loop;
+        return RAM;
+    end function;
+
+    signal RAM : ram_type := InitRamFromFile("/home/luka/sift-cpp-master/psds/tb/convolute_loops_tb/bram_state_1_init.txt");  
     attribute ram_style: string;
-    attribute ram_style of RAM: signal is "block";      
-    
+    attribute ram_style of RAM: signal is "block";   
 begin
 
-initial_process:process
-    
-    variable line_content_a, line_content_b : line;
-    variable i : natural := 0;
-    variable temp_data_a, temp_data_b : std_logic_vector(WIDTH-1 downto 0);
-    file bram_data_file: text open read_mode is "/home/luka/sift-cpp-master/psds/tb/convolute_loops_tb/bram_state_1_init.txt";
-    
-    begin     
-        
-        while not endfile(bram_data_file) loop
-            readline(bram_data_file, line_content_a);
-            hread(line_content_a, temp_data_a);
-            RAM(i/2)(2 * WIDTH -1 downto WIDTH) <= temp_data_a;
-            report "Temp_data_a = " & to_hstring(temp_data_a) & "h"; 
-            readline(bram_data_file, line_content_b);
-            hread(line_content_b, temp_data_b);
-            RAM(i/2)(WIDTH -1 downto 0) <= temp_data_b;
-            report "Temp_data_b = " & to_hstring(temp_data_b) & "h";            
-            i := i + 2;
-        end loop;
-        file_close(bram_data_file);
-        wait;
-    end process;
 
     process(clk_a, clk_b)
     begin
         if (rising_edge(clk_a)) then
             if (en_a = '1') then
-                    data_a_o <= RAM(to_integer(unsigned(addr_a)));
+                    data_a_o <= to_stdlogicvector(RAM(to_integer(unsigned(addr_a))));
                     if (we_a /= "0000") then
-                        RAM(to_integer(unsigned(addr_a))) <= data_a_i;
+                        RAM(to_integer(unsigned(addr_a))) <= to_bitvector(data_a_i);
                     end if;
             end if;
         end if;
         
         if (rising_edge(clk_b)) then
             if (en_b = '1') then                   
-                    data_b_o <= RAM(to_integer(unsigned(addr_b)));
+                    data_b_o <= to_stdlogicvector(RAM(to_integer(unsigned(addr_b))));
                     if (we_b /= "0000") then
-                        RAM(to_integer(unsigned(addr_b))) <= data_b_i;
-                    end if;                   
+                        RAM(to_integer(unsigned(addr_b))) <= to_bitvector(data_b_i);
+                    end if;   
             end if;
         end if;
+    
     end process;
+
 end Behavioral;
