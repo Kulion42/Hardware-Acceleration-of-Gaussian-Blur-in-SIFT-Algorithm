@@ -1,5 +1,5 @@
 set PROJECT_NAME              gaussian_blur_rtl
-set PROJECT_CONSTRAINT_FILE ./Zybo-Z7-Master.xdc
+set PROJECT_CONSTRAINT_FILE ./constraints/Zybo-Z7-Master.xdc
 
 set DIR_OUTPUT project_gaussian_blur
             
