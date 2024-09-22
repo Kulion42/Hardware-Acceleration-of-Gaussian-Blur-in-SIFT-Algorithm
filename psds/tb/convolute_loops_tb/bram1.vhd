@@ -33,16 +33,18 @@ architecture Behavioral of bram1 is
         FILE RamFile : text is in RamFileName;
         variable RamFileLine : line;
         variable RAM : ram_type;
-        --variable i : integer;
+        variable i : integer;
     begin
-        for i in ram_type'range loop
-        readline(RamFile, RamFileLine);
-        read(RamFileLine, RAM(i));
-    end loop;
+        i := 0;
+        while not endfile(RamFile) loop
+            readline(RamFile, RamFileLine);
+            read(RamFileLine, RAM(i));
+            i := i + 1;
+        end loop;
         return RAM;
     end function;
 
-    signal RAM : ram_type := InitRamFromFile("/home/luka/sift-cpp-master/psds/tb/convolute_loops_tb/bram_state_1_init.txt");  
+    signal RAM : ram_type := InitRamFromFile("/home/luka/y24-g10/psds/tb/bram_init/bram_state_1_init.txt");  
     attribute ram_style: string;
     attribute ram_style of RAM: signal is "block";   
 begin

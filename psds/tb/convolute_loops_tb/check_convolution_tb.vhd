@@ -119,14 +119,14 @@ begin
                 
                  sigma_size => sigma_size_s,
                  
-                 --bram1_a_en => bram1_a_en_s,
-                 --bram1_a_we => bram1_a_we_s,
+                 bram1_a_en => bram1_a_en_s,
+                 bram1_a_we => bram1_a_we_s,
                  bram1_a_addr => bram1_a_addr_s,
                  bram1_a_rdata => bram1_a_rdata_s,
                  bram1_a_wdata => bram1_a_wdata_s,
                  
-                 --bram1_b_en => bram1_b_en_s,
-                 --bram1_b_we => bram1_b_we_s,
+                 bram1_b_en => bram1_b_en_s,
+                 bram1_b_we => bram1_b_we_s,
                  bram1_b_addr => bram1_b_addr_s,
                  bram1_b_rdata => bram1_b_rdata_s,
                  bram1_b_wdata => bram1_b_wdata_s,
@@ -135,14 +135,14 @@ begin
                  kernel_rom_addr => kernel_rom_addr_s,
                  kernel_rom_data => kernel_rom_data_s,
                  
-                 --bram2_a_en => bram2_a_en_s,
-                 --bram2_a_we => bram2_a_we_s,
+                 bram2_a_en => bram2_a_en_s,
+                 bram2_a_we => bram2_a_we_s,
                  bram2_a_addr => bram2_a_addr_s,
                  bram2_a_rdata => bram2_a_rdata_s,
                  bram2_a_wdata => bram2_a_wdata_s,
                  
-                 --bram2_b_en => bram2_b_en_s,
-                 --bram2_b_we => bram2_b_we_s,
+                 bram2_b_en => bram2_b_en_s,
+                 bram2_b_we => bram2_b_we_s,
                  bram2_b_addr => bram2_b_addr_s,
                  bram2_b_rdata => bram2_b_rdata_s,
                  bram2_b_wdata => bram2_b_wdata_s,
@@ -156,14 +156,14 @@ begin
         port map(clk_a => clk_s,
                  clk_b => clk_s,
                  
-                 en_a => '1',
-                 we_a => "0000",
+                 en_a => bram1_a_en_s,
+                 we_a => bram1_a_we_s,
                  addr_a => bram1_a_addr_s,
                  data_a_o => bram1_a_rdata_s,
                  data_a_i => (others => '0'),
                  
-                 en_b => '1',
-                 we_b => "0000",
+                 en_b => bram1_b_en_s,
+                 we_b => bram1_b_we_s,
                  addr_b => bram1_b_addr_s,
                  data_b_o => bram1_b_rdata_s,
                  data_b_i => (others => '0')  );
@@ -175,14 +175,14 @@ begin
         port map(clk_a => clk_s,
                  clk_b => clk_s,
                  
-                 en_a => '1',
-                 we_a => "1111",
+                 en_a => bram2_a_en_s,
+                 we_a => bram2_a_we_s,
                  addr_a => bram2_a_addr_s,
                  data_a_i => bram2_a_wdata_s,
                  data_a_o => bram2_a_rdata_s,
                  
-                 en_b => '1',
-                 we_b => "1111",
+                 en_b => bram2_b_en_s,
+                 we_b => bram2_b_we_s,
                  addr_b => bram2_b_addr_s,
                  data_b_i => bram2_b_wdata_s,
                  data_b_o => bram2_a_rdata_s); 
@@ -210,7 +210,7 @@ begin
                 
                  sigma_size => sigma_size_s,
                  
-                 ready => start_s);  
+                 ready => open);  
                  
     
 clk_gen: process
@@ -226,47 +226,33 @@ begin
     reset_s <= '0';
     kernel_rom_en_s <= '1'; 
     wait until falling_edge(clk_s);
-    --bram2_a_we_s <= "1111";
-    --bram2_b_we_s <= "1111";
-    start_main <= '0';
-           
+    bram1_a_en_s <= '1';
+    bram1_b_en_s <= '1';
+    
+    bram1_a_we_s <= "0000";
+    bram1_b_we_s <= "0000";
+    
+    bram2_a_en_s <= '1';
+    bram2_b_en_s <= '1';
+    
+    bram2_a_we_s <= "1111";
+    bram2_b_we_s <= "1111";
+    
     img_height_s <= std_logic_vector(TO_SIGNED(110, 16));
     img_width_s <= std_logic_vector(TO_SIGNED(450, 16));
     img_offset_up_s <= std_logic_vector(TO_SIGNED(10, 16));
     img_offset_down_s <= std_logic_vector(TO_SIGNED(10, 16));
-    img_per_octave_s <= std_logic_vector(TO_SIGNED(1, 16));               
+    img_per_octave_s <= std_logic_vector(TO_SIGNED(1, 16));  
     
-    start_main <= '1';
-    
-    
+    start_s <= '1';
+                        
     wait until ready_s <= '1';
-    --bram2_a_we_s <= "0000";
-    --bram2_b_we_s <= "0000";
+    bram2_a_we_s <= "0000";
+    bram2_b_we_s <= "0000";
 wait;
 end process;
                  
---final_process:process
-    
- --   variable line_content_a, line_content_b : line;
- --   variable i : natural := 0;
-  --  variable temp_data : std_logic_vector(2*DATA_WIDTH-1 downto 0);
-  --  file bram_data_file: text open write_mode is "/home/luka/sift-cpp-master/psds/tb/convolute_loops_tb/bram_state_1_save.txt";
-    
-  --  begin
-    
-  --      wait until bram2_a_we_s = "0000" ;
-  --      while i < TO_INTEGER(unsigned(img_width_s)) * TO_INTEGER(unsigned(img_height_s)) loop
-            
-  --          bram2_a_addr_s <= std_logic_vector(TO_UNSIGNED(i, log2c(BRAM_SIZE)));
-  --          wait until rising_edge(clk_s);
-  --          hwrite(line_content_a, bram2_a_rdata_s);
-  --          writeline(bram_data_file, line_content_a);                     
-   --         i := i + 1;
-   --     end loop;
-   --     file_close(bram_data_file);
-  --      wait;
-  --  end process; 
-    
+
 
 
 end Behavioral;
