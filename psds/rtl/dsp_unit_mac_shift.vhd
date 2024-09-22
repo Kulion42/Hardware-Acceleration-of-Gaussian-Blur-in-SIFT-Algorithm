@@ -36,5 +36,5 @@ begin
             end if;
         end if;
     end process;
-    out_res <= alu_reg(WIDTH1 + WIDTH2 - 3 downto 14);
+    out_res <= std_logic_vector(TO_UNSIGNED(TO_INTEGER(unsigned(alu_reg)), WIDTH3));
 end Behavioral;

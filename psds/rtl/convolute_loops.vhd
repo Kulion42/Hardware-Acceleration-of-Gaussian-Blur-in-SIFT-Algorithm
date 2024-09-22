@@ -106,7 +106,7 @@ component dsp_unit_mac_shift is
 end component;
 
 signal x, y, k, dy, dx, c_y, c_x1, c_x2 : signed(DATA_WIDTH -1 downto 0);
-signal x_add_2, x_add_2_next: signed(DATA_WIDTH - 1 downto 0);
+signal x_add_1, x_add_1_next: signed(DATA_WIDTH - 1 downto 0);
 signal x_next, y_next, k_next, dx_next, dy_next, c_y_next, c_x1_next, c_x2_next : signed(DATA_WIDTH - 1 downto 0);
 signal pix1, pix2, pix3, pix4: unsigned(DATA_WIDTH -1 downto 0);
 signal val1: unsigned(DATA_WIDTH -1 downto 0);
@@ -225,7 +225,7 @@ addr_gen_4 : dsp_unit_mac_shift
          rst => reset,
          in_1 => std_logic_vector(y),
          in_2 => img_width,
-         in_3 => std_logic_vector(x_add_2),
+         in_3 => std_logic_vector(x_add_1),
          out_res => addr_b_b2
          );                                     
 next_state_process: process(clk, reset) is
@@ -246,12 +246,12 @@ begin
         c_x1 <= (others => '0');
         c_x2 <= (others => '0');
         
-        x_add_2 <= (others => '0');
+        x_add_1 <= (others => '0');
         
-        sum1_reg <= (others => '0');
-        sum2_reg <= (others => '0');
-        sum3_reg <= (others => '0');
-        sum4_reg <= (others => '0');
+        --sum1_reg <= (others => '0');
+        --sum2_reg <= (others => '0');
+        --sum3_reg <= (others => '0');
+        --sum4_reg <= (others => '0');
     
     elsif (rising_edge(clk) and reset = '0') then
         state_reg <= state_next;
@@ -267,19 +267,19 @@ begin
         c_x1 <= c_x1_next ;
         c_x2 <= c_x2_next ;
         
-        x_add_2 <= x_add_2_next;
+        x_add_1 <= x_add_1_next;
         
-        sum1_reg <= sum1_next;
-        sum2_reg <= sum2_next;
-        sum3_reg <= sum3_next;
-        sum4_reg <= sum4_next;   
+        --sum1_reg <= sum1_next;
+        --sum2_reg <= sum2_next;
+        --sum3_reg <= sum3_next;
+        --sum4_reg <= sum4_next;   
     
     end if;
 
 end process;
 
 combinational_logic_process: process(start, state_reg, state_next, img_width, img_height, img_offset_up, img_offset_down, sigma_size, x, x_next, y, y_next, k, k_next, dx, dy, dx_next, dy_next, c_x1, c_x2, c_y, 
-val1, pix1, pix2, pix3, pix4, sum1_reg, sum2_reg, sum3_reg, sum4_reg, sum1_next, sum2_next, sum3_next, sum4_next, kernel_rom_data, bram1_a_rdata, bram1_b_rdata) is
+val1, pix1, pix2, pix3, pix4, kernel_rom_data, bram1_a_rdata, bram1_b_rdata) is
 
 begin
    
@@ -293,15 +293,20 @@ begin
     c_x1_next <= c_x1;
     c_x2_next <= c_x2;
     
-    x_add_2_next <= x_add_2;
+    x_add_1_next <= x_add_1;
         
     dx_next <= dx;
     dy_next <= dy;
     
-    sum1_next <= sum1_reg;
-    sum2_next <= sum2_reg;
-    sum3_next <= sum3_reg;
-    sum4_next <= sum4_reg;
+    pix1 <= (others => '0');
+    pix2 <= (others => '0');
+    pix3 <= (others => '0');
+    pix4 <= (others => '0');
+    
+    val1 <= (others => '0');
+    
+    kernel_rom_addr <= (others => '0');
+    
     ready <= '0';
     
                 
@@ -331,11 +336,11 @@ begin
             else
                 if HORIZONTAL = true then
                     dx_next <= signed('0' &sigma_size(DATA_WIDTH/2 -1 downto 1)) +k;
-                    x_add_2_next <= x + TO_SIGNED(2, 16);
+                    x_add_1_next <= x + TO_SIGNED(1, 16);
                     state_next <= x_addr_gen;
                 else 
                     dy_next <= signed('0' &sigma_size(DATA_WIDTH/2 -1 downto 1)) +k;
-                    x_add_2_next <= x + TO_SIGNED(2, 16);
+                    x_add_1_next <= x + TO_SIGNED(1, 16);
                     state_next <= y_addr_gen;
                 end if;
             end if; 
@@ -350,10 +355,10 @@ begin
             
             if x + 2 < dx then
                 c_x2_next <= (others => '0');
-            elsif x_add_2 + dx > signed(img_width) then 
+            elsif x_add_1 + dx > signed(img_width) then 
                 c_x2_next <= signed(img_width) -1;
             else
-                c_x2_next <= x_add_2 + dx;
+                c_x2_next <= x_add_1 + dx;
             end if;
             
             c_y_next <= y;
@@ -377,7 +382,7 @@ begin
             end if;
             
             c_x1_next <= x; 
-            c_x2_next <= x_add_2;
+            c_x2_next <= x_add_1;
             kernel_rom_en <= '1';  
             kernel_rom_addr <= std_logic_vector(TO_UNSIGNED(TO_INTEGER(k), log2c(KERNEL_ROM_SIZE)));  
             state_next <= bram_read_1;
@@ -387,7 +392,7 @@ begin
             state_next <= bram_read_2;
         
         when bram_read_2 =>
-            val1 <= unsigned(kernel_rom_data(DATA_WIDTH -1 downto 0));
+            val1 <= unsigned(kernel_rom_data);
             
             pix1 <= unsigned(bram1_a_rdata(2 * DATA_WIDTH -1 downto DATA_WIDTH));
             pix2 <= unsigned(bram1_a_rdata(DATA_WIDTH -1  downto 0));
@@ -398,9 +403,6 @@ begin
             state_next <= loops_start;
             
         when k_loop_end =>
-            
-            bram2_a_wdata <= sum1_reg&sum2_reg;
-            bram2_b_wdata <= sum3_reg&sum4_reg;
             
             k_next <= (others => '0');
             y_next <= y + 1;
@@ -421,19 +423,35 @@ end process;
             bram1_b_en <= '1';
             
             bram1_a_we <= "0000";
-            bram1_a_we <= "0000";
-            
-            bram1_a_addr <= addr_a_b1;
-            bram1_b_addr <= addr_b_b1;
+            bram1_a_we <= "0000";        
             
             bram2_a_en <= '1';
             bram2_b_en <= '1';
             
-            bram2_a_we <= "1111" when state_reg = k_loop_end
-                            else "0000";
-            bram2_b_we <= "1111"when state_reg = k_loop_end
-                            else "0000";
+            bram2_a_we <= "1111";
+            bram2_b_we <= "1111";
             
-            bram2_a_addr <= addr_a_b2;
-            bram2_b_addr <= addr_b_b2;
+            sum1_reg <= (others => '0') when k < k_next
+                         else sum1_next;
+            sum2_reg <= (others => '0') when k < k_next
+                         else sum2_next;
+            sum3_reg <= (others => '0') when k < k_next
+                         else sum3_next;             
+            sum4_reg <= (others => '0') when k < k_next
+                         else sum4_next;
+            
+            bram1_a_addr <= addr_a_b1 when state_reg = bram_read_1
+                            else (others => '0');
+            bram1_b_addr <= addr_b_b1 when state_reg = bram_read_1
+                            else (others => '0');
+            
+            bram2_a_addr <= addr_a_b2 when state_reg = k_loop_end
+                            else (others => '0');
+            bram2_b_addr <= addr_b_b2 when state_reg = k_loop_end
+                            else (others => '0');
+            
+            bram2_a_wdata <= sum1_reg&sum2_reg when state_reg = k_loop_end
+                            else (others => '0');
+            bram2_b_wdata <= sum3_reg&sum4_reg when state_reg = k_loop_end
+                            else (others => '0');
 end Mixed;

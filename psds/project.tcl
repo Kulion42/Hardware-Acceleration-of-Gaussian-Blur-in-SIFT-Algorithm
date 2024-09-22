@@ -27,6 +27,8 @@ import_files -fileset constrs_1 -force -norecurse ${PROJECT_CONSTRAINT_FILE}
 
 update_compile_order -fileset sources_1
 
+set_property xsim.view {tb/convolute_loops_tb/check_convolution_tb_behav.wcfg } [get_filesets sim_1]
+
 # Launch Synthesis and wait on completion
 set_property -name {STEPS.SYNTH_DESIGN.ARGS.MORE OPTIONS} -value {-mode out_of_context} -objects [get_runs synth_1]
 launch_runs synth_1
