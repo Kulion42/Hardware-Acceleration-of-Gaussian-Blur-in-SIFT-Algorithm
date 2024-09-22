@@ -118,7 +118,7 @@ std::vector<Image> Cpu::generate_gaussian_pyramid_vector(const Image& img, int i
     assert(img.channels == 1);
     
     FILE *fp;
-    std::string bram_str = "test/bram_init/bram_state_";
+    std::string bram_str = "../../psds/tb/bram_init/bram_state_";
     std::string resize = "generate_img_";
     char numstr[21];
     std::string res;
@@ -159,7 +159,7 @@ std::vector<Image> Cpu::generate_gaussian_pyramid_vector(const Image& img, int i
 	//------------------------------------------------
 	//cout << "Bram initialzation 0" << endl;
 
-	fp = fopen("write_bram.txt", "w");
+
     for ( int x = 0; x < img.width; x+=4) {    
         for (int y = 0; y < img.height; y++) {
           data_t pix1, pix2, pix3, pix4; 
@@ -175,9 +175,11 @@ std::vector<Image> Cpu::generate_gaussian_pyramid_vector(const Image& img, int i
           write_mem(VP_ADDR_MAIN_BRAM_L  + 2 *(y*img.width + x + 2), pix3, pix4);
         }
     }
-    fclose(fp);
+
     
-    fp = fopen("read_bram.txt", "w");
+    sprintf(numstr, "%d", 0);
+    res = bram_str + numstr + "_init" + ".txt";
+    fp = fopen(res.c_str(), "w+");
     for ( int x = 0; x < img.width; x+=2) {    
         for (int y = 0; y < img.height; y++) {
           data_t pix1, pix2;
