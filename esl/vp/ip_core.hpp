@@ -4,6 +4,7 @@
 #include <vector>
 #include <array>
 #include <cstdint>
+#include <bitset>
 #include <sysc/datatypes/fx/sc_fixed.h>
 #include <tlm>
 #include <tlm_utils/simple_target_socket.h>
