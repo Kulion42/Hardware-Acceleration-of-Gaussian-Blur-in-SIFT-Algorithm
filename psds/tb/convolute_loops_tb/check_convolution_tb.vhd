@@ -47,9 +47,6 @@ architecture Behavioral of check_convolution_tb is
     constant DATA_WIDTH : integer :=16;
     constant BRAM_SIZE : integer :=60000;
     constant KERNEL_ROM_SIZE : integer :=76;
-    
-    file BRAM1_txt : text open read_mode is "bram_state_1_init.txt";
-    file BRAM2_txt : text open write_mode is "bram_state_1_save.txt";
 
     --signali
     signal clk_s : std_logic ;
@@ -115,7 +112,6 @@ begin
                  img_width => img_width_s,
                  img_offset_up => img_offset_up_s,
                  img_offset_down => img_offset_down_s,
-                 img_per_octave => img_per_octave_s,
                 
                  sigma_size => sigma_size_s,
                  
@@ -123,13 +119,11 @@ begin
                  bram1_a_we => bram1_a_we_s,
                  bram1_a_addr => bram1_a_addr_s,
                  bram1_a_rdata => bram1_a_rdata_s,
-                 bram1_a_wdata => bram1_a_wdata_s,
                  
                  bram1_b_en => bram1_b_en_s,
                  bram1_b_we => bram1_b_we_s,
                  bram1_b_addr => bram1_b_addr_s,
                  bram1_b_rdata => bram1_b_rdata_s,
-                 bram1_b_wdata => bram1_b_wdata_s,
                  
                  kernel_rom_en => kernel_rom_en_s,
                  kernel_rom_addr => kernel_rom_addr_s,
@@ -138,13 +132,11 @@ begin
                  bram2_a_en => bram2_a_en_s,
                  bram2_a_we => bram2_a_we_s,
                  bram2_a_addr => bram2_a_addr_s,
-                 bram2_a_rdata => bram2_a_rdata_s,
                  bram2_a_wdata => bram2_a_wdata_s,
                  
                  bram2_b_en => bram2_b_en_s,
                  bram2_b_we => bram2_b_we_s,
                  bram2_b_addr => bram2_b_addr_s,
-                 bram2_b_rdata => bram2_b_rdata_s,
                  bram2_b_wdata => bram2_b_wdata_s,
                  
                  ready => ready_s);
@@ -238,10 +230,10 @@ begin
     bram2_a_we_s <= "1111";
     bram2_b_we_s <= "1111";
     
-    img_height_s <= std_logic_vector(TO_SIGNED(110, 16));
-    img_width_s <= std_logic_vector(TO_SIGNED(450, 16));
-    img_offset_up_s <= std_logic_vector(TO_SIGNED(10, 16));
-    img_offset_down_s <= std_logic_vector(TO_SIGNED(10, 16));
+    img_height_s <= std_logic_vector(TO_SIGNED(90, 16));
+    img_width_s <= std_logic_vector(TO_SIGNED(225, 16));
+    img_offset_up_s <= std_logic_vector(TO_SIGNED(0, 16));
+    img_offset_down_s <= std_logic_vector(TO_SIGNED(0, 16));
     img_per_octave_s <= std_logic_vector(TO_SIGNED(1, 16));  
     
     start_s <= '1';

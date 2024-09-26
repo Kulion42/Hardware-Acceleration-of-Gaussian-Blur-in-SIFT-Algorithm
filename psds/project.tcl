@@ -8,6 +8,7 @@ file mkdir ${DIR_OUTPUT}
 create_project ${PROJECT_NAME} ${DIR_OUTPUT}/${PROJECT_NAME} -part xc7z010clg400-1 -force
 
 add_files -norecurse -fileset sim_1 {tb/convolute_loops_tb/check_convolution_tb.vhd}
+add_files -norecurse -fileset sim_1 {tb/convolute_loops_tb/check_convolution_tb_behav.wcfg }
 add_files -norecurse {rtl/dsp_unit_add.vhd}
 add_files -norecurse {rtl/dsp_unit_mac_shift.vhd}
 add_files -norecurse {rtl/utils_pkg.vhd}
@@ -26,9 +27,7 @@ import_files -fileset constrs_1 -force -norecurse ${PROJECT_CONSTRAINT_FILE}
 # Mimic GUI behavior of automatically setting top and file compile order
 
 update_compile_order -fileset sources_1
-
 set_property xsim.view {tb/convolute_loops_tb/check_convolution_tb_behav.wcfg } [get_filesets sim_1]
-
 # Launch Synthesis and wait on completion
 set_property -name {STEPS.SYNTH_DESIGN.ARGS.MORE OPTIONS} -value {-mode out_of_context} -objects [get_runs synth_1]
 launch_runs synth_1
