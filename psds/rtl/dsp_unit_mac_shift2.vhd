@@ -2,7 +2,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
 
-entity dsp_unit_mac_shift is
+entity dsp_unit_mac_shift2 is
     generic (WIDTH1: natural := 16;
              WIDTH2: natural := 16;
              WIDTH3: natural := 16 );
@@ -13,9 +13,9 @@ entity dsp_unit_mac_shift is
           in_3: in std_logic_vector(WIDTH3 - 1 downto 0);
           out_res: out std_logic_vector(WIDTH1 - 1 downto 0)
           );
-end dsp_unit_mac_shift;
+end dsp_unit_mac_shift2;
 
-architecture Behavioral of dsp_unit_mac_shift is
+architecture Behavioral of dsp_unit_mac_shift2 is
     attribute use_dsp : string;
     attribute use_dsp of Behavioral : architecture is "yes";
     
@@ -36,5 +36,5 @@ begin
             end if;
         end if;
     end process;
-    out_res <= std_logic_vector(TO_UNSIGNED(TO_INTEGER(unsigned(shift_right(unsigned(alu_reg), 14))) ,16));
+    out_res <= std_logic_vector(TO_UNSIGNED(TO_INTEGER(unsigned(alu_reg)), WIDTH3));
 end Behavioral;

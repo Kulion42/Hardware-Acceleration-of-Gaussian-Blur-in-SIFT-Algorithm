@@ -161,7 +161,7 @@ begin
                  data_b_i => (others => '0')  );
        
     --u ovaj bram se upisuje tmp slika 
-    BRAM2: entity work.bram(Behavioral)
+    BRAM2: entity work.bram2(Behavioral)
         generic map(WIDTH => DATA_WIDTH,
                     SIZE => BRAM_SIZE)
         port map(clk_a => clk_s,
@@ -237,6 +237,8 @@ begin
     img_per_octave_s <= std_logic_vector(TO_SIGNED(1, 16));  
     
     start_s <= '1';
+    wait until falling_edge(clk_s);
+    start_s <= '0';
                         
     wait until ready_s <= '1';
     bram2_a_we_s <= "0000";
