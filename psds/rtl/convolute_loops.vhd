@@ -96,7 +96,7 @@ component dsp_unit_mac_shift is
           in_2: in std_logic_vector(WIDTH2 - 1 downto 0);
           in_3: in std_logic_vector(WIDTH3 - 1 downto 0);
           size: in std_logic_vector(WIDTH1/2 -1 downto 0); 
-          curr: in signed(WIDTH1 -1 downto 0);
+          curr: in std_logic_vector(WIDTH1 -1 downto 0);
           out_res: out std_logic_vector(WIDTH1 - 1 downto 0)
           );    
 end component;
@@ -118,80 +118,16 @@ signal x_add_2, x_add_1_next, y_check, x_check_1, x_check_2: signed(DATA_WIDTH -
 signal x_next, y_next, k_next, dx_next, dy_next, c_y_next, c_x1_next, c_x2_next : signed(DATA_WIDTH - 1 downto 0);
 signal pix1, pix2, pix3, pix4, pix1_next, pix2_next, pix3_next, pix4_next: unsigned(DATA_WIDTH -1 downto 0);
 signal val, val_next: unsigned(DATA_WIDTH -1 downto 0);
-signal sum1_reg, sum2_reg, sum3_reg, sum4_reg: std_logic_vector(DATA_WIDTH -1  downto 0); 
-signal sum1_next, sum2_next, sum3_next, sum4_next: std_logic_vector(DATA_WIDTH - 1 downto 0);
-signal sum_mac1, sum_mac2, sum_mac3, sum_mac4: std_logic_vector(DATA_WIDTH -1 downto 0);
-signal conc_sum_a, conc_sum_b, conc_sum_a_next, conc_sum_b_next: std_logic_vector(2 *DATA_WIDTH -1 downto 0);
+signal sum1_reg, sum2_reg, sum3_reg, sum4_reg: unsigned(DATA_WIDTH -1  downto 0); 
+signal sum1_next, sum2_next, sum3_next, sum4_next: unsigned(DATA_WIDTH - 1 downto 0);
+signal mul_reg_1, mul_reg_2, mul_reg_3, mul_reg_4: unsigned(2 *DATA_WIDTH -1 downto 0);
 signal sigma_center: signed(DATA_WIDTH/2 -1 downto 0);
-type state_t is (idle, loops_start, k_loop, k_loop_end, y_loop_end, bram_read);
+type state_t is (idle, loops, sum_calc, stal1, stal2, stal3);
 signal state_reg, state_next : state_t;
 
 begin
 
 sigma_center <= not('0' &signed(sigma_size(DATA_WIDTH/2 -1 downto 1))) + 1;
- mac1: dsp_unit_mac_shift
-    generic map(
-         WIDTH1 => DATA_WIDTH,
-         WIDTH2 => DATA_WIDTH,
-         WIDTH3 => DATA_WIDTH)
-    port map(
-         clk => clk,
-         rst => reset,
-         in_1 => std_logic_vector(pix1),
-         in_2 => std_logic_vector(val),
-         in_3 => sum1_reg,
-         size => sigma_size,
-         curr => k,
-         out_res => sum1_next
-         );
-         
-mac2: dsp_unit_mac_shift
-    generic map(
-         WIDTH1 => DATA_WIDTH,
-         WIDTH2 => DATA_WIDTH,
-         WIDTH3 => DATA_WIDTH)
-    port map(
-         clk => clk,
-         rst => reset,
-         in_1 => std_logic_vector(pix2),
-         in_2 => std_logic_vector(val),
-         in_3 => sum2_reg,
-         size => sigma_size,
-         curr => k,
-         out_res => sum2_next
-         );
-
-mac3: dsp_unit_mac_shift
-    generic map(
-         WIDTH1 => DATA_WIDTH,
-         WIDTH2 => DATA_WIDTH,
-         WIDTH3 => DATA_WIDTH)
-    port map(
-         clk => clk,
-         rst => reset,
-         in_1 => std_logic_vector(pix3),
-         in_2 => std_logic_vector(val),
-         in_3 => sum3_reg,
-         size => sigma_size,
-         curr => k,
-         out_res => sum3_next
-         );    
-         
-mac4: dsp_unit_mac_shift
-    generic map(
-         WIDTH1 => DATA_WIDTH,
-         WIDTH2 => DATA_WIDTH,
-         WIDTH3 => DATA_WIDTH)
-    port map(
-         clk => clk,
-         rst => reset,
-         in_1 => std_logic_vector(pix4),
-         in_2 => std_logic_vector(val),
-         in_3 => sum4_reg,
-         size => sigma_size,
-         curr => k,
-         out_res => sum4_next
-         );
 addr_gen_1 : dsp_unit_mac_shift2
     generic map(
          WIDTH1 => DATA_WIDTH,
@@ -255,9 +191,10 @@ begin
         y <= (others => '0');
         k <= (others => '0');
         
-        --c_x1 <= (others => '0'); 
-        --c_x2 <= (others => '0'); 
-        --c_y <= (others => '0');
+        x_add_2 <= TO_SIGNED(1, 16);
+        c_x1 <= (others => '0'); 
+        c_x2 <= (others => '0'); 
+        c_y <= (others => '0');
         
         sum1_reg <= (others => '0');
         sum2_reg <= (others => '0');
@@ -271,14 +208,14 @@ begin
         y <= y_next;
         k <= k_next;
         
-        --c_x1 <= c_x1_next; 
-        --c_x2 <= c_x2_next; 
-        --c_y <= c_y_next;
-        
         sum1_reg <= sum1_next;
         sum2_reg <= sum2_next;
         sum3_reg <= sum3_next; 
         sum4_reg <= sum4_next;
+        c_x1 <= c_x1_next; 
+        c_x2 <= c_x2_next; 
+        c_y <= c_y_next;
+        x_add_2 <= x + TO_SIGNED(1, 16);
     
     end if;
 
@@ -291,53 +228,113 @@ begin
     y_next <= y;
     k_next <= k;    
     
-    --c_x1_next <= c_x1; 
-    --c_x2_next <= c_x2; 
-    --c_y_next <= c_y;
-                 
+    sum1_next <= sum1_reg;
+    sum2_next <= sum2_reg;
+    sum3_next <= sum3_reg; 
+    sum4_next <= sum4_reg;
+    
+    c_x1_next <= c_x1; 
+    c_x2_next <= c_x2; 
+    c_y_next <= c_y;    
+    
+    mul_reg_1 <= (others => '0');   
+    mul_reg_2 <= (others => '0');             
+    mul_reg_3 <= (others => '0');             
+    mul_reg_4 <= (others => '0');             
+    
+    bram2_a_wdata <= std_logic_vector(sum1_reg&sum2_reg);
+    bram2_b_wdata <= std_logic_vector(sum3_reg&sum4_reg); 
+              
     ready <= '0';
                 
     case state_reg is 
     
         when idle =>
             if start = '1' then
-                state_next <= loops_start;
+                state_next <= loops;
                                   
             elsif start = '0' then  
                 ready <= '1';          
                 state_next <= idle;
             end if;
             
-        when loops_start => 
-            x_add_2 <= x + TO_SIGNED(1, 16);    
+        when loops =>    
             if x>= signed(img_width) then
                 ready <= '1';
-                state_next <= idle;
-            
-            elsif ( HORIZONTAL = false and y>= signed(img_height) - signed(img_offset_down)) or ( HORIZONTAL = true and y>= signed(img_height) - signed(img_offset_down) - signed(img_offset_up)) then
-                state_next <= y_loop_end;  
+                state_next <= idle;          
+            elsif ( HORIZONTAL = false and y>= signed(img_height) - signed(img_offset_down)) or ( HORIZONTAL = true and y>= signed(img_height) - signed(img_offset_down) - signed(img_offset_up)) then    
+                y_next <= (others => '0');
+                x_next <= x + 2;
+                state_next <= loops; 
+                 
+            elsif k>= signed(sigma_size)  then
+                k_next <= (others => '0');          
+                y_next <= y + 1;                   
+                state_next <= stal2;                   
             else
-                state_next <= k_loop;
-            end if;
-            
-        when k_loop =>  
-            val <= unsigned(kernel_rom_data);       
-            if k>= signed(sigma_size) then                             
-                state_next <= k_loop_end;                    
-            else
+                   if HORIZONTAL = true then
+                    if abs(dx) > x  then
+                        c_x1_next <= (others => '0');
+                    elsif x + dx >= signed(img_width) then 
+                        c_x1_next <= signed(img_width) -1;
+                    else
+                        c_x1_next <= x + dx;
+                    end if;
+                    
+                    if abs(dx) > x_add_2 then
+                        c_x2_next <= (others => '0');
+                    elsif x_add_2 + dx >= signed(img_width) then 
+                        c_x2_next <= signed(img_width) -1;
+                    else
+                        c_x2_next <= x_add_2 + dx;
+                    end if;
+                    
+                    c_y_next <= y;
+
+                else                     
+                    if abs(dy) > y  and TO_INTEGER(signed(img_offset_up)) = 0  then
+                        c_y_next <= (others => '0');
+                        
+                    elsif dy < 0 and y + dy < signed(img_offset_up) and TO_INTEGER(signed(img_offset_up)) = 10 then
+                        c_y_next <= signed(img_offset_up) + dy;
+                                
+                    elsif y + dy >= signed(img_height) and TO_INTEGER(signed(img_offset_down)) = 0 then
+                        c_y_next <= signed(img_height) -1 ;
+                                
+                    elsif y + dy >= signed(img_height) and TO_INTEGER(signed(img_offset_down)) = 10 then
+                        c_y_next <= signed(img_height) - signed(img_offset_down) + dy;
+                                    
+                    else
+                        c_y_next <= y + dy;
+                    end if;
+                    
+                    c_x1_next <= x; 
+                    c_x2_next <= x_add_2;
+
+                end if; 
+                state_next <= stal1;
+             end if;
+        when stal1 => 
+                state_next <= sum_calc;
+        when stal2 => 
+                state_next <= stal3;        
+        when stal3 => 
+                sum1_next <= (others => '0');
+                sum2_next <= (others => '0');
+                sum3_next <= (others => '0');
+                sum4_next <= (others => '0'); 
+                state_next <= loops;             
+        when sum_calc =>         
+                mul_reg_1 <= unsigned(bram1_a_rdata(2 *DATA_WIDTH -1 downto DATA_WIDTH)) * unsigned(kernel_rom_data);
+                sum1_next <= sum1_reg + TO_UNSIGNED(TO_INTEGER(unsigned(mul_reg_1))/2 **14, 16);
+                mul_reg_2 <= unsigned(bram1_a_rdata(DATA_WIDTH-1 downto 0)) * unsigned(kernel_rom_data);
+                sum2_next <= sum2_reg + TO_UNSIGNED(TO_INTEGER(unsigned(mul_reg_2))/2 **14, 16);
+                mul_reg_3 <= unsigned(bram1_b_rdata(2 *DATA_WIDTH -1 downto DATA_WIDTH)) * unsigned(kernel_rom_data);
+                sum3_next <= sum3_reg + TO_UNSIGNED(TO_INTEGER(unsigned(mul_reg_3))/2 **14, 16);
+                mul_reg_4 <= unsigned(bram1_b_rdata(DATA_WIDTH-1 downto 0)) * unsigned(kernel_rom_data);
+                sum4_next <= sum4_reg + TO_UNSIGNED(TO_INTEGER(unsigned(mul_reg_4))/2 **14, 16);               
                 k_next <= k + 1;
-                state_next <= k_loop;  
-            end if;        
-                       
-        when k_loop_end =>  
-            k_next <= (others => '0');
-            y_next <= y + 1; 
-            state_next <= loops_start;       
-        
-        when y_loop_end =>
-            y_next <= (others => '0');
-            x_next <= x + 2;    
-            state_next <= loops_start;
+                state_next <= loops;         
             
         when others => 
             state_next <= idle;
@@ -366,73 +363,14 @@ begin
     dy <= sigma_center + k; 
 end process;
 
-pix_proc: process(bram1_a_rdata, bram1_b_rdata)
+x_add_proc: process(x)
 begin
-    pix1 <= unsigned(bram1_a_rdata(2 * DATA_WIDTH -1 downto DATA_WIDTH));
-    pix2 <= unsigned(bram1_a_rdata(DATA_WIDTH -1  downto 0));
-    pix3 <= unsigned(bram1_b_rdata(2 * DATA_WIDTH -1 downto DATA_WIDTH));
-    pix4 <= unsigned(bram1_b_rdata(DATA_WIDTH -1 downto 0));
+    x_add_2 <= x + TO_SIGNED(1, 16); 
 end process;
 
-bram_write_proc: process(sum1_reg, sum2_reg, sum3_reg, sum4_reg)
-begin
-bram2_a_wdata <= sum1_reg&sum2_reg;
 
-bram2_b_wdata <= sum3_reg&sum4_reg;
-
-end process;
-
-control_log_proc: process(x, x_add_2, y, dx, dy)
-begin
-
-x_check_1 <= x + dx;
-x_check_2 <= x_add_2 + dx;
-y_check <= y + dy;
-
-end process; 
-
-addr_read_gen_proc: process (x, y, x_add_2, x_check_1, x_check_2, y_check, img_width, img_height, img_offset_up, img_offset_down, dy)
-begin
-    if HORIZONTAL = true then
-                    if x_check_1 < 0  then
-                        c_x1 <= (others => '0');
-                    elsif x + dx >= signed(img_width) then 
-                        c_x1 <= signed(img_width) -1;
-                    else
-                        c_x1 <= x_check_1;
-                    end if;
-                    
-                    if x_check_2 < 0 then
-                        c_x2 <= (others => '0');
-                    elsif x_check_2 >= signed(img_width) then 
-                        c_x2 <= signed(img_width) -1;
-                    else
-                        c_x2 <= x_check_2;
-                    end if;
-                    
-                    c_y <= y;
-
-                else                     
-                    if y_check < 0  and TO_INTEGER(signed(img_offset_up)) = 0  then
-                        c_y <= (others => '0');
-                        
-                    elsif y_check < signed(img_offset_up) and TO_INTEGER(signed(img_offset_up)) = 10 then
-                        c_y <= signed(img_offset_up) + dy;
-                                
-                    elsif y_check >= signed(img_height) and TO_INTEGER(signed(img_offset_down)) = 0 then
-                        c_y <= signed(img_height) -1 ;
-                                
-                    elsif y_check >= signed(img_height) and TO_INTEGER(signed(img_offset_down)) = 10 then
-                        c_y <= signed(img_height) - signed(img_offset_down) + dy;
-                                    
-                    else
-                        c_y <= y_check;
-                    end if;
-                    
-                    c_x1 <= x; 
-                    c_x2 <= x_add_2;
-
-                end if;                  
-end process;                             
-         
+--addr_read_gen_proc: process (x, y, x_add_2, img_width, img_height, img_offset_up, img_offset_down, dy, dx)
+--begin
+                   
+--end process;                                   
 end Mixed;

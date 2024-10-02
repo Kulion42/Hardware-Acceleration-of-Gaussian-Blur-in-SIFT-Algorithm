@@ -107,7 +107,7 @@ Port (
     bram1_a_we: out std_logic_vector(3 downto 0);
     bram1_a_addr: out std_logic_vector(log2c(BRAM_SIZE) - 1 downto 0);
     bram1_a_rdata: in std_logic_vector(2 *DATA_WIDTH -1 downto 0); 
-
+    
     bram1_b_en: out std_logic;
     bram1_b_we: out std_logic_vector(3 downto 0);
     bram1_b_addr: out std_logic_vector(log2c(BRAM_SIZE) - 1 downto 0);
@@ -120,13 +120,13 @@ Port (
     
     bram2_a_en: out std_logic;
     bram2_a_we: out std_logic_vector(3 downto 0);
-    bram2_a_addr: out std_logic_vector(log2c(BRAM_SIZE) - 1 downto 0);
-    bram2_a_wdata: out std_logic_vector(2 *DATA_WIDTH -1 downto 0); 
+    bram2_a_addr: out std_logic_vector(log2c(BRAM_SIZE) - 1 downto 0); 
+    bram2_a_wdata: out std_logic_vector(2 *DATA_WIDTH -1 downto 0);
     
     bram2_b_en: out std_logic;
     bram2_b_we: out std_logic_vector(3 downto 0);
     bram2_b_addr: out std_logic_vector(log2c(BRAM_SIZE) - 1 downto 0);
-    bram2_b_wdata: out std_logic_vector(2 *DATA_WIDTH -1 downto 0); 
+    bram2_b_wdata: out std_logic_vector(2 *DATA_WIDTH -1 downto 0);
     
     ready : out std_logic
       
@@ -162,7 +162,7 @@ Port (
 );
 end component;
 
-signal rom_en, start_x_conv, start_y_conv: std_logic;
+signal rom_a_en,rom_b_en, start_x_conv, start_y_conv: std_logic;
 signal rom_a_addr, rom_b_addr: std_logic_vector(log2c(KERNEL_ROM_SIZE) -1 downto 0);
 signal rom_a_data, rom_b_data: std_logic_vector(DATA_WIDTH -1 downto 0);
 signal rom_addr_off_prev, rom_addr_off, size: std_logic_vector(DATA_WIDTH/2 -1 downto 0);
@@ -183,9 +183,9 @@ kernel_rom_gen: kernel_rom
         
         img_number => img_per_octave,
         
-        kernel_rom_a_en => rom_en,
+        kernel_rom_a_en => rom_a_en,
         kernel_rom_a_addr => rom_a_addr,
-        kernel_rom_b_en => rom_en,
+        kernel_rom_b_en => rom_b_en,
         kernel_rom_b_addr => rom_b_addr,
     
         kernel_rom_a_data => rom_a_data,
@@ -227,7 +227,7 @@ y_conv_gen: convolute_loops
         bram1_b_addr => read1_b_addr,
         bram1_b_rdata => main_bram_b_rdata,
          
-        kernel_rom_en => rom_en,
+        kernel_rom_en => rom_a_en,
         kernel_rom_addr => rom_a_addr,
         kernel_rom_data => rom_a_data,
         
@@ -274,7 +274,7 @@ x_conv_gen: convolute_loops
         bram1_b_addr => read2_b_addr,
         bram1_b_rdata => tmp_bram_b_rdata,
         
-        kernel_rom_en => rom_en,
+        kernel_rom_en => rom_b_en,
         kernel_rom_addr => rom_b_addr,
         kernel_rom_data => rom_b_data,
         
