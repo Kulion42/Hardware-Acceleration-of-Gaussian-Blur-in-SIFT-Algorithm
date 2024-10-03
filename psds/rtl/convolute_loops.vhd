@@ -86,20 +86,6 @@ architecture Mixed of convolute_loops is
     attribute use_dsp : string;
     attribute use_dsp of Mixed : architecture is "yes";
     
-component dsp_unit_mac_shift is
-    generic (WIDTH1: natural := 16;
-             WIDTH2: natural := 16;
-             WIDTH3: natural := 16 );
-    port (clk: in std_logic;
-          rst: in std_logic;
-          in_1: in std_logic_vector(WIDTH1 - 1 downto 0);
-          in_2: in std_logic_vector(WIDTH2 - 1 downto 0);
-          in_3: in std_logic_vector(WIDTH3 - 1 downto 0);
-          size: in std_logic_vector(WIDTH1/2 -1 downto 0); 
-          curr: in std_logic_vector(WIDTH1 -1 downto 0);
-          out_res: out std_logic_vector(WIDTH1 - 1 downto 0)
-          );    
-end component;
 
 component dsp_unit_mac_shift2 is
     generic (WIDTH1: natural := 16;
@@ -114,10 +100,10 @@ component dsp_unit_mac_shift2 is
           );
 end component;
 signal x, y, k, dy, dx, c_y, c_x1, c_x2 : signed(DATA_WIDTH -1 downto 0);
-signal x_add_2, x_add_1_next, y_check, x_check_1, x_check_2: signed(DATA_WIDTH - 1 downto 0);
-signal x_next, y_next, k_next, dx_next, dy_next, c_y_next, c_x1_next, c_x2_next : signed(DATA_WIDTH - 1 downto 0);
-signal pix1, pix2, pix3, pix4, pix1_next, pix2_next, pix3_next, pix4_next: unsigned(DATA_WIDTH -1 downto 0);
-signal val, val_next: unsigned(DATA_WIDTH -1 downto 0);
+signal x_add_2, x_add_1_next: signed(DATA_WIDTH - 1 downto 0);
+signal x_next, y_next, k_next, c_y_next, c_x1_next, c_x2_next : signed(DATA_WIDTH - 1 downto 0);
+--signal pix1, pix2, pix3, pix4: unsigned(DATA_WIDTH -1 downto 0);
+--signal val, val_next: unsigned(DATA_WIDTH -1 downto 0);
 signal sum1_reg, sum2_reg, sum3_reg, sum4_reg: unsigned(DATA_WIDTH -1  downto 0); 
 signal sum1_next, sum2_next, sum3_next, sum4_next: unsigned(DATA_WIDTH - 1 downto 0);
 signal mul_reg_1, mul_reg_2, mul_reg_3, mul_reg_4: unsigned(2 *DATA_WIDTH -1 downto 0);
@@ -191,9 +177,8 @@ begin
         y <= (others => '0');
         k <= (others => '0');
         
-        x_add_2 <= TO_SIGNED(1, 16);
         c_x1 <= (others => '0'); 
-        c_x2 <= (others => '0'); 
+        c_x2 <= TO_SIGNED(1, 16); 
         c_y <= (others => '0');
         
         sum1_reg <= (others => '0');
@@ -206,7 +191,7 @@ begin
     
         x <= x_next;
         y <= y_next;
-        k <= k_next;
+        k <= k_next; 
         
         sum1_reg <= sum1_next;
         sum2_reg <= sum2_next;
@@ -215,7 +200,6 @@ begin
         c_x1 <= c_x1_next; 
         c_x2 <= c_x2_next; 
         c_y <= c_y_next;
-        x_add_2 <= x + TO_SIGNED(1, 16);
     
     end if;
 
@@ -236,12 +220,7 @@ begin
     c_x1_next <= c_x1; 
     c_x2_next <= c_x2; 
     c_y_next <= c_y;    
-    
-    mul_reg_1 <= (others => '0');   
-    mul_reg_2 <= (others => '0');             
-    mul_reg_3 <= (others => '0');             
-    mul_reg_4 <= (others => '0');             
-    
+          
     bram2_a_wdata <= std_logic_vector(sum1_reg&sum2_reg);
     bram2_b_wdata <= std_logic_vector(sum3_reg&sum4_reg); 
               
@@ -325,13 +304,9 @@ begin
                 sum4_next <= (others => '0'); 
                 state_next <= loops;             
         when sum_calc =>         
-                mul_reg_1 <= unsigned(bram1_a_rdata(2 *DATA_WIDTH -1 downto DATA_WIDTH)) * unsigned(kernel_rom_data);
                 sum1_next <= sum1_reg + TO_UNSIGNED(TO_INTEGER(unsigned(mul_reg_1))/2 **14, 16);
-                mul_reg_2 <= unsigned(bram1_a_rdata(DATA_WIDTH-1 downto 0)) * unsigned(kernel_rom_data);
                 sum2_next <= sum2_reg + TO_UNSIGNED(TO_INTEGER(unsigned(mul_reg_2))/2 **14, 16);
-                mul_reg_3 <= unsigned(bram1_b_rdata(2 *DATA_WIDTH -1 downto DATA_WIDTH)) * unsigned(kernel_rom_data);
                 sum3_next <= sum3_reg + TO_UNSIGNED(TO_INTEGER(unsigned(mul_reg_3))/2 **14, 16);
-                mul_reg_4 <= unsigned(bram1_b_rdata(DATA_WIDTH-1 downto 0)) * unsigned(kernel_rom_data);
                 sum4_next <= sum4_reg + TO_UNSIGNED(TO_INTEGER(unsigned(mul_reg_4))/2 **14, 16);               
                 k_next <= k + 1;
                 state_next <= loops;         
@@ -362,15 +337,17 @@ begin
     dx <= sigma_center + k;
     dy <= sigma_center + k; 
 end process;
-
 x_add_proc: process(x)
 begin
-    x_add_2 <= x + TO_SIGNED(1, 16); 
+    x_add_2 <= x + TO_SIGNED(1, 16);
 end process;
 
-
---addr_read_gen_proc: process (x, y, x_add_2, img_width, img_height, img_offset_up, img_offset_down, dy, dx)
---begin
-                   
---end process;                                   
+pix_proc: process(bram1_a_rdata, bram1_b_rdata, kernel_rom_data)
+begin
+    mul_reg_1 <= unsigned(bram1_a_rdata(2 *DATA_WIDTH -1 downto DATA_WIDTH)) * unsigned(kernel_rom_data);
+    mul_reg_2 <= unsigned(bram1_a_rdata(DATA_WIDTH-1 downto 0)) * unsigned(kernel_rom_data);
+    mul_reg_3 <= unsigned(bram1_b_rdata(2 *DATA_WIDTH -1 downto DATA_WIDTH)) * unsigned(kernel_rom_data);
+    mul_reg_4 <= unsigned(bram1_b_rdata(DATA_WIDTH-1 downto 0)) * unsigned(kernel_rom_data);
+end process;
+                                 
 end Mixed;
