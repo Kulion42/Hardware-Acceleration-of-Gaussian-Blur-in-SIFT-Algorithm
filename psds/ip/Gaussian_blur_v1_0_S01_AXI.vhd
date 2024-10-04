@@ -1,11 +1,17 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
+use work.utils_pkg.ALL;
 
 entity Gaussian_blur_v1_0_S01_AXI is
 	generic (
 		-- Users to add parameters here
-
+        --DATA WIDTH
+        DATA_WIDTH : natural := 16;
+    
+        --SIZE OF BRAMS
+        BRAM_SIZE : natural := 60000; --FIXED
+        
 		-- User parameters ends
 		-- Do not modify the parameters beyond this line
 
@@ -14,7 +20,7 @@ entity Gaussian_blur_v1_0_S01_AXI is
 		-- Width of S_AXI data bus
 		C_S_AXI_DATA_WIDTH	: integer	:= 32;
 		-- Width of S_AXI address bus
-		C_S_AXI_ADDR_WIDTH	: integer	:= 10;
+		C_S_AXI_ADDR_WIDTH	: integer	:= 16;
 		-- Width of optional user defined signal in write address channel
 		C_S_AXI_AWUSER_WIDTH	: integer	:= 0;
 		-- Width of optional user defined signal in read address channel
@@ -28,7 +34,14 @@ entity Gaussian_blur_v1_0_S01_AXI is
 	);
 	port (
 		-- Users to add ports here
-
+		
+        main_mem_addr_axi_o : out std_logic_vector(log2c(BRAM_SIZE)-1 downto 0);
+        main_mem_data_axi_o : out std_logic_vector(2*DATA_WIDTH - 1 downto 0);
+        main_mem_we_axi_o : out std_logic_vector(3 downto 0);
+        main_mem_en_axi_o : out std_logic;
+    
+        main_mem_data_axi_i : in std_logic_vector(2*DATA_WIDTH-1 downto 0); --software read
+		
 		-- User ports ends
 		-- Do not modify the ports beyond this line
 
@@ -475,70 +488,105 @@ begin
 	    end if;
 	  end if;
 	end  process;
+	
 	-- ------------------------------------------
 	-- -- Example code to access user logic memory region
 	-- ------------------------------------------
 
-	gen_mem_sel: if (USER_NUM_MEM >= 1) generate
-	begin
-	  mem_select  <= "1";
-	  mem_address <= axi_araddr(ADDR_LSB+OPT_MEM_ADDR_BITS downto ADDR_LSB) when axi_arv_arr_flag = '1' else
-	                 axi_awaddr(ADDR_LSB+OPT_MEM_ADDR_BITS downto ADDR_LSB) when axi_awv_awr_flag = '1' else
-	                 (others => '0');
-	end generate gen_mem_sel;
+--	gen_mem_sel: if (USER_NUM_MEM >= 1) generate
+--	begin
+--	  mem_select  <= "1";
+--	  mem_address <= axi_araddr(ADDR_LSB+OPT_MEM_ADDR_BITS downto ADDR_LSB) when axi_arv_arr_flag = '1' else
+--	                 axi_awaddr(ADDR_LSB+OPT_MEM_ADDR_BITS downto ADDR_LSB) when axi_awv_awr_flag = '1' else
+--	                 (others => '0');
+--	end generate gen_mem_sel;
 	 
-	-- implement Block RAM(s)
-	BRAM_GEN : for i in 0 to USER_NUM_MEM-1 generate
-	  signal mem_rden : std_logic;
-	  signal mem_wren : std_logic;
-	begin
-	  mem_wren <= axi_wready and S_AXI_WVALID ;
-	  mem_rden <= axi_arv_arr_flag ;
+--	-- implement Block RAM(s)
+--	BRAM_GEN : for i in 0 to USER_NUM_MEM-1 generate
+--	  signal mem_rden : std_logic;
+--	  signal mem_wren : std_logic;
+--	begin
+--	  mem_wren <= axi_wready and S_AXI_WVALID ;
+--	  mem_rden <= axi_arv_arr_flag ;
 	
-	 BYTE_BRAM_GEN : for mem_byte_index in 0 to (C_S_AXI_DATA_WIDTH/8-1) generate
-	   signal byte_ram : BYTE_RAM_TYPE;
-	   signal data_in  : std_logic_vector(8-1 downto 0);
-	   signal data_out : std_logic_vector(8-1 downto 0);
-	 begin
-	   --assigning 8 bit data
-	   data_in  <= S_AXI_WDATA((mem_byte_index*8+7) downto mem_byte_index*8);
-	   data_out <= byte_ram(to_integer(unsigned(mem_address)));
-	   BYTE_RAM_PROC : process( S_AXI_ACLK ) is
-	   begin
-	     if ( rising_edge (S_AXI_ACLK) ) then
-	       if ( mem_wren = '1' and S_AXI_WSTRB(mem_byte_index) = '1' ) then
-	         byte_ram(to_integer(unsigned(mem_address))) <= data_in;
-	       end if;
-	     end if;
+--	 BYTE_BRAM_GEN : for mem_byte_index in 0 to (C_S_AXI_DATA_WIDTH/8-1) generate
+--	   signal byte_ram : BYTE_RAM_TYPE;
+--	   signal data_in  : std_logic_vector(8-1 downto 0);
+--	   signal data_out : std_logic_vector(8-1 downto 0);
+--	 begin
+--	   --assigning 8 bit data
+--	   data_in  <= S_AXI_WDATA((mem_byte_index*8+7) downto mem_byte_index*8);
+--	   data_out <= byte_ram(to_integer(unsigned(mem_address)));
+--	   BYTE_RAM_PROC : process( S_AXI_ACLK ) is
+--	   begin
+--	     if ( rising_edge (S_AXI_ACLK) ) then
+--	       if ( mem_wren = '1' and S_AXI_WSTRB(mem_byte_index) = '1' ) then
+--	         byte_ram(to_integer(unsigned(mem_address))) <= data_in;
+--	       end if;
+--	     end if;
 	  
-	   end process BYTE_RAM_PROC;
-	   process( S_AXI_ACLK ) is
-	     begin
-	       if ( rising_edge (S_AXI_ACLK) ) then
-	         if ( mem_rden = '1') then 
-	           mem_data_out(i)((mem_byte_index*8+7) downto mem_byte_index*8) <= data_out;
-	         end if;
-	       end if;
-	   end process;
+--	   end process BYTE_RAM_PROC;
+--	   process( S_AXI_ACLK ) is
+--	     begin
+--	       if ( rising_edge (S_AXI_ACLK) ) then
+--	         if ( mem_rden = '1') then 
+--	           mem_data_out(i)((mem_byte_index*8+7) downto mem_byte_index*8) <= data_out;
+--	         end if;
+--	       end if;
+--	   end process;
 	 
-	 end generate BYTE_BRAM_GEN;
+--	 end generate BYTE_BRAM_GEN;
 
-	end generate BRAM_GEN;
-	--Output register or memory read data
+--	end generate BRAM_GEN;
+--	--Output register or memory read data
 
-	process(mem_data_out, axi_rvalid ) is
-	begin
-	  if (axi_rvalid = '1') then
-	    -- When there is a valid read address (S_AXI_ARVALID) with 
-	    -- acceptance of read address by the slave (axi_arready), 
-	    -- output the read dada 
-	    axi_rdata <= mem_data_out(0);  -- memory range 0 read data
-	  else
-	    axi_rdata <= (others => '0');
-	  end if;  
-	end process;
+--	process(mem_data_out, axi_rvalid ) is
+--	begin
+--	  if (axi_rvalid = '1') then
+--	    -- When there is a valid read address (S_AXI_ARVALID) with 
+--	    -- acceptance of read address by the slave (axi_arready), 
+--	    -- output the read dada 
+--	    axi_rdata <= mem_data_out(0);  -- memory range 0 read data
+--	  else
+--	    axi_rdata <= (others => '0');
+--	  end if;  
+--	end process;
 
 	-- Add user logic here
+
+    main_mem_we_axi_o <= axi_wready and S_AXI_WVALID; --treba izmena jer ima 4 bita kod nas
+    main_mem_addr_axi_o <= axi_araddr(C_S_AXI_ADDR_WIDTH - 1 downto ADDR_LSB)
+        when axi_arv_arr_flag = '1' else
+            axi_awaddr(C_S_AXI_ADDR_WIDTH - 1 downto ADDR_LSB)
+        when axi_awv_awr_flag = '1' else
+            (others => '0');
+    main_mem_data_axi_o <= S_AXI_WDATA;
+    
+    --treba dodatna logika za main_mem_en_axi_o
+    
+    --Output memory read data
+    process(main_mem_data_axi_i, axi_rvalid) is
+    begin
+        if (axi_rvalid = '1') then
+            -- When there is a valid read address (S_AXI_ARVALID) with
+            -- acceptance of read address by the slave (axi_arready), output the read data
+            axi_rdata <= main_mem_data_axi_i;
+        else
+            axi_rdata <= (others => '0');
+        end if;
+    end process;
+    
+    --Potrebno je umetnuti logiku za en i 
+    --resiti nacin koriscenja porta A main memorije i od IP i CPU
+    
+--        main_mem_addr_axi_o : out std_logic_vector(log2c(BRAM_SIZE)-1 downto 0);
+--        main_mem_data_axi_o : out std_logic_vector(2*DATA_WIDTH - 1 downto 0);
+--        main_mem_we_axi_o : out std_logic_vector(3 downto 0);
+--        main_mem_en_axi_o : out std_logic;
+    
+--        main_mem_data_axi_i : in std_logic_vector(2*DATA_WIDTH-1 downto 0); --software read    
+
+
 
 	-- User logic ends
 
