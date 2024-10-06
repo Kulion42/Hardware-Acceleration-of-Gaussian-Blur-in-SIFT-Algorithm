@@ -185,7 +185,6 @@ begin
                     KERNEL_ROM_SIZE => KERNEL_ROM_SIZE)
         port map(clk => clk_s,
                  reset => reset_s,
-                 start => start_main,
                  
                  img_number => img_per_octave_s,
     
@@ -200,9 +199,8 @@ begin
                  kernel_rom_addr_off_prev => "00001001" ,
                  kernel_rom_addr_off_next => rom_addr_off_next_s,
                 
-                 sigma_size => sigma_size_s,
-                 
-                 ready => open);  
+                 sigma_size => sigma_size_s
+                 );  
                  
     
 clk_gen: process
@@ -227,9 +225,6 @@ begin
     bram2_a_en_s <= '1';
     bram2_b_en_s <= '1';
     
-    bram2_a_we_s <= "1111";
-    bram2_b_we_s <= "1111";
-    
     img_height_s <= std_logic_vector(TO_SIGNED(90, 16));
     img_width_s <= std_logic_vector(TO_SIGNED(225, 16));
     img_offset_up_s <= std_logic_vector(TO_SIGNED(0, 16));
@@ -239,14 +234,11 @@ begin
     start_s <= '1';
     wait until falling_edge(clk_s);
     start_s <= '0';
-                        
-    wait until ready_s <= '1';
-    bram2_a_we_s <= "0000";
-    bram2_b_we_s <= "0000";
+
 wait;
 end process;
                  
-
+ 
 
 
 end Behavioral;

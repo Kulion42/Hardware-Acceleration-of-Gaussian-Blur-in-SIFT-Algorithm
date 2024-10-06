@@ -141,7 +141,6 @@ Generic (
 Port ( 
     clk: in std_logic;
     reset: in std_logic;
-    start: in std_logic;
     
     img_number: in std_logic_vector(DATA_WIDTH- 1 downto 0);
       
@@ -156,9 +155,7 @@ Port (
     kernel_rom_addr_off_prev: in std_logic_vector(DATA_WIDTH/2 -1 downto 0);
     kernel_rom_addr_off_next: out std_logic_vector(DATA_WIDTH/2 -1 downto 0);
     
-    sigma_size: out std_logic_vector(DATA_WIDTH/2 -1 downto 0);
-    
-    ready: out std_logic
+    sigma_size: out std_logic_vector(DATA_WIDTH/2 -1 downto 0)
 );
 end component;
 
@@ -179,7 +176,6 @@ kernel_rom_gen: kernel_rom
     Port map(
         clk => clk,
         reset => reset,
-        start => start,
         
         img_number => img_per_octave,
         
@@ -193,9 +189,7 @@ kernel_rom_gen: kernel_rom
     
         kernel_rom_addr_off_prev => rom_addr_off_prev,
         kernel_rom_addr_off_next => rom_addr_off,
-        sigma_size => size,
-    
-        ready  => start_y_conv
+        sigma_size => size
     );
     
 y_conv_gen: convolute_loops
@@ -208,7 +202,7 @@ y_conv_gen: convolute_loops
     Port map(
         clk => clk,
         reset => reset,
-        start => start_y_conv,
+        start => start,
 
         img_height => img_height,
         img_width => img_width,
@@ -293,21 +287,17 @@ x_conv_gen: convolute_loops
     );
     
     
-    main_bram_a_addr <= read1_a_addr when start_y_conv = '1' and start_x_conv = '0'
-                        else write1_a_addr when start_x_conv = '1' and start_y_conv = '1'
-                        else (others => '1');
-    main_bram_b_addr <= read1_b_addr when start_y_conv = '1' and start_x_conv = '0'
-                        else write1_b_addr when start_x_conv = '1' and start_y_conv = '1'
-                        else (others => '1');                    
-    tmp_bram_a_addr <= read2_a_addr when start_x_conv = '1' and start_y_conv = '1'
-                        else write2_a_addr when start_y_conv = '1' and start_x_conv = '0'
-                        else (others => '1');
-    tmp_bram_b_addr <= read2_b_addr when start_x_conv = '1' and start_y_conv = '1'
-                        else write2_b_addr when start_y_conv = '1' and start_x_conv = '0'
-                        else (others => '1');    
-rom_offset: process(rom_addr_off)
+    main_bram_a_addr <= read1_a_addr when start_x_conv = '0'
+                        else write1_a_addr;
+    main_bram_b_addr <= read1_b_addr when start_x_conv = '0'
+                        else write1_b_addr;                   
+    tmp_bram_a_addr <= read2_a_addr when start_x_conv = '1' 
+                        else write2_a_addr;
+    tmp_bram_b_addr <= read2_b_addr when start_x_conv = '1'
+                        else write2_b_addr;    
+rom_offset: process(size)
 begin
-     rom_addr_off_prev <= rom_addr_off;   
+     rom_addr_off_prev <= rom_addr_off ;   
 end process;  
              
     main_bram_a_en <= '1';

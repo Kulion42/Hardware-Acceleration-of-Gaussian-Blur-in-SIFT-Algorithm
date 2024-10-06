@@ -257,7 +257,7 @@ main_bram_b_rdata_blur_s <= (others => '0');
 
     
      if (main_bram_a_cpu_en = '1') then -- CPU write/reads
-        main_bram_a_addr_bram_s <= main_bram_a_cpu_en_s;
+        main_bram_a_en_bram_s <= main_bram_a_cpu_en;
         main_bram_a_we_bram_s <= main_bram_a_cpu_we;
         main_bram_a_addr_bram_s <= main_bram_a_cpu_addr;
         if main_bram_a_cpu_we /= "0000" then
@@ -278,7 +278,7 @@ main_bram_b_rdata_blur_s <= (others => '0');
      end if;
      
      if (main_bram_b_cpu_en = '1') then -- CPU write/reads
-        main_bram_b_addr_bram_s <= main_bram_b_cpu_en_s;
+        main_bram_b_en_bram_s <= main_bram_b_cpu_en;
         main_bram_b_we_bram_s <= main_bram_b_cpu_we;
         main_bram_b_addr_bram_s <= main_bram_b_cpu_addr;
         if main_bram_b_cpu_we /= "0000" then
