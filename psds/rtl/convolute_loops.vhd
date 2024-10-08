@@ -134,6 +134,7 @@ begin
         sum2_reg <= (others => '0');
         sum3_reg <= (others => '0'); 
         sum4_reg <= (others => '0');
+        x_add_2 <= TO_SIGNED(1, 16); 
     
     elsif (rising_edge(clk) and reset = '0') then
         state_reg <= state_next;
@@ -149,7 +150,7 @@ begin
         c_x1 <= c_x1_next; 
         c_x2 <= c_x2_next; 
         c_y <= c_y_next;
-    
+        x_add_2 <= x + TO_SIGNED(1, 16);
     end if;
 
 end process;
@@ -287,11 +288,6 @@ bram2_b_we <= "1111";
 kernel_addr: process(k, sigma_size, sigma_center)
 begin
 
-end process;
-x_add_proc: process(x, reset)
-begin
-    x_add_2 <= x + TO_SIGNED(1, 16) when reset = '0'
-               else TO_SIGNED(1, 16);
 end process;
 
 pix_proc: process(kernel_rom_data)

@@ -21,6 +21,8 @@ add_files -norecurse {tb/convolute_loops_tb/bram1.vhd}
 add_files -norecurse {rtl/gaussian_blur.vhd}
 add_files -norecurse {rtl/top_model.vhd}
 
+set_property file_type {VHDL 2008} [get_files rtl/kernel_rom.vhd]
+
 import_files -force
 
 import_files -fileset constrs_1 -force -norecurse ${PROJECT_CONSTRAINT_FILE}
