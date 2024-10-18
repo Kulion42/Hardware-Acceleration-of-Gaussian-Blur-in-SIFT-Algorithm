@@ -24,7 +24,7 @@ entity Gaussian_blur_v1_0 is
 
 		-- Parameters of Axi Slave Bus Interface S01_AXI
 		C_S01_AXI_ID_WIDTH	: integer	:= 1;
-		C_S01_AXI_DATA_WIDTH	: integer	:= 32;
+		C_S01_AXI_DATA_WIDTH	: integer	:= 64; --menjano
 		C_S01_AXI_ADDR_WIDTH	: integer	:= 16;
 		C_S01_AXI_AWUSER_WIDTH	: integer	:= 1;
 		C_S01_AXI_ARUSER_WIDTH	: integer	:= 1;
@@ -117,19 +117,20 @@ architecture arch_imp of Gaussian_blur_v1_0 is
     --signal declarations
     
     signal system_reset_s : std_logic;
+  
     
     --Interface to the AXI LITE controller
     
     signal reg_data_s : std_logic_vector(DATA_WIDTH - 1 downto 0);
     
-    signal img_height_wr_s: std_logic;
-    signal img_width_wr_s: std_logic;
-    signal img_offset_up_wr_s: std_logic; 
-    signal img_offset_down_wr_s: std_logic;
-    signal img_per_octave_wr_s: std_logic;
+    signal img_height_we_s: std_logic;
+    signal img_width_we_s: std_logic;
+    signal img_offset_up_we_s: std_logic; 
+    signal img_offset_down_we_s: std_logic;
+    signal img_per_octave_we_s: std_logic;
             
-    signal start_wr_s : std_logic;
-    signal reset_wr_s : std_logic;
+    signal start_we_s : std_logic;
+    signal reset_we_s : std_logic;
     --signal ready_wr_s : std_logic;
                
     --software read
@@ -142,30 +143,38 @@ architecture arch_imp of Gaussian_blur_v1_0 is
     signal ready_axi_s : std_logic;
     signal start_axi_s : std_logic;
     signal reset_axi_s : std_logic;
+ 
     
     --Interface to the AXI FULL controller
-    
-    --izmedju ovih 5 signala i 5 signala sa guassian blur PORT A treba mux
-    signal main_mem_addr_axi_o_s : std_logic_vector(log2c(BRAM_SIZE)-1 downto 0);
-    signal main_mem_data_axi_o_s : std_logic_vector(2*DATA_WIDTH - 1 downto 0);
-    signal main_mem_we_axi_o_s : std_logic_vector(3 downto 0);
-    signal main_mem_en_axi_o_s : std_logic;
+    signal main_mem_addr_axi_s : std_logic_vector(log2c(BRAM_SIZE)-1 downto 0);
+    signal main_mem_wdata_axi_s : std_logic_vector(2*DATA_WIDTH - 1 downto 0);
+    signal main_mem_we_axi_s : std_logic_vector(3 downto 0);
+    signal main_mem_en_axi_s : std_logic;
         
-    signal main_mem_data_axi_i_s : std_logic_vector(2*DATA_WIDTH-1 downto 0); --software read
+    signal main_mem_rdata_axi_s : std_logic_vector(2*DATA_WIDTH-1 downto 0); --signal ka CPU
     
-    --Interace to the Gaussian blur module
     
-    signal reset_reg_s: std_logic;
-    signal start_reg_s: std_logic;
+    --axi full interface towards main bram A port
+    signal main_mem_a_addr_axi_s : std_logic_vector(log2c(BRAM_SIZE)-1 downto 0);
+    signal main_mem_a_wdata_axi_s : std_logic_vector(2*DATA_WIDTH - 1 downto 0);
+    signal main_mem_a_we_axi_s : std_logic_vector(3 downto 0);
+    signal main_mem_a_en_axi_s : std_logic;
+        
+    signal main_mem_a_rdata_axi_s : std_logic_vector(2*DATA_WIDTH-1 downto 0); --signal ka CPU
     
-    --IMAGE ELEMENTS
-    signal img_height_reg_s: std_logic_vector(DATA_WIDTH -1 downto 0);
-    signal img_width_reg_s: std_logic_vector(DATA_WIDTH -1 downto 0);
-    signal img_offset_up_reg_s: std_logic_vector(DATA_WIDTH -1 downto 0); 
-    signal img_offset_down_reg_s: std_logic_vector(DATA_WIDTH -1 downto 0);
-    signal img_per_octave_reg_s: std_logic_vector(DATA_WIDTH -1 downto 0);
     
-    --BRAMS
+    --axi full interface towards main bram B port
+    signal main_mem_b_addr_axi_s : std_logic_vector(log2c(BRAM_SIZE)-1 downto 0);
+    signal main_mem_b_wdata_axi_s : std_logic_vector(2*DATA_WIDTH - 1 downto 0);
+    signal main_mem_b_we_axi_s : std_logic_vector(3 downto 0);
+    signal main_mem_b_en_axi_s : std_logic;
+        
+    signal main_mem_b_rdata_axi_s : std_logic_vector(2*DATA_WIDTH-1 downto 0); --signal ka CPU
+    
+    
+    --INPUT OF MEMORY SUBSYSTEM
+    
+    --signals outputs of muxes for main bram
     signal main_bram_a_en_s: std_logic;
     signal main_bram_a_we_s: std_logic_vector(3 downto 0);
     signal main_bram_a_addr_s: std_logic_vector(log2c(BRAM_SIZE) - 1 downto 0);
@@ -178,6 +187,7 @@ architecture arch_imp of Gaussian_blur_v1_0 is
     signal main_bram_b_rdata_s: std_logic_vector(2 *DATA_WIDTH -1 downto 0);
     signal main_bram_b_wdata_s: std_logic_vector(2 *DATA_WIDTH -1 downto 0); 
     
+    --signals between gausian blur and tmp bram
     signal tmp_bram_a_en_s: std_logic;
     signal tmp_bram_a_we_s: std_logic_vector(3 downto 0);
     signal tmp_bram_a_addr_s: std_logic_vector(log2c(BRAM_SIZE) - 1 downto 0);
@@ -191,7 +201,42 @@ architecture arch_imp of Gaussian_blur_v1_0 is
     signal tmp_bram_b_wdata_s: std_logic_vector(2 *DATA_WIDTH -1 downto 0);
     
     
+    --Interace to the Gaussian blur module
+    
+    signal reset_reg_s: std_logic;
+    signal start_reg_s: std_logic;
     signal ready_reg_s: std_logic;
+    
+    --IMAGE ELEMENTS
+    signal img_height_reg_s: std_logic_vector(DATA_WIDTH -1 downto 0);
+    signal img_width_reg_s: std_logic_vector(DATA_WIDTH -1 downto 0);
+    signal img_offset_up_reg_s: std_logic_vector(DATA_WIDTH -1 downto 0); 
+    signal img_offset_down_reg_s: std_logic_vector(DATA_WIDTH -1 downto 0);
+    signal img_per_octave_reg_s: std_logic_vector(DATA_WIDTH -1 downto 0);
+    
+    --signals of gaussian blur towards muxes for main bram
+    signal main_bram_a_en_gaus_s: std_logic;
+    signal main_bram_a_we_gaus_s: std_logic_vector(3 downto 0);
+    signal main_bram_a_addr_gaus_s: std_logic_vector(log2c(BRAM_SIZE) - 1 downto 0);
+    signal main_bram_a_rdata_gaus_s: std_logic_vector(2 *DATA_WIDTH -1 downto 0);
+    signal main_bram_a_wdata_gaus_s: std_logic_vector(2 *DATA_WIDTH -1 downto 0); 
+    
+    signal main_bram_b_en_gaus_s: std_logic;
+    signal main_bram_b_we_gaus_s: std_logic_vector(3 downto 0);
+    signal main_bram_b_addr_gaus_s: std_logic_vector(log2c(BRAM_SIZE) - 1 downto 0);
+    signal main_bram_b_rdata_gaus_s: std_logic_vector(2 *DATA_WIDTH -1 downto 0);
+    signal main_bram_b_wdata_gaus_s: std_logic_vector(2 *DATA_WIDTH -1 downto 0); 
+    
+    --signals for tmp bram are already declared as common for tmp bram and gaus
+    
+    --selekt signal za mux-eve na port A i port B
+    signal main_bram_select : std_logic;
+    
+    
+    --dva signala koji se korite jer su wready i rvalid out portovi a potrebni su za proveru za muxeve
+    signal s01_axi_wready_buffer : std_logic;
+    signal s01_axi_rvalid_buffer : std_logic;
+    
     
     --END OF USER SIGNALS
     
@@ -211,14 +256,14 @@ architecture arch_imp of Gaussian_blur_v1_0 is
 		--User ports added here
 		reg_data_o : out std_logic_vector(DATA_WIDTH - 1 downto 0);
     
-        img_height_wr_o: out std_logic;
-        img_width_wr_o: out std_logic;
-        img_offset_up_wr_o: out std_logic; 
-        img_offset_down_wr_o: out std_logic;
-        img_per_octave_wr_o: out std_logic;
+        img_height_we_o: out std_logic;
+        img_width_we_o: out std_logic;
+        img_offset_up_we_o: out std_logic; 
+        img_offset_down_we_o: out std_logic;
+        img_per_octave_we_o: out std_logic;
         
-        start_wr_o : out std_logic;
-        reset_wr_o : out std_logic;
+        start_we_o : out std_logic;
+        reset_we_o : out std_logic;
         --ready_wr_o : out std_logic;
                
         --software read
@@ -280,11 +325,11 @@ architecture arch_imp of Gaussian_blur_v1_0 is
 		--User ports
 		
 		main_mem_addr_axi_o : out std_logic_vector(log2c(BRAM_SIZE)-1 downto 0);
-        main_mem_data_axi_o : out std_logic_vector(2*DATA_WIDTH - 1 downto 0);
+        main_mem_wdata_axi_o : out std_logic_vector(2*DATA_WIDTH - 1 downto 0);
         main_mem_we_axi_o : out std_logic_vector(3 downto 0);
         main_mem_en_axi_o : out std_logic;
     
-        main_mem_data_axi_i : in std_logic_vector(2*DATA_WIDTH-1 downto 0); --software read
+        main_mem_rdata_axi_i : in std_logic_vector(2*DATA_WIDTH-1 downto 0); --software read
 		
 		--END user ports
 		
@@ -355,14 +400,14 @@ Gaussian_blur_v1_0_S00_AXI_inst : Gaussian_blur_v1_0_S00_AXI
 	    --user ports
 	    reg_data_o => reg_data_s,
     
-        img_height_wr_o => img_height_wr_s,
-        img_width_wr_o => img_width_wr_s,
-        img_offset_up_wr_o => img_offset_up_wr_s,
-        img_offset_down_wr_o => img_offset_down_wr_s,
-        img_per_octave_wr_o => img_per_octave_wr_s,
+        img_height_we_o => img_height_we_s,
+        img_width_we_o => img_width_we_s,
+        img_offset_up_we_o => img_offset_up_we_s,
+        img_offset_down_we_o => img_offset_down_we_s,
+        img_per_octave_we_o => img_per_octave_we_s,
         
-        start_wr_o => start_wr_s,
-        reset_wr_o => reset_wr_s, 
+        start_we_o => start_we_s,
+        reset_we_o => reset_we_s, 
         --ready_wr_o => img_height_wr_s;
                
         --software read
@@ -421,12 +466,12 @@ Gaussian_blur_v1_0_S01_AXI_inst : Gaussian_blur_v1_0_S01_AXI
 	port map (
 	   
 	    --user ports
-	    main_mem_addr_axi_o => main_mem_addr_axi_o_s,  
-        main_mem_data_axi_o => main_mem_data_axi_o_s,
-        main_mem_we_axi_o => main_mem_we_axi_o_s,
-        main_mem_en_axi_o => main_mem_en_axi_o_s,
+	    main_mem_addr_axi_o => main_mem_addr_axi_s,  
+        main_mem_wdata_axi_o => main_mem_wdata_axi_s,
+        main_mem_we_axi_o => main_mem_we_axi_s,
+        main_mem_en_axi_o => main_mem_en_axi_s,
     
-        main_mem_data_axi_i => main_mem_data_axi_i_s, --software read
+        main_mem_rdata_axi_i => main_mem_rdata_axi_s, --software read
 	    --end user ports
 	
 		S_AXI_ACLK	=> s01_axi_aclk,
@@ -449,7 +494,7 @@ Gaussian_blur_v1_0_S01_AXI_inst : Gaussian_blur_v1_0_S01_AXI
 		S_AXI_WLAST	=> s01_axi_wlast,
 		S_AXI_WUSER	=> s01_axi_wuser,
 		S_AXI_WVALID	=> s01_axi_wvalid,
-		S_AXI_WREADY	=> s01_axi_wready,
+		S_AXI_WREADY	=> s01_axi_wready_buffer, --menjano za buffer
 		S_AXI_BID	=> s01_axi_bid,
 		S_AXI_BRESP	=> s01_axi_bresp,
 		S_AXI_BUSER	=> s01_axi_buser,
@@ -473,7 +518,7 @@ Gaussian_blur_v1_0_S01_AXI_inst : Gaussian_blur_v1_0_S01_AXI
 		S_AXI_RRESP	=> s01_axi_rresp,
 		S_AXI_RLAST	=> s01_axi_rlast,
 		S_AXI_RUSER	=> s01_axi_ruser,
-		S_AXI_RVALID	=> s01_axi_rvalid,
+		S_AXI_RVALID	=> s01_axi_rvalid_buffer,  --menjano za buffer
 		S_AXI_RREADY	=> s01_axi_rready
 	);
 
@@ -496,14 +541,14 @@ Gaussian_blur_v1_0_S01_AXI_inst : Gaussian_blur_v1_0_S01_AXI
             
             reg_data_i => reg_data_s,
             
-            img_height_wr_i => img_height_wr_s,
-            img_width_wr_i => img_width_wr_s,
-            img_offset_up_wr_i => img_offset_up_wr_s,
-            img_offset_down_wr_i => img_offset_down_wr_s,
-            img_per_octave_wr_i => img_per_octave_wr_s,
+            img_height_we_i => img_height_we_s,
+            img_width_we_i => img_width_we_s,
+            img_offset_up_we_i => img_offset_up_we_s,
+            img_offset_down_we_i => img_offset_down_we_s,
+            img_per_octave_we_i => img_per_octave_we_s,
             
-            start_wr_i  => start_wr_s,
-            reset_wr_i  => reset_wr_s,
+            start_we_i  => start_we_s,
+            reset_we_i  => reset_we_s,
             --ready_wr_i  => ready_wr_s,
                
             --software read
@@ -518,18 +563,26 @@ Gaussian_blur_v1_0_S01_AXI_inst : Gaussian_blur_v1_0_S01_AXI
             reset_axi_o => reset_axi_s,
             
             -----------------------------------------------------------------
+            --MAIN BRAM INTERFACE
             
-            --INTERFACE TO AXI FULL - main bram A Port
-            main_mem_addr_axi_i => main_mem_addr_axi_o_s,
-            main_mem_data_axi_i => main_mem_data_axi_o_s,
-            main_mem_we_axi_i => main_mem_we_axi_o_s,
-            main_mem_en_axi_i => main_mem_en_axi_o_s,
+            --main bram interface A port
+            main_mem_a_addr_i => main_bram_a_addr_s,
+            main_mem_a_wdata_i => main_bram_a_wdata_s,
+            main_mem_a_we_i => main_bram_a_we_s,
+            main_mem_a_en_i => main_bram_a_en_s,
             
-            --software read
-            main_mem_data_axi_o => main_mem_data_axi_i_s, --software read
-            --logika za i/o je obrnuta jer su portovi prepisani iz AXI FULL modula a ne memory
-             -----------------------------------------------------------------
-        
+            main_mem_a_rdata_o => main_bram_a_rdata_s,
+            
+            --main bram interface B port
+            main_mem_b_addr_i => main_bram_b_addr_s,
+            main_mem_b_wdata_i => main_bram_a_wdata_s,
+            main_mem_b_we_i => main_bram_b_we_s,
+            main_mem_b_en_i => main_bram_b_en_s,
+            
+            main_mem_b_rdata_o => main_bram_b_rdata_s,
+            
+            -----------------------------------------------------------------
+            
             --INTERFACE TO GAUSSIAN_BLUR
             
             --registers 
@@ -542,31 +595,24 @@ Gaussian_blur_v1_0_S01_AXI_inst : Gaussian_blur_v1_0_S01_AXI
             start_o => start_reg_s,
             reset_o => reset_reg_s,
             ready_i => ready_reg_s,
-            
-            --main bram interface B port
-            main_mem_addr_o => main_bram_b_addr_s,
-            main_mem_data_o => main_bram_b_rdata_s, 
-            main_mem_we_o => main_bram_b_we_s, 
-            main_mem_en_o => main_bram_b_en_s, 
-            
-            main_mem_data_i => main_bram_b_wdata_s,  
-            
-            
+
+          
             --temp bram interface
-            tmp_mem_addr_a_o => tmp_bram_a_addr_s, 
-            tmp_mem_data_a_o => tmp_bram_a_rdata_s,
-            tmp_mem_we_a_o => tmp_bram_a_we_s, 
-            tmp_mem_en_a_o => tmp_bram_a_en_s, 
+            tmp_mem_a_addr_i => tmp_bram_a_addr_s, 
+            tmp_mem_a_wdata_i => tmp_bram_a_wdata_s, 
+            tmp_mem_a_we_i => tmp_bram_a_we_s, 
+            tmp_mem_a_en_i => tmp_bram_a_en_s, 
             
-            tmp_mem_data_a_i => tmp_bram_a_wdata_s, 
+            tmp_mem_a_rdata_o => tmp_bram_a_rdata_s,
             
+         
+            tmp_mem_b_addr_i => tmp_bram_b_addr_s, 
+            tmp_mem_b_wdata_i => tmp_bram_b_wdata_s,
+            tmp_mem_b_we_i => tmp_bram_b_we_s,
+            tmp_mem_b_en_i => tmp_bram_b_en_s, 
             
-            tmp_mem_addr_b_o => tmp_bram_b_addr_s, 
-            tmp_mem_data_b_o => tmp_bram_b_rdata_s, 
-            tmp_mem_we_b_o => tmp_bram_b_we_s,
-            tmp_mem_en_b_o => tmp_bram_b_en_s, 
-            
-            tmp_mem_data_b_i => tmp_bram_b_wdata_s); 
+            tmp_mem_b_rdata_o => tmp_bram_b_rdata_s
+            ); 
            
     --Gaussian blur modul
     Gaussian_blur: entity work.gaussian_blur(Mixed)
@@ -590,20 +636,20 @@ Gaussian_blur_v1_0_S01_AXI_inst : Gaussian_blur_v1_0_S01_AXI
             ready => ready_reg_s,
             
             --BRAMS
-            main_bram_a_en => main_bram_a_en_s,
-            main_bram_a_we => main_bram_a_we_s,
-            main_bram_a_addr => main_bram_a_addr_s,
-            main_bram_a_rdata => main_bram_a_rdata_s,
+            main_bram_a_en => main_bram_a_en_gaus_s,
+            main_bram_a_we => main_bram_a_we_gaus_s,
+            main_bram_a_addr => main_bram_a_addr_gaus_s,
+            main_bram_a_rdata => main_bram_a_rdata_gaus_s,
             
-            main_bram_a_wdata => main_bram_a_wdata_s,
+            main_bram_a_wdata => main_bram_a_wdata_gaus_s,
             
             
-            main_bram_b_en => main_bram_b_en_s,
-            main_bram_b_we => main_bram_b_we_s,
-            main_bram_b_addr => main_bram_b_addr_s,
-            main_bram_b_rdata => main_bram_b_rdata_s,
+            main_bram_b_en => main_bram_b_en_gaus_s,
+            main_bram_b_we => main_bram_b_we_gaus_s,
+            main_bram_b_addr => main_bram_b_addr_gaus_s,
+            main_bram_b_rdata => main_bram_b_rdata_gaus_s,
             
-            main_bram_b_wdata => main_bram_b_wdata_s,
+            main_bram_b_wdata => main_bram_b_wdata_gaus_s,
             
             
             tmp_bram_a_en => tmp_bram_a_en_s,
@@ -620,15 +666,50 @@ Gaussian_blur_v1_0_S01_AXI_inst : Gaussian_blur_v1_0_S01_AXI
             tmp_bram_b_rdata => tmp_bram_b_rdata_s,
             
             tmp_bram_b_wdata => tmp_bram_b_wdata_s);
+  
+  main_bram_mux_portA:
+    main_bram_a_en_s <= main_mem_a_en_axi_s when main_bram_select = '1' else main_bram_a_en_gaus_s;
+    main_bram_a_we_s <= main_mem_a_we_axi_s when main_bram_select = '1' else main_bram_a_we_gaus_s;
+    main_bram_a_addr_s <= main_mem_a_addr_axi_s when main_bram_select = '1' else main_bram_a_addr_gaus_s;
+    main_bram_a_wdata_s <= main_mem_a_wdata_axi_s when main_bram_select = '1' else main_bram_a_wdata_gaus_s;
+  
+  main_bram_mux_portB:
+    main_bram_b_en_s <= main_mem_b_en_axi_s when main_bram_select = '1' else main_bram_b_en_gaus_s;
+    main_bram_b_we_s <= main_mem_b_we_axi_s when main_bram_select = '1' else main_bram_b_we_gaus_s;
+    main_bram_b_addr_s <= main_mem_b_addr_axi_s when main_bram_select = '1' else main_bram_b_addr_gaus_s;
+    main_bram_b_wdata_s <= main_mem_b_wdata_axi_s when main_bram_select = '1' else main_bram_b_wdata_gaus_s;
+    
+    --ovo su muxevi koji vode ka main bram-u
+    
+    --potreban demux koji vodi od main bram-a ka ili ip ili cpu
+    
+    
+  mux_select_gen:
+    process (s01_axi_wvalid, s01_axi_wready_buffer, s01_axi_rvalid_buffer, s01_axi_rready)
+    begin
+        if (s01_axi_wvalid = '1' and s01_axi_wready_buffer = '1') or (s01_axi_rvalid_buffer = '1' and s01_axi_rready = '1') then
+            main_bram_select <= '1';  -- Assert mux selection signal when write address or data is valid
+        else
+            main_bram_select <= '0';  -- De-assert when no write transaction is taking place
+        end if;
+    end process;  
+    
+    s01_axi_wready <= s01_axi_wready_buffer;
+    s01_axi_rvalid <= s01_axi_rvalid_buffer;
+    
+    
+             --Dva signala za proveru treba umetnuti tamo gde su originali
+             
+             --proces za mux treba podeliti, jedno je za mux jedno je za demux
          
-            --treba dosta menjanja jer PORT A i PORT B treba da se naprave tako da
-            --Port A upise podakte od CPU-a a onda se prebacuje u rad sa IP
-            
-            --Moguca solucija je 1 mux za svaki port ka main memoriji, na svaki se dovode
-            --i IP core i AXI Full Portovi a neki signal (CPU ili AXI Full kontrolise mux)
+            --Treba razdeliti podatke sa axija na podatke koji se vuku u bram
+            --rutirati po 30 bitnim podacima
     
             --potrebno prebaciti logiku iz top.vhd
-
+            
+            
+            --dodati demux za povratne vrednosti
+            
 	-- User logic ends
 
 end arch_imp;
