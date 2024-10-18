@@ -3,15 +3,14 @@ use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
 
 entity dsp_unit_mac_shift is
-    generic (WIDTH1: natural := 16;
-             WIDTH2: natural := 16;
-             WIDTH3: natural := 16 );
+    generic (WIDTH_IN: natural := 16;
+             WIDTH_OUT:natural := 16 );
     port (clk: in std_logic;
           rst: in std_logic;
-          in_1: in std_logic_vector(WIDTH1 - 1 downto 0);
-          in_2: in std_logic_vector(WIDTH2 - 1 downto 0);
-          in_3: in std_logic_vector(WIDTH3 - 1 downto 0);
-          out_res: out std_logic_vector(WIDTH1 - 1 downto 0)
+          in_1: in std_logic_vector(WIDTH_IN - 1 downto 0);
+          in_2: in std_logic_vector(WIDTH_IN - 1 downto 0);
+          in_3: in std_logic_vector(WIDTH_IN - 1 downto 0);
+          out_res: out std_logic_vector(WIDTH_OUT - 1 downto 0)
           );
 end dsp_unit_mac_shift;
 
@@ -19,8 +18,8 @@ architecture Behavioral of dsp_unit_mac_shift is
     attribute use_dsp : string;
     attribute use_dsp of Behavioral : architecture is "yes";
     
-    signal mult_reg, alu_reg: std_logic_vector(WIDTH1 + WIDTH2 - 1 downto 0);
-    signal tmp_reg: std_logic_vector(WIDTH3 - 1 downto 0);
+    signal mult_reg, alu_reg: std_logic_vector(2 *WIDTH_IN - 1 downto 0);
+    signal tmp_reg: std_logic_vector(WIDTH_IN - 1 downto 0);
 begin
     process(clk) is
     begin
@@ -36,5 +35,5 @@ begin
             end if;
         end if;
     end process;
-    out_res <= std_logic_vector(TO_UNSIGNED(TO_INTEGER(unsigned(shift_right(unsigned(alu_reg), 14))) ,16));
+    out_res <= alu_reg(WIDTH_OUT-1 downto 0);
 end Behavioral;

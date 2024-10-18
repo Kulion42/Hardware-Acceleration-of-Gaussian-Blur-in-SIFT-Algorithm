@@ -36,7 +36,7 @@ Generic(
     
     --SIZE OF BRAMS AND ROM
     KERNEL_ROM_SIZE : natural := 76; --FIXED 
-    BRAM_SIZE : natural := 60000 --FIXED
+    BRAM_SIZE : natural := 30000 --FIXED
 );
 Port ( 
     clk: in std_logic;
@@ -54,14 +54,14 @@ Port (
     main_bram_a_cpu_en: in std_logic;
     main_bram_a_cpu_we: in std_logic_vector(3 downto 0);
     main_bram_a_cpu_addr: in std_logic_vector(log2c(BRAM_SIZE) - 1 downto 0);
-    main_bram_a_cpu_rdata: out std_logic_vector(2 *DATA_WIDTH -1 downto 0);
-    main_bram_a_cpu_wdata: in std_logic_vector(2 *DATA_WIDTH -1 downto 0); 
+    main_bram_a_cpu_rdata: out std_logic_vector(2 *(DATA_WIDTH-1) -1 downto 0);
+    main_bram_a_cpu_wdata: in std_logic_vector(2 *(DATA_WIDTH-1) -1 downto 0); 
     
     main_bram_b_cpu_en: in std_logic;
     main_bram_b_cpu_we: in std_logic_vector(3 downto 0);
     main_bram_b_cpu_addr: in std_logic_vector(log2c(BRAM_SIZE) - 1 downto 0);
-    main_bram_b_cpu_rdata: out std_logic_vector(2 *DATA_WIDTH -1 downto 0);
-    main_bram_b_cpu_wdata: in std_logic_vector(2 *DATA_WIDTH -1 downto 0); 
+    main_bram_b_cpu_rdata: out std_logic_vector(2 *(DATA_WIDTH-1) -1 downto 0);
+    main_bram_b_cpu_wdata: in std_logic_vector(2 *(DATA_WIDTH-1) -1 downto 0); 
     
     ready: out std_logic
 );
@@ -69,92 +69,21 @@ end top_model;
 
 architecture Structural of top_model is
 
-component gaussian_blur is
-Generic(
-    --DATA WIDTH
-    DATA_WIDTH : natural := 16;
-    
-    --SIZE OF BRAMS AND ROM
-    KERNEL_ROM_SIZE : natural := 76; --FIXED 
-    BRAM_SIZE : natural := 60000 --FIXED
-);
-Port ( 
-    clk: in std_logic;
-    reset: in std_logic;
-    start: in std_logic;
-    
-    --IMAGE ELEMENTS
-    img_height: in std_logic_vector(DATA_WIDTH -1 downto 0);
-    img_width: in std_logic_vector(DATA_WIDTH -1 downto 0);
-    img_offset_up: in std_logic_vector(DATA_WIDTH -1 downto 0); 
-    img_offset_down: in std_logic_vector(DATA_WIDTH -1 downto 0);
-    img_per_octave: in std_logic_vector(DATA_WIDTH -1 downto 0);
-    
-    --BRAMS
-    main_bram_a_en: out std_logic;
-    main_bram_a_we: out std_logic_vector(3 downto 0);
-    main_bram_a_addr: out std_logic_vector(log2c(BRAM_SIZE) - 1 downto 0);
-    main_bram_a_rdata: in std_logic_vector(2 *DATA_WIDTH -1 downto 0);
-    main_bram_a_wdata: out std_logic_vector(2 *DATA_WIDTH -1 downto 0); 
-    
-    main_bram_b_en: out std_logic;
-    main_bram_b_we: out std_logic_vector(3 downto 0);
-    main_bram_b_addr: out std_logic_vector(log2c(BRAM_SIZE) - 1 downto 0);
-    main_bram_b_rdata: in std_logic_vector(2 *DATA_WIDTH -1 downto 0);
-    main_bram_b_wdata: out std_logic_vector(2 *DATA_WIDTH -1 downto 0); 
-    
-    tmp_bram_a_en: out std_logic;
-    tmp_bram_a_we: out std_logic_vector(3 downto 0);
-    tmp_bram_a_addr: out std_logic_vector(log2c(BRAM_SIZE) - 1 downto 0);
-    tmp_bram_a_rdata: in std_logic_vector(2 *DATA_WIDTH -1 downto 0);
-    tmp_bram_a_wdata: out std_logic_vector(2 *DATA_WIDTH -1 downto 0);
-    
-    tmp_bram_b_en: out std_logic;
-    tmp_bram_b_we: out std_logic_vector(3 downto 0);
-    tmp_bram_b_addr: out std_logic_vector(log2c(BRAM_SIZE) - 1 downto 0);
-    tmp_bram_b_rdata: in std_logic_vector(2 *DATA_WIDTH -1 downto 0);
-    tmp_bram_b_wdata: out std_logic_vector(2 *DATA_WIDTH -1 downto 0);
-    
-    
-    ready: out std_logic
-    
-);
-
-end component;
-
-component bram is
-    generic (WIDTH: positive := 16;
-             SIZE: positive := 60000);
-    port (clk_a : in std_logic;
-          clk_b : in std_logic;
-          en_a: in std_logic;
-          en_b: in std_logic;
-          we_a: in std_logic_vector(3 downto 0);
-          we_b: in std_logic_vector(3 downto 0);
-          addr_a: in std_logic_vector(log2c(SIZE) -1 downto 0);
-          addr_b: in std_logic_vector(log2c(SIZE) -1 downto 0);
-          data_a_i: in std_logic_vector(2 *WIDTH-1 downto 0);
-          data_b_i: in std_logic_vector(2 *WIDTH-1 downto 0);
-          data_a_o: out std_logic_vector(2 *WIDTH-1 downto 0);
-          data_b_o: out std_logic_vector(2 *WIDTH-1 downto 0));
-
-end component;
-
 signal main_bram_a_en_blur_s, main_bram_b_en_blur_s, tmp_bram_a_en_blur_s, tmp_bram_b_en_blur_s: std_logic;
 signal main_bram_a_we_blur_s, main_bram_b_we_blur_s, tmp_bram_a_we_blur_s, tmp_bram_b_we_blur_s: std_logic_vector(3 downto 0);
 signal main_bram_a_addr_blur_s, main_bram_b_addr_blur_s, tmp_bram_a_addr_blur_s, tmp_bram_b_addr_blur_s: std_logic_vector(log2c(BRAM_SIZE) -1 downto 0);
-signal main_bram_a_rdata_blur_s, main_bram_b_rdata_blur_s, tmp_bram_a_rdata_blur_s, tmp_bram_b_rdata_blur_s: std_logic_vector(2*DATA_WIDTH -1 downto 0);
-signal main_bram_a_wdata_blur_s, main_bram_b_wdata_blur_s, tmp_bram_a_wdata_blur_s, tmp_bram_b_wdata_blur_s: std_logic_vector(2*DATA_WIDTH -1 downto 0);
+signal main_bram_a_rdata_blur_s, main_bram_b_rdata_blur_s, tmp_bram_a_rdata_blur_s, tmp_bram_b_rdata_blur_s: std_logic_vector(2*(DATA_WIDTH-1) -1 downto 0);
+signal main_bram_a_wdata_blur_s, main_bram_b_wdata_blur_s, tmp_bram_a_wdata_blur_s, tmp_bram_b_wdata_blur_s: std_logic_vector(2*(DATA_WIDTH-1) -1 downto 0);
 
 signal main_bram_a_en_bram_s, main_bram_b_en_bram_s, tmp_bram_a_en_bram_s, tmp_bram_b_en_bram_s: std_logic;
 signal main_bram_a_we_bram_s, main_bram_b_we_bram_s, tmp_bram_a_we_bram_s, tmp_bram_b_we_bram_s: std_logic_vector(3 downto 0);
 signal main_bram_a_addr_bram_s, main_bram_b_addr_bram_s, tmp_bram_a_addr_bram_s, tmp_bram_b_addr_bram_s: std_logic_vector(log2c(BRAM_SIZE) -1 downto 0);
-signal main_bram_a_rdata_bram_s, main_bram_b_rdata_bram_s, tmp_bram_a_rdata_bram_s, tmp_bram_b_rdata_bram_s: std_logic_vector(2*DATA_WIDTH -1 downto 0);
-signal main_bram_a_wdata_bram_s, main_bram_b_wdata_bram_s, tmp_bram_a_wdata_bram_s, tmp_bram_b_wdata_bram_s: std_logic_vector(2*DATA_WIDTH -1 downto 0);
+signal main_bram_a_rdata_bram_s, main_bram_b_rdata_bram_s, tmp_bram_a_rdata_bram_s, tmp_bram_b_rdata_bram_s: std_logic_vector(2*(DATA_WIDTH-1) -1 downto 0);
+signal main_bram_a_wdata_bram_s, main_bram_b_wdata_bram_s, tmp_bram_a_wdata_bram_s, tmp_bram_b_wdata_bram_s: std_logic_vector(2*(DATA_WIDTH-1) -1 downto 0);
 
 begin 
 
-gauss_blur: gaussian_blur
+gauss_blur: entity work.gaussian_blur
 Generic map(
     --DATA WIDTH
     DATA_WIDTH => DATA_WIDTH,
@@ -204,9 +133,9 @@ Port map(
     
 );
 
-main_bram: bram
+main_bram: entity work.bram
 Generic map(
-    WIDTH => DATA_WIDTH,
+    WIDTH => DATA_WIDTH -1,
     SIZE => BRAM_SIZE
     )
 Port map(
@@ -224,9 +153,9 @@ Port map(
     data_b_o => main_bram_b_rdata_bram_s 
     );
     
-tmp_bram: bram
+tmp_bram: entity work.bram
 Generic map(
-    WIDTH => DATA_WIDTH,
+    WIDTH => DATA_WIDTH-1,
     SIZE => BRAM_SIZE
     )
 Port map(

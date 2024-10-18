@@ -169,7 +169,7 @@ next_off_gen: dsp_unit_add
           out_res => kernel_rom_addr_off_next_s
            );
 
-sigma_proc: process(size_s, img_number)
+sigma_proc: process(size_s, img_number, kernel_rom_addr_off_next_s)
 begin              
 sigma_size <= std_logic_vector(size_s) when TO_INTEGER(unsigned(img_number)) = 4 or TO_INTEGER(unsigned(img_number)) = 5
               else std_logic_vector(size_s + 2);

@@ -31,7 +31,7 @@ Generic(
     
     --SIZE OF BRAMS AND ROM
     KERNEL_ROM_SIZE : natural := 76; --FIXED 
-    BRAM_SIZE : natural := 60000 --FIXED
+    BRAM_SIZE : natural := 0000 --FIXED
 );
 Port ( 
     clk: in std_logic;
@@ -49,26 +49,26 @@ Port (
     main_bram_a_en: out std_logic;
     main_bram_a_we: out std_logic_vector(3 downto 0);
     main_bram_a_addr: out std_logic_vector(log2c(BRAM_SIZE) - 1 downto 0);
-    main_bram_a_rdata: in std_logic_vector(2 *DATA_WIDTH -1 downto 0);
-    main_bram_a_wdata: out std_logic_vector(2 *DATA_WIDTH -1 downto 0); 
+    main_bram_a_rdata: in std_logic_vector(2 *(DATA_WIDTH-1)-1 downto 0);
+    main_bram_a_wdata: out std_logic_vector(2 *(DATA_WIDTH-1) -1 downto 0); 
     
     main_bram_b_en: out std_logic;
     main_bram_b_we: out std_logic_vector(3 downto 0);
     main_bram_b_addr: out std_logic_vector(log2c(BRAM_SIZE) - 1 downto 0);
-    main_bram_b_rdata: in std_logic_vector(2 *DATA_WIDTH -1 downto 0);
-    main_bram_b_wdata: out std_logic_vector(2 *DATA_WIDTH -1 downto 0); 
+    main_bram_b_rdata: in std_logic_vector(2 *(DATA_WIDTH-1) -1 downto 0);
+    main_bram_b_wdata: out std_logic_vector(2 *(DATA_WIDTH-1) -1 downto 0); 
     
     tmp_bram_a_en: out std_logic;
     tmp_bram_a_we: out std_logic_vector(3 downto 0);
     tmp_bram_a_addr: out std_logic_vector(log2c(BRAM_SIZE) - 1 downto 0);
-    tmp_bram_a_rdata: in std_logic_vector(2 *DATA_WIDTH -1 downto 0);
-    tmp_bram_a_wdata: out std_logic_vector(2 *DATA_WIDTH -1 downto 0);
+    tmp_bram_a_rdata: in std_logic_vector(2 *(DATA_WIDTH-1) -1 downto 0);
+    tmp_bram_a_wdata: out std_logic_vector(2 *(DATA_WIDTH-1) -1 downto 0);
     
     tmp_bram_b_en: out std_logic;
     tmp_bram_b_we: out std_logic_vector(3 downto 0);
     tmp_bram_b_addr: out std_logic_vector(log2c(BRAM_SIZE) - 1 downto 0);
-    tmp_bram_b_rdata: in std_logic_vector(2 *DATA_WIDTH -1 downto 0);
-    tmp_bram_b_wdata: out std_logic_vector(2 *DATA_WIDTH -1 downto 0);
+    tmp_bram_b_rdata: in std_logic_vector(2 *(DATA_WIDTH-1) -1 downto 0);
+    tmp_bram_b_wdata: out std_logic_vector(2 *(DATA_WIDTH-1) -1 downto 0);
     
     
     ready: out std_logic
@@ -87,7 +87,7 @@ Generic(
     
     --SIZE OF BRAMS AND ROM
     KERNEL_ROM_SIZE : natural := 76; --FIXED 
-    BRAM_SIZE : natural := 60000 --FIXED
+    BRAM_SIZE : natural := 30000 --FIXED
 
 );
 Port ( 
@@ -106,12 +106,12 @@ Port (
     bram1_a_en: out std_logic;
     bram1_a_we: out std_logic_vector(3 downto 0);
     bram1_a_addr: out std_logic_vector(log2c(BRAM_SIZE) - 1 downto 0);
-    bram1_a_rdata: in std_logic_vector(2 *DATA_WIDTH -1 downto 0); 
+    bram1_a_rdata: in std_logic_vector(2 *(DATA_WIDTH-1) -1 downto 0); 
     
     bram1_b_en: out std_logic;
     bram1_b_we: out std_logic_vector(3 downto 0);
     bram1_b_addr: out std_logic_vector(log2c(BRAM_SIZE) - 1 downto 0);
-    bram1_b_rdata: in std_logic_vector(2 *DATA_WIDTH -1 downto 0);
+    bram1_b_rdata: in std_logic_vector(2 *(DATA_WIDTH-1) -1 downto 0);
     
     kernel_rom_en: out std_logic;
     kernel_rom_addr: out std_logic_vector(log2c(KERNEL_ROM_SIZE) - 1 downto 0);
@@ -121,12 +121,12 @@ Port (
     bram2_a_en: out std_logic;
     bram2_a_we: out std_logic_vector(3 downto 0);
     bram2_a_addr: out std_logic_vector(log2c(BRAM_SIZE) - 1 downto 0); 
-    bram2_a_wdata: out std_logic_vector(2 *DATA_WIDTH -1 downto 0);
+    bram2_a_wdata: out std_logic_vector(2 *(DATA_WIDTH-1) -1 downto 0);
     
     bram2_b_en: out std_logic;
     bram2_b_we: out std_logic_vector(3 downto 0);
     bram2_b_addr: out std_logic_vector(log2c(BRAM_SIZE) - 1 downto 0);
-    bram2_b_wdata: out std_logic_vector(2 *DATA_WIDTH -1 downto 0);
+    bram2_b_wdata: out std_logic_vector(2 *(DATA_WIDTH-1) -1 downto 0);
     
     ready : out std_logic
       
@@ -159,7 +159,7 @@ Port (
 );
 end component;
 
-signal rom_a_en,rom_b_en, start_x_conv, start_y_conv: std_logic;
+signal rom_a_en,rom_b_en, start_x_conv, end_x_conv: std_logic;
 signal rom_a_addr, rom_b_addr: std_logic_vector(log2c(KERNEL_ROM_SIZE) -1 downto 0);
 signal rom_a_data, rom_b_data: std_logic_vector(DATA_WIDTH -1 downto 0);
 signal rom_addr_off_prev, rom_addr_off, size: std_logic_vector(DATA_WIDTH/2 -1 downto 0);
@@ -283,7 +283,7 @@ x_conv_gen: convolute_loops
         bram2_b_addr => write1_b_addr,
         bram2_b_wdata => main_bram_b_wdata,
         
-        ready => ready
+        ready => end_x_conv
     );
     
     
@@ -294,7 +294,8 @@ x_conv_gen: convolute_loops
     tmp_bram_a_addr <= read2_a_addr when start_x_conv = '1' 
                         else write2_a_addr;
     tmp_bram_b_addr <= read2_b_addr when start_x_conv = '1'
-                        else write2_b_addr;    
+                        else write2_b_addr;
+    ready <= end_x_conv and start_x_conv;                                           
 rom_offset: process(size)
 begin
      rom_addr_off_prev <= rom_addr_off ;   
@@ -305,9 +306,13 @@ end process;
     tmp_bram_a_en <= '1';
     tmp_bram_b_en <= '1';   
     
-    main_bram_a_we <= "1111";
-    main_bram_b_we <= "1111";
-    tmp_bram_a_we <= "1111";
-    tmp_bram_b_we <= "1111";
+    main_bram_a_we <= "1111" when start_x_conv = '1'
+                        else "0000";
+    main_bram_b_we <= "1111" when start_x_conv = '1'
+                        else "0000";
+    tmp_bram_a_we <= "1111" when start_x_conv = '0'
+                        else "0000";
+    tmp_bram_b_we <= "1111" when start_x_conv = '0'
+                        else "0000";
                    
 end Mixed;
