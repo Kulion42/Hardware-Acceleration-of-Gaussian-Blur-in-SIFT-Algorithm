@@ -7,7 +7,7 @@ entity Gaussian_blur_v1_0_S01_AXI is
 	generic (
 		-- Users to add parameters here
         --DATA WIDTH
-        DATA_WIDTH : natural := 16;
+        --DATA_WIDTH : natural := 30; -- sirina BRAM-a
     
         --SIZE OF BRAMS
         BRAM_SIZE : natural := 60000; --FIXED
@@ -17,10 +17,13 @@ entity Gaussian_blur_v1_0_S01_AXI is
 
 		-- Width of ID for for write address, write data, read address and read data
 		C_S_AXI_ID_WIDTH	: integer	:= 1;
+		
 		-- Width of S_AXI data bus
-		C_S_AXI_DATA_WIDTH	: integer	:= 32;
+		C_S_AXI_DATA_WIDTH	: integer	:= 64; --menjano
+		
 		-- Width of S_AXI address bus
-		C_S_AXI_ADDR_WIDTH	: integer	:= 16;
+		C_S_AXI_ADDR_WIDTH	: integer	:= 16; --menjano
+		
 		-- Width of optional user defined signal in write address channel
 		C_S_AXI_AWUSER_WIDTH	: integer	:= 0;
 		-- Width of optional user defined signal in read address channel
@@ -36,11 +39,11 @@ entity Gaussian_blur_v1_0_S01_AXI is
 		-- Users to add ports here
 		
         main_mem_addr_axi_o : out std_logic_vector(log2c(BRAM_SIZE)-1 downto 0);
-        main_mem_data_axi_o : out std_logic_vector(2*DATA_WIDTH - 1 downto 0);
+        main_mem_wdata_axi_o : out std_logic_vector(C_S_AXI_DATA_WIDTH - 1 downto 0); --ovo mora biti sirina axi magistrale podataka
         main_mem_we_axi_o : out std_logic_vector(3 downto 0);
         main_mem_en_axi_o : out std_logic;
     
-        main_mem_data_axi_i : in std_logic_vector(2*DATA_WIDTH-1 downto 0); --software read
+        main_mem_rdata_axi_i : in std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0); --software read
 		
 		-- User ports ends
 		-- Do not modify the ports beyond this line
@@ -554,23 +557,23 @@ begin
 
 	-- Add user logic here
 
-    main_mem_we_axi_o <= axi_wready and S_AXI_WVALID; --treba izmena jer ima 4 bita kod nas
+    main_mem_we_axi_o <= (axi_wready and S_AXI_WVALID)&(axi_wready and S_AXI_WVALID)&(axi_wready and S_AXI_WVALID)&(axi_wready and S_AXI_WVALID); --treba izmena jer ima 4 bita kod nas, ovo je primitivno samo da prodje compiler
     main_mem_addr_axi_o <= axi_araddr(C_S_AXI_ADDR_WIDTH - 1 downto ADDR_LSB)
         when axi_arv_arr_flag = '1' else
             axi_awaddr(C_S_AXI_ADDR_WIDTH - 1 downto ADDR_LSB)
         when axi_awv_awr_flag = '1' else
             (others => '0');
-    main_mem_data_axi_o <= S_AXI_WDATA;
+    main_mem_wdata_axi_o <= S_AXI_WDATA;
     
     --treba dodatna logika za main_mem_en_axi_o
     
     --Output memory read data
-    process(main_mem_data_axi_i, axi_rvalid) is
+    process(main_mem_rdata_axi_i, axi_rvalid) is
     begin
         if (axi_rvalid = '1') then
             -- When there is a valid read address (S_AXI_ARVALID) with
             -- acceptance of read address by the slave (axi_arready), output the read data
-            axi_rdata <= main_mem_data_axi_i;
+            axi_rdata <= main_mem_rdata_axi_i;
         else
             axi_rdata <= (others => '0');
         end if;
@@ -579,14 +582,6 @@ begin
     --Potrebno je umetnuti logiku za en i 
     --resiti nacin koriscenja porta A main memorije i od IP i CPU
     
---        main_mem_addr_axi_o : out std_logic_vector(log2c(BRAM_SIZE)-1 downto 0);
---        main_mem_data_axi_o : out std_logic_vector(2*DATA_WIDTH - 1 downto 0);
---        main_mem_we_axi_o : out std_logic_vector(3 downto 0);
---        main_mem_en_axi_o : out std_logic;
-    
---        main_mem_data_axi_i : in std_logic_vector(2*DATA_WIDTH-1 downto 0); --software read    
-
-
 
 	-- User logic ends
 
