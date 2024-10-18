@@ -51,14 +51,14 @@ Port (
     
     reg_data_i : in std_logic_vector(DATA_WIDTH - 1 downto 0);
     
-    img_height_wr_i: in std_logic;
-    img_width_wr_i: in std_logic;
-    img_offset_up_wr_i: in std_logic; 
-    img_offset_down_wr_i: in std_logic;
-    img_per_octave_wr_i: in std_logic;
+    img_height_we_i: in std_logic;
+    img_width_we_i: in std_logic;
+    img_offset_up_we_i: in std_logic; 
+    img_offset_down_we_i: in std_logic;
+    img_per_octave_we_i: in std_logic;
     
-    start_wr_i : in std_logic;
-    reset_wr_i : in std_logic;
+    start_we_i : in std_logic;
+    reset_we_i : in std_logic;
     --ready_wr_i : in std_logic;
        
     --software read
@@ -73,18 +73,26 @@ Port (
     reset_axi_o : out std_logic;
     
     -----------------------------------------------------------------
+    --MAIN BRAM INTERFACE
     
-    --INTERFACE TO AXI FULL - main bram A Port
-    main_mem_addr_axi_i : in std_logic_vector(log2c(BRAM_SIZE)-1 downto 0);
-    main_mem_data_axi_i : in std_logic_vector(2*DATA_WIDTH - 1 downto 0);
-    main_mem_we_axi_i : in std_logic_vector(3 downto 0);
-    main_mem_en_axi_i : in std_logic;
+    --main bram interface A port
+    main_mem_a_addr_i : in std_logic_vector(log2c(BRAM_SIZE)-1 downto 0);
+    main_mem_a_wdata_i : in std_logic_vector(2*DATA_WIDTH-1 downto 0);
+    main_mem_a_we_i : in std_logic_vector(3 downto 0);
+    main_mem_a_en_i : in std_logic;
     
-    --software read
-    main_mem_data_axi_o : out std_logic_vector(2*DATA_WIDTH-1 downto 0); --software read
+    main_mem_a_rdata_o : out std_logic_vector(2*DATA_WIDTH - 1 downto 0);  
+    
+    --main bram interface B port
+    main_mem_b_addr_i : in std_logic_vector(log2c(BRAM_SIZE)-1 downto 0);
+    main_mem_b_wdata_i : in std_logic_vector(2*DATA_WIDTH-1 downto 0);  
+    main_mem_b_we_i : in std_logic_vector(3 downto 0);
+    main_mem_b_en_i : in std_logic;
+    
+    main_mem_b_rdata_o : out std_logic_vector(2*DATA_WIDTH - 1 downto 0);
     
      -----------------------------------------------------------------
-
+     
     --INTERFACE TO GAUSSIAN_BLUR
     
     --registers 
@@ -96,32 +104,25 @@ Port (
     
     start_o : out std_logic;
     reset_o : out std_logic;
+    
     ready_i : in std_logic;
-    
-    --main bram interface B port
-    main_mem_addr_o : in std_logic_vector(log2c(BRAM_SIZE)-1 downto 0);
-    main_mem_data_o : out std_logic_vector(2*DATA_WIDTH - 1 downto 0);
-    main_mem_we_o : in std_logic_vector(3 downto 0);
-    main_mem_en_o : in std_logic;
-    
-    main_mem_data_i : in std_logic_vector(2*DATA_WIDTH-1 downto 0);  
-    
-    
+   
+     
     --temp bram interface
-    tmp_mem_addr_a_o : in std_logic_vector(log2c(BRAM_SIZE)-1 downto 0);
-    tmp_mem_data_a_o : out std_logic_vector(2*DATA_WIDTH - 1 downto 0);
-    tmp_mem_we_a_o : in std_logic_vector(3 downto 0);
-    tmp_mem_en_a_o : in std_logic;
+    tmp_mem_a_addr_i : in std_logic_vector(log2c(BRAM_SIZE)-1 downto 0);
+    tmp_mem_a_rdata_o : out std_logic_vector(2*DATA_WIDTH - 1 downto 0);
+    tmp_mem_a_we_i : in std_logic_vector(3 downto 0);
+    tmp_mem_a_en_i : in std_logic;
     
-    tmp_mem_data_a_i : in std_logic_vector(2*DATA_WIDTH-1 downto 0);
+    tmp_mem_a_wdata_i : in std_logic_vector(2*DATA_WIDTH-1 downto 0);
     
     
-    tmp_mem_addr_b_o : in std_logic_vector(log2c(BRAM_SIZE)-1 downto 0);
-    tmp_mem_data_b_o : out std_logic_vector(2*DATA_WIDTH - 1 downto 0);
-    tmp_mem_we_b_o : in std_logic_vector(3 downto 0);
-    tmp_mem_en_b_o : in std_logic;
+    tmp_mem_b_addr_i : in std_logic_vector(log2c(BRAM_SIZE)-1 downto 0);
+    tmp_mem_b_rdata_o : out std_logic_vector(2*DATA_WIDTH - 1 downto 0);
+    tmp_mem_b_we_i : in std_logic_vector(3 downto 0);
+    tmp_mem_b_en_i : in std_logic;
     
-    tmp_mem_data_b_i : in std_logic_vector(2*DATA_WIDTH-1 downto 0) 
+    tmp_mem_b_wdata_i : in std_logic_vector(2*DATA_WIDTH-1 downto 0) 
     
     
      
@@ -184,7 +185,7 @@ begin
         if rising_edge(clk) then
             if reset = '1' then
                 img_height_s <= (others => '0');
-            elsif img_height_wr_i = '1' then
+            elsif img_height_we_i = '1' then
                 img_height_s <= reg_data_i;
             end if;
         end if;
@@ -197,7 +198,7 @@ begin
         if rising_edge(clk) then
             if reset = '1' then
                 img_width_s <= (others => '0');
-            elsif img_width_wr_i = '1' then
+            elsif img_width_we_i = '1' then
                 img_width_s <= reg_data_i;
             end if;
         end if;
@@ -209,7 +210,7 @@ begin
         if rising_edge(clk) then
             if reset = '1' then
                 img_offset_up_s <= (others => '0');
-            elsif img_offset_up_wr_i = '1' then
+            elsif img_offset_up_we_i = '1' then
                 img_offset_up_s <= reg_data_i;
             end if;
         end if;
@@ -221,7 +222,7 @@ begin
         if rising_edge(clk) then
             if reset = '1' then
                 img_offset_down_s <= (others => '0');
-            elsif img_offset_down_wr_i = '1' then
+            elsif img_offset_down_we_i = '1' then
                 img_offset_down_s <= reg_data_i;
             end if;
         end if;
@@ -233,7 +234,7 @@ begin
         if rising_edge(clk) then
             if reset = '1' then
                 img_per_octave_s <= (others => '0');
-            elsif img_per_octave_wr_i = '1' then
+            elsif img_per_octave_we_i = '1' then
                 img_per_octave_s <= reg_data_i;
             end if;
         end if;
@@ -245,7 +246,7 @@ begin
         if rising_edge(clk) then
             if reset = '1' then
                 start_s <= '0';
-            elsif start_wr_i = '1' then
+            elsif start_we_i = '1' then
                 start_s <= reg_data_i(0);
             end if;
         end if;
@@ -270,7 +271,7 @@ begin
         if rising_edge(clk) then
             if reset = '1' then
                 reset_s <= '0';
-            elsif reset_wr_i = '1' then
+            elsif reset_we_i = '1' then
                 reset_s <= reg_data_i(0);
             end if;
         end if;
@@ -287,20 +288,20 @@ begin
     Port map(
         clk_a => clk,
         clk_b => clk,
-        en_a => main_mem_en_axi_i,
-        en_b => main_mem_en_o,
-        we_a => main_mem_we_axi_i,
-        we_b => main_mem_we_o,
-        addr_a => main_mem_addr_axi_i,
-        addr_b => main_mem_addr_o,
-        data_a_i => main_mem_data_axi_i,
-        data_b_i => main_mem_data_i,
-        data_a_o => main_mem_data_axi_o,
-        data_b_o => main_mem_data_o 
+        en_a => main_mem_a_en_i,
+        en_b => main_mem_b_en_i,
+        we_a => main_mem_a_we_i,
+        we_b => main_mem_b_we_i,
+        addr_a => main_mem_a_addr_i,
+        addr_b => main_mem_b_addr_i,
+        data_a_i => main_mem_a_wdata_i,  --ulazni podatak za upis u bram
+        data_b_i => main_mem_b_wdata_i,  --ulazni podatak za upis u bram
+        data_a_o => main_mem_a_rdata_o,  --izlazni podatak za citanje bram-a
+        data_b_o => main_mem_b_rdata_o   --izlazni podatak za citanje bram-a
     );
-    --Port A is for axi i/o and port B is for IP i/o
+    --Port A i port B se koriste i od strane axija i od strane gaussian blura
+    --ovo je implementirano u top modelu
     
-    --dodati mux za port A ako se koristi od strane IP
     
     
     
@@ -312,17 +313,19 @@ begin
     Port map(
         clk_a => clk,
         clk_b => clk,
-        en_a => tmp_mem_en_a_o,
-        en_b => tmp_mem_en_b_o,
-        we_a => tmp_mem_we_a_o,
-        we_b => tmp_mem_we_b_o,
-        addr_a => tmp_mem_addr_a_o,
-        addr_b => tmp_mem_addr_b_o,
-        data_a_i => tmp_mem_data_a_i,
-        data_b_i => tmp_mem_data_b_i,
-        data_a_o => tmp_mem_data_a_o,
-        data_b_o => tmp_mem_data_b_o 
+        en_a => tmp_mem_a_en_i,
+        en_b => tmp_mem_b_en_i,
+        we_a => tmp_mem_a_we_i,
+        we_b => tmp_mem_b_we_i,
+        addr_a => tmp_mem_a_addr_i,
+        addr_b => tmp_mem_b_addr_i,
+        data_a_i => tmp_mem_a_wdata_i,  --ulazni podatak za upis u bram
+        data_b_i => tmp_mem_b_wdata_i,  --ulazni podatak za upis u bram
+        data_a_o => tmp_mem_a_rdata_o,  --izlazni podatak za citanje bram-a
+        data_b_o => tmp_mem_b_rdata_o   --izlazni podatak za citanje bram-a
     );   
     --Oba porta se koriste od strane IP-a,
+ 
+    --Dodati write_read_bram_control
  
 end struct;
