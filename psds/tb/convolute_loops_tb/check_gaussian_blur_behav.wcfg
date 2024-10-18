@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wave_config>
+   <wave_state>
+   </wave_state>
+   <db_ref_list>
+      <db_ref path="check_gaussian_blur_behav.wdb" id="1">
+         <top_modules>
+            <top_module name="check_gaussian_blur" />
+            <top_module name="txt_util" />
+            <top_module name="utils_pkg" />
+         </top_modules>
+      </db_ref>
+   </db_ref_list>
+   <zoom_setting>
+      <ZoomStartTime time="0.000000000 ms"></ZoomStartTime>
+      <ZoomEndTime time="13.100000001 ms"></ZoomEndTime>
+      <Cursor1Time time="7.467000000 ms"></Cursor1Time>
+   </zoom_setting>
+   <column_width_setting>
+      <NameColumnWidth column_width="89"></NameColumnWidth>
+      <ValueColumnWidth column_width="79"></ValueColumnWidth>
+   </column_width_setting>
+   <WVObjectSize size="34" />
+   <wvobject type="logic" fp_name="/check_gaussian_blur/clk_s">
+      <obj_property name="ElementShortName">clk_s</obj_property>
+      <obj_property name="ObjectShortName">clk_s</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/check_gaussian_blur/reset_s">
+      <obj_property name="ElementShortName">reset_s</obj_property>
+      <obj_property name="ObjectShortName">reset_s</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/check_gaussian_blur/start_s">
+      <obj_property name="ElementShortName">start_s</obj_property>
+      <obj_property name="ObjectShortName">start_s</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/check_gaussian_blur/ready_s">
+      <obj_property name="ElementShortName">ready_s</obj_property>
+      <obj_property name="ObjectShortName">ready_s</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/check_gaussian_blur/GAUSS/start_x_conv">
+      <obj_property name="ElementShortName">start_x_conv</obj_property>
+      <obj_property name="ObjectShortName">start_x_conv</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/check_gaussian_blur/GAUSS/end_x_conv">
+      <obj_property name="ElementShortName">end_x_conv</obj_property>
+      <obj_property name="ObjectShortName">end_x_conv</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/check_gaussian_blur/img_height_s">
+      <obj_property name="ElementShortName">img_height_s[15:0]</obj_property>
+      <obj_property name="ObjectShortName">img_height_s[15:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/check_gaussian_blur/img_width_s">
+      <obj_property name="ElementShortName">img_width_s[15:0]</obj_property>
+      <obj_property name="ObjectShortName">img_width_s[15:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/check_gaussian_blur/img_offset_up_s">
+      <obj_property name="ElementShortName">img_offset_up_s[15:0]</obj_property>
+      <obj_property name="ObjectShortName">img_offset_up_s[15:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/check_gaussian_blur/img_offset_down_s">
+      <obj_property name="ElementShortName">img_offset_down_s[15:0]</obj_property>
+      <obj_property name="ObjectShortName">img_offset_down_s[15:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/check_gaussian_blur/img_per_octave_s">
+      <obj_property name="ElementShortName">img_per_octave_s[15:0]</obj_property>
+      <obj_property name="ObjectShortName">img_per_octave_s[15:0]</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/check_gaussian_blur/main_a_en_s">
+      <obj_property name="ElementShortName">main_a_en_s</obj_property>
+      <obj_property name="ObjectShortName">main_a_en_s</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/check_gaussian_blur/main_a_we_s">
+      <obj_property name="ElementShortName">main_a_we_s[3:0]</obj_property>
+      <obj_property name="ObjectShortName">main_a_we_s[3:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/check_gaussian_blur/main_a_addr_s">
+      <obj_property name="ElementShortName">main_a_addr_s[14:0]</obj_property>
+      <obj_property name="ObjectShortName">main_a_addr_s[14:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/check_gaussian_blur/main_a_rdata_s">
+      <obj_property name="ElementShortName">main_a_rdata_s[29:0]</obj_property>
+      <obj_property name="ObjectShortName">main_a_rdata_s[29:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/check_gaussian_blur/main_a_wdata_s">
+      <obj_property name="ElementShortName">main_a_wdata_s[29:0]</obj_property>
+      <obj_property name="ObjectShortName">main_a_wdata_s[29:0]</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/check_gaussian_blur/main_b_en_s">
+      <obj_property name="ElementShortName">main_b_en_s</obj_property>
+      <obj_property name="ObjectShortName">main_b_en_s</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/check_gaussian_blur/main_b_we_s">
+      <obj_property name="ElementShortName">main_b_we_s[3:0]</obj_property>
+      <obj_property name="ObjectShortName">main_b_we_s[3:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/check_gaussian_blur/main_b_addr_s">
+      <obj_property name="ElementShortName">main_b_addr_s[14:0]</obj_property>
+      <obj_property name="ObjectShortName">main_b_addr_s[14:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/check_gaussian_blur/main_b_rdata_s">
+      <obj_property name="ElementShortName">main_b_rdata_s[29:0]</obj_property>
+      <obj_property name="ObjectShortName">main_b_rdata_s[29:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/check_gaussian_blur/main_b_wdata_s">
+      <obj_property name="ElementShortName">main_b_wdata_s[29:0]</obj_property>
+      <obj_property name="ObjectShortName">main_b_wdata_s[29:0]</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/check_gaussian_blur/tmp_a_en_s">
+      <obj_property name="ElementShortName">tmp_a_en_s</obj_property>
+      <obj_property name="ObjectShortName">tmp_a_en_s</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/check_gaussian_blur/tmp_a_we_s">
+      <obj_property name="ElementShortName">tmp_a_we_s[3:0]</obj_property>
+      <obj_property name="ObjectShortName">tmp_a_we_s[3:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/check_gaussian_blur/tmp_a_addr_s">
+      <obj_property name="ElementShortName">tmp_a_addr_s[14:0]</obj_property>
+      <obj_property name="ObjectShortName">tmp_a_addr_s[14:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/check_gaussian_blur/tmp_a_rdata_s">
+      <obj_property name="ElementShortName">tmp_a_rdata_s[29:0]</obj_property>
+      <obj_property name="ObjectShortName">tmp_a_rdata_s[29:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/check_gaussian_blur/tmp_a_wdata_s">
+      <obj_property name="ElementShortName">tmp_a_wdata_s[29:0]</obj_property>
+      <obj_property name="ObjectShortName">tmp_a_wdata_s[29:0]</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/check_gaussian_blur/tmp_b_en_s">
+      <obj_property name="ElementShortName">tmp_b_en_s</obj_property>
+      <obj_property name="ObjectShortName">tmp_b_en_s</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/check_gaussian_blur/tmp_b_we_s">
+      <obj_property name="ElementShortName">tmp_b_we_s[3:0]</obj_property>
+      <obj_property name="ObjectShortName">tmp_b_we_s[3:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/check_gaussian_blur/tmp_b_addr_s">
+      <obj_property name="ElementShortName">tmp_b_addr_s[14:0]</obj_property>
+      <obj_property name="ObjectShortName">tmp_b_addr_s[14:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/check_gaussian_blur/tmp_b_rdata_s">
+      <obj_property name="ElementShortName">tmp_b_rdata_s[29:0]</obj_property>
+      <obj_property name="ObjectShortName">tmp_b_rdata_s[29:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/check_gaussian_blur/tmp_b_wdata_s">
+      <obj_property name="ElementShortName">tmp_b_wdata_s[29:0]</obj_property>
+      <obj_property name="ObjectShortName">tmp_b_wdata_s[29:0]</obj_property>
+   </wvobject>
+   <wvobject type="other" fp_name="/check_gaussian_blur/DATA_WIDTH">
+      <obj_property name="ElementShortName">DATA_WIDTH</obj_property>
+      <obj_property name="ObjectShortName">DATA_WIDTH</obj_property>
+   </wvobject>
+   <wvobject type="other" fp_name="/check_gaussian_blur/BRAM_SIZE">
+      <obj_property name="ElementShortName">BRAM_SIZE</obj_property>
+      <obj_property name="ObjectShortName">BRAM_SIZE</obj_property>
+   </wvobject>
+   <wvobject type="other" fp_name="/check_gaussian_blur/KERNEL_ROM_SIZE">
+      <obj_property name="ElementShortName">KERNEL_ROM_SIZE</obj_property>
+      <obj_property name="ObjectShortName">KERNEL_ROM_SIZE</obj_property>
+   </wvobject>
+</wave_config>

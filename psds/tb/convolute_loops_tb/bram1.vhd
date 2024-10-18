@@ -9,8 +9,8 @@ use std.textio.all;
 use work.txt_util.all;
 
 entity bram1 is
-    generic (WIDTH: positive := 16;
-             SIZE: positive := 60000);
+    generic (WIDTH: positive := 15;
+             SIZE: positive := 30000);
     port (clk_a : in std_logic;
           clk_b : in std_logic;
           en_a: in std_logic;
