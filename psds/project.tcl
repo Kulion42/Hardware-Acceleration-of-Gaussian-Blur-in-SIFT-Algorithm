@@ -6,12 +6,15 @@ set DIR_OUTPUT project_gaussian_blur
 file mkdir ${DIR_OUTPUT}
 
 create_project ${PROJECT_NAME} ${DIR_OUTPUT}/${PROJECT_NAME} -part xc7z010clg400-1 -force
-
+#Simulation sources
 add_files -norecurse -fileset sim_1 {tb/convolute_loops_tb/check_convolution_tb.vhd}
 add_files -norecurse -fileset sim_1 {tb/convolute_loops_tb/check_convolution_tb_behav.wcfg }
+add_files -norecurse -fileset sim_1 {tb/convolute_loops_tb/check_gaussian_blur.vhd}
+add_files -norecurse -fileset sim_1 {tb/convolute_loops_tb/check_gaussian_blur_behav.wcfg }
+#Design sources
 add_files -norecurse {rtl/dsp_unit_add.vhd}
 add_files -norecurse {rtl/dsp_unit_mac_shift.vhd}
-add_files -norecurse {rtl/dsp_unit_mac_shift2.vhd}
+add_files -norecurse {rtl/dsp_unit_mul_shift.vhd}
 add_files -norecurse {rtl/utils_pkg.vhd}
 add_files -norecurse {tb/convolute_loops_tb/txt_util.vhd}
 add_files -norecurse {rtl/kernel_rom.vhd}
@@ -22,6 +25,7 @@ add_files -norecurse {rtl/gaussian_blur.vhd}
 add_files -norecurse {rtl/top_model.vhd}
 
 set_property file_type {VHDL 2008} [get_files rtl/kernel_rom.vhd]
+set_property file_type {VHDL 2008} [get_files rtl/convolute_loops.vhd]
 
 import_files -force
 
