@@ -33,7 +33,6 @@ Generic (
 Port ( 
     clk: in std_logic;
     reset: in std_logic;
-    start: in std_logic;
       
     img_number: in std_logic_vector(DATA_WIDTH- 1 downto 0);
     
@@ -48,10 +47,8 @@ Port (
     kernel_rom_addr_off_prev: in std_logic_vector(DATA_WIDTH/2 -1 downto 0);
     kernel_rom_addr_off_next: out std_logic_vector(DATA_WIDTH/2 -1 downto 0);
     
-    sigma_size: out std_logic_vector(DATA_WIDTH/2 -1 downto 0);
+    sigma_size: out std_logic_vector(DATA_WIDTH/2 -1 downto 0) 
     
-    
-    ready: out std_logic
 );
 end kernel_rom;
 
@@ -65,7 +62,7 @@ architecture Mixed of kernel_rom is
     type sigma_lut is array (0 to 5) of unsigned(LUT_WIDTH -1 downto 0);
     
     constant SIGMA_VALS : sigma_lut := (
-        X"009FDF38", X"009CF687", X"00C5C2D0", X"00F929CB", X"0139ED10", X"018B85A3"
+        X"03BF3B56", X"03ADC730", X"04A290E6", X"05D712C8", X"075B8E66", X"094521D8"
     );
      
 component dsp_unit_mul_shift_23 is
@@ -93,9 +90,9 @@ component dsp_unit_add is
           out_res: out std_logic_vector(WIDTH1 - 1 downto 0));
 end component;
 
-signal size_s: unsigned(DATA_WIDTH/2 -1 downto 0);
-signal add1_in1, add1_in2 : unsigned(2*DATA_WIDTH -1 downto 0);
-signal add1_out: std_logic_vector(2*DATA_WIDTH -1 downto 0);
+signal size_s, size_shift: unsigned(DATA_WIDTH/2 -1 downto 0);
+signal add1_in1, add1_in2 : unsigned(2 *DATA_WIDTH -1 downto 0);
+signal add1_out: unsigned(2*DATA_WIDTH -1 downto 0);
 signal addr_a_out, addr_b_out, kernel_rom_addr_off_next_s: std_logic_vector(DATA_WIDTH/2 -1 downto 0);
 type rom_type is array (0 to KERNEL_ROM_SIZE-1) of unsigned(DATA_WIDTH -1 downto 0);
 signal ROM: rom_type := (
@@ -126,24 +123,12 @@ begin
     end if;
 
 end process;
-add1_in1 <= SIGMA_VALS(TO_INTEGER(unsigned(img_number)))(2*DATA_WIDTH -2 downto 0) & '0';
-add1_in2 <= SIGMA_VALS(TO_INTEGER(unsigned(img_number)))(2*DATA_WIDTH -3 downto 0) & "00";
+--size_shift <= shift_right(SIGMA_VALS(TO_INTEGER(unsigned(img_number))), 23)(DATA_WIDTH/2 -1 downto 0);
 
-size_gen: dsp_unit_add 
-    generic map(
-          WIDTH1 => 2*DATA_WIDTH ,
-          WIDTH2 => 2*DATA_WIDTH 
-         )
-    port map(
-          clk => clk,
-          rst => reset,
-          in_1 => std_logic_vector(add1_in1),
-          in_2 => std_logic_vector(add1_in2),
-          out_res => add1_out
-           );
+add1_out <= shift_right(SIGMA_VALS(TO_INTEGER(unsigned(img_number))), 23);
            
-size_s <= unsigned(add1_out(30 downto 23)) or X"01" when add1_out(23) = '0' else
-             unsigned(add1_out(30 downto 23)) +2; 
+size_s <= add1_out(DATA_WIDTH/2 -1 downto 0) when add1_out(0) = '1' else
+          add1_out(DATA_WIDTH/2 -1 downto 0) + 1; 
                        
 addr1_gen: dsp_unit_add 
     generic map(
@@ -183,12 +168,16 @@ next_off_gen: dsp_unit_add
           in_2 => std_logic_vector(size_s),
           out_res => kernel_rom_addr_off_next_s
            );
-              
-sigma_size <= std_logic_vector(size_s);
 
-kernel_rom_addr_off_next <= (others => '0') when TO_INTEGER(unsigned(img_number)) = 4
+sigma_proc: process(size_s, img_number, kernel_rom_addr_off_next_s)
+begin              
+sigma_size <= std_logic_vector(size_s) when TO_INTEGER(unsigned(img_number)) = 4 or TO_INTEGER(unsigned(img_number)) = 5
+              else std_logic_vector(size_s + 2);
+kernel_rom_addr_off_next <= (others => '0') when TO_INTEGER(unsigned(img_number)) = 5
                             else std_logic_vector(size_s) when TO_INTEGER(unsigned(img_number)) = 0
                             else kernel_rom_addr_off_next_s;
-ready <= '0' when kernel_rom_addr_off_prev = kernel_rom_addr_off_next_s
-            else '1';                             
+end process;
+                            
+--ready <= '0' when kernel_rom_addr_off_prev = kernel_rom_addr_off_next_s
+            --else '1';                             
 end Mixed;

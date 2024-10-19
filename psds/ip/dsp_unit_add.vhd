@@ -25,7 +25,7 @@ begin
             if (rst = '1') then
                 res_reg <= (others => '0');
             else
-                res_reg <= std_logic_vector(unsigned(in_1) + unsigned(in_2));
+                res_reg <= std_logic_vector(signed(in_1) + signed(in_2));
             end if;
         end if;
     end process;
