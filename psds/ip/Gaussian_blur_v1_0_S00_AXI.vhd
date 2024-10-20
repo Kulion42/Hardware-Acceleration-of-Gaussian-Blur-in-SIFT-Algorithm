@@ -21,19 +21,21 @@ entity Gaussian_blur_v1_0_S00_AXI is
 	port (
 		-- Users to add ports here
 		
+		--Vrednost koja se upisuje
         reg_data_o : out std_logic_vector(DATA_WIDTH - 1 downto 0);
     
-        img_height_wr_o: out std_logic;
-        img_width_wr_o: out std_logic;
-        img_offset_up_wr_o: out std_logic; 
-        img_offset_down_wr_o: out std_logic;
-        img_per_octave_wr_o: out std_logic;
+        --kontrolni signali
+        img_height_we_o: out std_logic;
+        img_width_we_o: out std_logic;
+        img_offset_up_we_o: out std_logic; 
+        img_offset_down_we_o: out std_logic;
+        img_per_octave_we_o: out std_logic;
         
-        start_wr_o : out std_logic;
-        reset_wr_o : out std_logic;
+        start_we_o : out std_logic;
+        reset_we_o : out std_logic;
         --ready_wr_o : out std_logic;
                
-        --software read
+        --software read - podatak nazad kroz axi ka softveru
         img_height_axi_i: in std_logic_vector(DATA_WIDTH -1 downto 0);
         img_width_axi_i: in std_logic_vector(DATA_WIDTH -1 downto 0);
         img_offset_up_axi_i: in std_logic_vector(DATA_WIDTH -1 downto 0); 
@@ -238,33 +240,45 @@ begin
 	  if rising_edge(S_AXI_ACLK) then 
 	    if S_AXI_ARESETN = '0' then
 	    
-	       img_height_wr_o <= '0';
-           img_width_wr_o  <= '0';
-           img_offset_up_wr_o  <= '0';
-           img_offset_down_wr_o  <= '0';
-           img_per_octave_wr_o  <= '0';
+	       img_height_we_o <= '0';
+           img_width_we_o  <= '0';
+           img_offset_up_we_o  <= '0';
+           img_offset_down_we_o  <= '0';
+           img_per_octave_we_o  <= '0';
             
-           start_wr_o <= '0';
-           reset_wr_o <= '0';
-           --ready_wr_o <= '0'; --mozda treba mozda ne
+           start_we_o <= '0';
+           reset_we_o <= '0';
+           --ready_wr_o <= '0'; --mozda treba mozda ne, mislim da ne
 	    else
+	    
+	       --default
+	       img_height_we_o <= '0';
+           img_width_we_o  <= '0';
+           img_offset_up_we_o  <= '0';
+           img_offset_down_we_o  <= '0';
+           img_per_octave_we_o  <= '0';
+            
+           start_we_o <= '0';
+           reset_we_o <= '0';
+           --ready_wr_o <= '0'; --mozda treba mozda ne, mislim da ne
+	    
 	      loc_addr := axi_awaddr(ADDR_LSB + OPT_MEM_ADDR_BITS downto ADDR_LSB);
 	      if (slv_reg_wren = '1') then
 	        case loc_addr is
 	          when b"000" =>
-	               img_width_wr_o <= '1';
+	               img_width_we_o <= '1';
 	          when b"001" =>
-	               img_height_wr_o <= '1';
+	               img_height_we_o <= '1';
 	          when b"010" =>
-	               img_offset_up_wr_o <= '1';
+	               img_offset_up_we_o <= '1';
 	          when b"011" =>
-	               img_offset_down_wr_o <= '1';
+	               img_offset_down_we_o <= '1';
 	          when b"100" =>
-	               img_per_octave_wr_o <= '1';
+	               img_per_octave_we_o <= '1';
 	          when b"101" =>
-	               reset_wr_o <= '1';
+	               reset_we_o <= '1';
 	          when b"110" =>
-	               start_wr_o <= '1';
+	               start_we_o <= '1';
 	          when b"111" =>
 	               --ready_wr_o <= '1'; ne znam da li treba cpu da moze da promeni
 	          when others =>
@@ -402,6 +416,7 @@ begin
 
 
 	-- Add user logic here
+	
 	--register koji stalluje podatak za 1 takt, sa vezbi
         process (S_AXI_ACLK)
         begin
@@ -409,6 +424,7 @@ begin
             reg_data_o <= S_AXI_WDATA((DATA_WIDTH-1) downto 0); -- za ovo nisam siguran
          end if;
         end process;
+        
 	-- User logic ends
 
 end arch_imp;
