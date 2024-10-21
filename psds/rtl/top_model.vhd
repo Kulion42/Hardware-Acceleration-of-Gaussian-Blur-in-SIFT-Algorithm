@@ -174,61 +174,33 @@ Port map(
     );
     
     
-write_read_bram_control: process(main_bram_a_cpu_en, main_bram_b_cpu_en, main_bram_a_cpu_we, main_bram_b_cpu_we, main_bram_a_cpu_addr, main_bram_b_cpu_addr, main_bram_a_cpu_wdata, main_bram_b_cpu_wdata)
-begin
+--A_PORT_CONTROL_LOGIC:
+main_bram_a_en_bram_s <= main_bram_a_cpu_en when main_bram_a_cpu_en = '1'
+                         else main_bram_a_en_blur_s;
+main_bram_a_we_bram_s <= main_bram_a_cpu_we when main_bram_a_cpu_en = '1'
+                         else main_bram_a_we_blur_s;
+main_bram_a_addr_bram_s <= main_bram_a_cpu_addr when main_bram_a_cpu_en = '1'
+                         else main_bram_a_addr_blur_s;         
+main_bram_a_wdata_bram_s <= main_bram_a_cpu_wdata when main_bram_a_cpu_en = '1'
+                         else main_bram_a_wdata_blur_s; 
+main_bram_a_cpu_rdata <= main_bram_a_rdata_bram_s when main_bram_a_cpu_en = '1'
+                         else (others => '0');
+main_bram_a_rdata_blur_s <= main_bram_a_rdata_bram_s when main_bram_a_cpu_en = '0'
+                         else (others => '0');
 
-main_bram_a_cpu_rdata <= (others => '0');
-main_bram_b_cpu_rdata <= (others => '0');
-main_bram_a_wdata_bram_s <= (others => '0');
-main_bram_b_wdata_bram_s <= (others => '0');
-main_bram_a_rdata_blur_s <= (others => '0');
-main_bram_b_rdata_blur_s <= (others => '0');
-
-    
-     if (main_bram_a_cpu_en = '1') then -- CPU write/reads
-        main_bram_a_en_bram_s <= main_bram_a_cpu_en;
-        main_bram_a_we_bram_s <= main_bram_a_cpu_we;
-        main_bram_a_addr_bram_s <= main_bram_a_cpu_addr;
-        if main_bram_a_cpu_we /= "0000" then
-            main_bram_a_wdata_bram_s <= main_bram_a_cpu_wdata;
-        else
-            main_bram_a_cpu_rdata <= main_bram_a_rdata_bram_s;
-        end if;
-     else -- IP_Core write/reads
-        main_bram_a_en_bram_s <= main_bram_a_en_blur_s;
-        main_bram_a_we_bram_s <= main_bram_a_we_blur_s;
-        main_bram_a_addr_bram_s <= main_bram_a_addr_blur_s;
-        if main_bram_a_we_blur_s /= "0000" then
-            main_bram_a_wdata_bram_s <= main_bram_a_wdata_blur_s;
-        else
-            main_bram_a_rdata_blur_s <= main_bram_a_rdata_bram_s;
-        end if;
-     
-     end if;
-     
-     if (main_bram_b_cpu_en = '1') then -- CPU write/reads
-        main_bram_b_en_bram_s <= main_bram_b_cpu_en;
-        main_bram_b_we_bram_s <= main_bram_b_cpu_we;
-        main_bram_b_addr_bram_s <= main_bram_b_cpu_addr;
-        if main_bram_b_cpu_we /= "0000" then
-            main_bram_b_wdata_bram_s <= main_bram_b_cpu_wdata;
-        else
-            main_bram_b_cpu_rdata <= main_bram_b_rdata_bram_s;
-        end if;
-     else -- IP_Core write/reads
-        main_bram_b_en_bram_s <= main_bram_b_en_blur_s;
-        main_bram_b_we_bram_s <= main_bram_b_we_blur_s;
-        main_bram_b_addr_bram_s <= main_bram_b_addr_blur_s;
-        if main_bram_b_we_blur_s /= "0000" then
-            main_bram_b_wdata_bram_s <= main_bram_b_wdata_blur_s;
-        else
-            main_bram_b_rdata_blur_s <= main_bram_b_rdata_bram_s;
-        end if;
-     
-     end if;
-     
-
-end process;    
+--B_PORT_CONTROL_LOGIC:
+main_bram_b_en_bram_s <= main_bram_b_cpu_en when main_bram_b_cpu_en = '1'
+                         else main_bram_b_en_blur_s;
+main_bram_b_we_bram_s <= main_bram_b_cpu_we when main_bram_b_cpu_en = '1'
+                         else main_bram_b_we_blur_s;
+main_bram_b_addr_bram_s <= main_bram_b_cpu_addr when main_bram_b_cpu_en = '1'
+                         else main_bram_b_addr_blur_s;         
+main_bram_b_wdata_bram_s <= main_bram_b_cpu_wdata when main_bram_b_cpu_en = '1'
+                         else main_bram_b_wdata_blur_s;   
+main_bram_b_cpu_rdata <= main_bram_b_rdata_bram_s when main_bram_b_cpu_en = '1'
+                         else (others => '0');
+main_bram_b_rdata_blur_s <= main_bram_b_rdata_bram_s when main_bram_b_cpu_en = '0'
+                         else (others => '0');   
          
    
 end Structural;
