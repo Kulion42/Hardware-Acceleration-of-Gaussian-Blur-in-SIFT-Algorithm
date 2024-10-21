@@ -24,9 +24,6 @@ use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
 use work.utils_pkg.ALL;
 
-
-
-
 entity convolute_loops is
 Generic(
     --WIDTH OF DATA

@@ -295,8 +295,9 @@ x_conv_gen: convolute_loops
                         else write2_a_addr;
     tmp_bram_b_addr <= read2_b_addr when start_x_conv = '1'
                         else write2_b_addr;
-    ready <= end_x_conv and start_x_conv;                                           
-rom_offset: process(size)
+    ready <= end_x_conv and start_x_conv; 
+                                              
+rom_offset: process(size, rom_addr_off, start_x_conv)
 begin
      rom_addr_off_prev <= rom_addr_off ;   
 end process;  

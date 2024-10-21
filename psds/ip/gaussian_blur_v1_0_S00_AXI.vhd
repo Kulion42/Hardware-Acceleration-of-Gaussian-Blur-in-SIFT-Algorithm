@@ -4,7 +4,7 @@ use ieee.numeric_std.all;
 use ieee.std_logic_arith.all;
 use work.utils_pkg.ALL;
 
-entity Gaussian_blur_v1_0_S00_AXI is
+entity gaussian_blur_v1_0_S00_AXI is
 	generic (
 		-- Users to add parameters here
         --DATA WIDTH
@@ -110,9 +110,9 @@ entity Gaussian_blur_v1_0_S00_AXI is
     		-- accept the read data and response information.
 		S_AXI_RREADY	: in std_logic
 	);
-end Gaussian_blur_v1_0_S00_AXI;
+end gaussian_blur_v1_0_S00_AXI;
 
-architecture arch_imp of Gaussian_blur_v1_0_S00_AXI is
+architecture arch_imp of gaussian_blur_v1_0_S00_AXI is
 
 	-- AXI4LITE signals
 	signal axi_awaddr	: std_logic_vector(C_S_AXI_ADDR_WIDTH-1 downto 0);

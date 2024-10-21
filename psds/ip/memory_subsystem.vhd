@@ -39,7 +39,7 @@ Generic(
     DATA_WIDTH : natural := 16;
     
     --SIZE OF BRAMS
-    BRAM_SIZE : natural := 60000 --FIXED
+    BRAM_SIZE : natural := 30000 --FIXED
 );
 Port (
     clk: in std_logic;
@@ -77,19 +77,19 @@ Port (
     
     --main bram interface A port
     main_mem_a_addr_i : in std_logic_vector(log2c(BRAM_SIZE)-1 downto 0);
-    main_mem_a_wdata_i : in std_logic_vector(2*DATA_WIDTH-1 downto 0);
+    main_mem_a_wdata_i : in std_logic_vector(2*(DATA_WIDTH-1)-1 downto 0);
     main_mem_a_we_i : in std_logic_vector(3 downto 0);
     main_mem_a_en_i : in std_logic;
     
-    main_mem_a_rdata_o : out std_logic_vector(2*DATA_WIDTH - 1 downto 0);  
+    main_mem_a_rdata_o : out std_logic_vector(2*(DATA_WIDTH-1)-1 downto 0);  
     
     --main bram interface B port
     main_mem_b_addr_i : in std_logic_vector(log2c(BRAM_SIZE)-1 downto 0);
-    main_mem_b_wdata_i : in std_logic_vector(2*DATA_WIDTH-1 downto 0);  
+    main_mem_b_wdata_i : in std_logic_vector(2*(DATA_WIDTH-1)-1 downto 0);  
     main_mem_b_we_i : in std_logic_vector(3 downto 0);
     main_mem_b_en_i : in std_logic;
     
-    main_mem_b_rdata_o : out std_logic_vector(2*DATA_WIDTH - 1 downto 0);
+    main_mem_b_rdata_o : out std_logic_vector(2*(DATA_WIDTH-1)-1 downto 0);
     
      -----------------------------------------------------------------
      
@@ -110,19 +110,19 @@ Port (
      
     --temp bram interface
     tmp_mem_a_addr_i : in std_logic_vector(log2c(BRAM_SIZE)-1 downto 0);
-    tmp_mem_a_rdata_o : out std_logic_vector(2*DATA_WIDTH - 1 downto 0);
+    tmp_mem_a_rdata_o : out std_logic_vector(2*(DATA_WIDTH-1)-1 downto 0);
     tmp_mem_a_we_i : in std_logic_vector(3 downto 0);
     tmp_mem_a_en_i : in std_logic;
     
-    tmp_mem_a_wdata_i : in std_logic_vector(2*DATA_WIDTH-1 downto 0);
+    tmp_mem_a_wdata_i : in std_logic_vector(2*(DATA_WIDTH-1)-1 downto 0);
     
     
     tmp_mem_b_addr_i : in std_logic_vector(log2c(BRAM_SIZE)-1 downto 0);
-    tmp_mem_b_rdata_o : out std_logic_vector(2*DATA_WIDTH - 1 downto 0);
+    tmp_mem_b_rdata_o : out std_logic_vector(2*(DATA_WIDTH-1)-1 downto 0);
     tmp_mem_b_we_i : in std_logic_vector(3 downto 0);
     tmp_mem_b_en_i : in std_logic;
     
-    tmp_mem_b_wdata_i : in std_logic_vector(2*DATA_WIDTH-1 downto 0) 
+    tmp_mem_b_wdata_i : in std_logic_vector(2*(DATA_WIDTH-1)-1 downto 0) 
     
     
      
@@ -132,8 +132,8 @@ end memory_subsystem;
 architecture struct of memory_subsystem is
 
     component bram is
-    generic (WIDTH: positive := 16;
-             SIZE: positive := 60000);
+    generic (WIDTH: positive := 15;
+             SIZE: positive := 30000);
     port (clk_a : in std_logic;
           clk_b : in std_logic;
           en_a: in std_logic;
@@ -282,7 +282,7 @@ begin
     
     main_bram: bram
     Generic map(
-        WIDTH => DATA_WIDTH,
+        WIDTH => DATA_WIDTH-1,
         SIZE => BRAM_SIZE
     )
     Port map(
@@ -307,7 +307,7 @@ begin
     
     tmp_bram: bram
     Generic map(
-        WIDTH => DATA_WIDTH,
+        WIDTH => DATA_WIDTH-1,
         SIZE => BRAM_SIZE
         )
     Port map(
