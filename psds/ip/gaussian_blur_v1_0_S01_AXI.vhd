@@ -507,7 +507,7 @@ begin
     
     --Potrebno je umetnuti logiku za en i 
     
-    --main_mem_en_axi_o <= '1';
+    main_mem_en_axi_o <= '1';
     
 
 	-- User logic ends
