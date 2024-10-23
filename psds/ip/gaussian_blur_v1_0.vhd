@@ -156,16 +156,16 @@ architecture arch_imp of gaussian_blur_v1_0 is
     
     --axi full interface towards main bram A port
     signal main_bram_a_addr_axi_s : std_logic_vector(log2c(BRAM_SIZE)-1 downto 0);
-    signal main_bram_a_wdata_axi_s : std_logic_vector(2*((DATA_WIDTH-1) - 1) - 1 downto 0);
+    signal main_bram_a_wdata_axi_s : std_logic_vector(2*(DATA_WIDTH-1) - 1 downto 0);
     signal main_bram_a_we_axi_s : std_logic_vector(3 downto 0);
     signal main_bram_a_en_axi_s : std_logic;
         
-    signal main_bram_a_rdata_axi_s : std_logic_vector(2*((DATA_WIDTH-1) - 1)-1 downto 0); --signal ka CPU
+    signal main_bram_a_rdata_axi_s : std_logic_vector(2*(DATA_WIDTH-1)-1 downto 0); --signal ka CPU
     
     
     --axi full interface towards main bram B port
     signal main_bram_b_addr_axi_s : std_logic_vector(log2c(BRAM_SIZE)-1 downto 0);
-    signal main_bram_b_wdata_axi_s : std_logic_vector(2*((DATA_WIDTH-1) - 1) - 1 downto 0);
+    signal main_bram_b_wdata_axi_s : std_logic_vector(2*(DATA_WIDTH - 1) - 1 downto 0);
     signal main_bram_b_we_axi_s : std_logic_vector(3 downto 0);
     signal main_bram_b_en_axi_s : std_logic;
         
@@ -724,7 +724,7 @@ Gaussian_blur_v1_0_S01_AXI_inst : gaussian_blur_v1_0_S01_AXI
             
             --main bram interface B port
             main_mem_b_addr_i => main_bram_b_addr_s,
-            main_mem_b_wdata_i => main_bram_a_wdata_s,
+            main_mem_b_wdata_i => main_bram_b_wdata_s,
             main_mem_b_we_i => main_bram_b_we_s,
             main_mem_b_en_i => main_bram_b_en_s,
             
@@ -849,13 +849,20 @@ Gaussian_blur_v1_0_S01_AXI_inst : gaussian_blur_v1_0_S01_AXI
     s01_axi_rvalid <= s01_axi_rvalid_buffer;
     
     --Delimo podatke sa axi full-a na port A i port B vrednosti
-    main_bram_b_wdata_axi_s <= main_bram_wdata_axi_s(62 downto 48)&main_bram_wdata_axi_s(32 downto 46);
+    main_bram_b_wdata_axi_s <= main_bram_wdata_axi_s(62 downto 48)&main_bram_wdata_axi_s(46 downto 32);
     main_bram_a_wdata_axi_s <= main_bram_wdata_axi_s(30 downto 16)&main_bram_wdata_axi_s(14 downto 0);
     
     --Adresa na port A je sa axi full-a a adresa na port B je +1
     main_bram_a_addr_axi_s <= main_bram_addr_axi_s;
     main_bram_b_addr_axi_s <= std_logic_vector(unsigned(main_bram_addr_axi_s) + 1);
     
+    --oba idu iz axi full-a (unutra je potavljen na 1 stalno)
+    main_bram_a_en_axi_s <= main_bram_en_axi_s;
+    main_bram_b_en_axi_s <= main_bram_en_axi_s;
+    
+    --oba idu iz axi full-a 
+    main_bram_a_we_axi_s <= main_bram_we_axi_s;
+    main_bram_b_we_axi_s <= main_bram_we_axi_s;    
     
     --demux koji rutira podatke sa read izlaza bram-a na ili ip ili axi full
     demux:process(main_bram_select, main_bram_a_rdata_s, main_bram_b_rdata_s)
@@ -871,11 +878,13 @@ Gaussian_blur_v1_0_S01_AXI_inst : gaussian_blur_v1_0_S01_AXI
             main_bram_b_rdata_axi_s <= (others => '0');
             
             main_bram_a_rdata_gaus_s <= main_bram_a_rdata_s;
-            main_bram_b_rdata_gaus_s <= main_bram_a_rdata_s;
+            main_bram_b_rdata_gaus_s <= main_bram_b_rdata_s;
         end if;      
        
     end process;
      
+   --rekonstrukcija podatka koji se vraca ka axi full-u u softver
+   main_bram_rdata_axi_s <= '0'&main_bram_b_rdata_axi_s(29 downto 15)&'0'&main_bram_b_rdata_axi_s(14 downto 0)&'0'&main_bram_a_rdata_axi_s(29 downto 15)&'0'&main_bram_a_rdata_axi_s(14 downto 0);
             
             --potrebno prebaciti logiku iz top.vhd
 
