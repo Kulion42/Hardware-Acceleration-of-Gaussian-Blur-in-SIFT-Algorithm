@@ -69,7 +69,7 @@ Port (
     img_per_octave_axi_o: out std_logic_vector(DATA_WIDTH -1 downto 0);
     
     ready_axi_o : out std_logic;
-    start_axi_o : out std_logic;
+    start_axi_o : out std_logic; --ako treba da se cita od strane softvera, treba dodati
     reset_axi_o : out std_logic;
     
     -----------------------------------------------------------------

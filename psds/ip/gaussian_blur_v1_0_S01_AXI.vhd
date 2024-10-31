@@ -484,14 +484,12 @@ begin
 	-- Add user logic here
 
     main_mem_we_axi_o <= (axi_wready and S_AXI_WVALID)&(axi_wready and S_AXI_WVALID)&(axi_wready and S_AXI_WVALID)&(axi_wready and S_AXI_WVALID); --treba izmena jer ima 4 bita kod nas, ovo je primitivno samo da prodje compiler
-    main_mem_addr_axi_o <= axi_araddr(C_S_AXI_ADDR_WIDTH - 1 downto ADDR_LSB)
+    main_mem_addr_axi_o <= axi_araddr(C_S_AXI_ADDR_WIDTH - 1 - 1 downto ADDR_LSB - 1) --dodato je -1 jer se adresira 32 bita a sirina je 64
         when axi_arv_arr_flag = '1' else
-            axi_awaddr(C_S_AXI_ADDR_WIDTH - 1 downto ADDR_LSB)
+            axi_awaddr(C_S_AXI_ADDR_WIDTH - 1 - 1 downto ADDR_LSB - 1)                --dodato je -1 jer se adresira 32 bita a sirina je 64
         when axi_awv_awr_flag = '1' else
             (others => '0');
     main_mem_wdata_axi_o <= S_AXI_WDATA;
-    
-    --treba dodatna logika za main_mem_en_axi_o
     
     --Output memory read data
     process(main_mem_rdata_axi_i, axi_rvalid) is
@@ -506,7 +504,6 @@ begin
     end process;
     
     --Potrebno je umetnuti logiku za en i 
-    
     main_mem_en_axi_o <= '1';
     
 

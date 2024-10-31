@@ -116,14 +116,14 @@ architecture arch_imp of gaussian_blur_v1_0 is
 
     --signal declarations
     
-    signal system_reset_s : std_logic;
+    signal system_reset_s : std_logic; --koristi se samo za memorijski podsistem, mozda moze i umesto reset reg u gaussian_blur
   
     
     --Interface to the AXI LITE controller
     
-    signal reg_data_s : std_logic_vector(DATA_WIDTH - 1 downto 0);
+    signal reg_data_s : std_logic_vector(DATA_WIDTH - 1 downto 0); --izlaz axi lite, ulaz u memorijski podsistem
     
-    signal img_height_we_s: std_logic;
+    signal img_height_we_s: std_logic; --izlazni axi lite a ulazni u memorijski podsistem
     signal img_width_we_s: std_logic;
     signal img_offset_up_we_s: std_logic; 
     signal img_offset_down_we_s: std_logic;
@@ -838,9 +838,9 @@ Gaussian_blur_v1_0_S01_AXI_inst : gaussian_blur_v1_0_S01_AXI
     process (s01_axi_wvalid, s01_axi_wready_buffer, s01_axi_rvalid_buffer, s01_axi_rready)
     begin
         if (s01_axi_wvalid = '1' and s01_axi_wready_buffer = '1') or (s01_axi_rvalid_buffer = '1' and s01_axi_rready = '1') then
-            main_bram_select <= '1';  -- Assert mux selection signal when write address or data is valid
+            main_bram_select <= '1';  -- kada axi cita ili upisuje postavi na 1
         else
-            main_bram_select <= '0';  -- De-assert when no write transaction is taking place
+            main_bram_select <= '0';  -- kada axi ne koristi main bram, postavi na 0
         end if;
     end process;  
     
