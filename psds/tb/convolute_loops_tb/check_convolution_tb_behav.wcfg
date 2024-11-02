@@ -13,11 +13,11 @@
    </db_ref_list>
    <zoom_setting>
       <ZoomStartTime time="0.000 ns"></ZoomStartTime>
-      <ZoomEndTime time="71.301 ns"></ZoomEndTime>
-      <Cursor1Time time="78.490 ns"></Cursor1Time>
+      <ZoomEndTime time="351.001 ns"></ZoomEndTime>
+      <Cursor1Time time="351.000 ns"></Cursor1Time>
    </zoom_setting>
    <column_width_setting>
-      <NameColumnWidth column_width="120"></NameColumnWidth>
+      <NameColumnWidth column_width="95"></NameColumnWidth>
       <ValueColumnWidth column_width="79"></ValueColumnWidth>
    </column_width_setting>
    <WVObjectSize size="40" />
@@ -29,57 +29,53 @@
       <obj_property name="ElementShortName">reset_s</obj_property>
       <obj_property name="ObjectShortName">reset_s</obj_property>
    </wvobject>
-   <wvobject type="logic" fp_name="/check_convolution_tb/start_s">
-      <obj_property name="ElementShortName">start_s</obj_property>
-      <obj_property name="ObjectShortName">start_s</obj_property>
-   </wvobject>
    <wvobject type="logic" fp_name="/check_convolution_tb/ready_s">
       <obj_property name="ElementShortName">ready_s</obj_property>
       <obj_property name="ObjectShortName">ready_s</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/check_convolution_tb/bram1_a_addr_s">
-      <obj_property name="ElementShortName">bram1_a_addr_s[15:0]</obj_property>
-      <obj_property name="ObjectShortName">bram1_a_addr_s[15:0]</obj_property>
+      <obj_property name="ElementShortName">bram1_a_addr_s[14:0]</obj_property>
+      <obj_property name="ObjectShortName">bram1_a_addr_s[14:0]</obj_property>
       <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/check_convolution_tb/bram1_a_rdata_s">
-      <obj_property name="ElementShortName">bram1_a_rdata_s[31:0]</obj_property>
-      <obj_property name="ObjectShortName">bram1_a_rdata_s[31:0]</obj_property>
+      <obj_property name="ElementShortName">bram1_a_rdata_s[29:0]</obj_property>
+      <obj_property name="ObjectShortName">bram1_a_rdata_s[29:0]</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/check_convolution_tb/bram1_b_addr_s">
-      <obj_property name="ElementShortName">bram1_b_addr_s[15:0]</obj_property>
-      <obj_property name="ObjectShortName">bram1_b_addr_s[15:0]</obj_property>
+      <obj_property name="ElementShortName">bram1_b_addr_s[14:0]</obj_property>
+      <obj_property name="ObjectShortName">bram1_b_addr_s[14:0]</obj_property>
       <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/check_convolution_tb/bram1_b_rdata_s">
-      <obj_property name="ElementShortName">bram1_b_rdata_s[31:0]</obj_property>
-      <obj_property name="ObjectShortName">bram1_b_rdata_s[31:0]</obj_property>
+      <obj_property name="ElementShortName">bram1_b_rdata_s[29:0]</obj_property>
+      <obj_property name="ObjectShortName">bram1_b_rdata_s[29:0]</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/check_convolution_tb/convolution_HW/bram2_a_we">
       <obj_property name="ElementShortName">bram2_a_we[3:0]</obj_property>
       <obj_property name="ObjectShortName">bram2_a_we[3:0]</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/check_convolution_tb/bram2_a_addr_s">
-      <obj_property name="ElementShortName">bram2_a_addr_s[15:0]</obj_property>
-      <obj_property name="ObjectShortName">bram2_a_addr_s[15:0]</obj_property>
+      <obj_property name="ElementShortName">bram2_a_addr_s[14:0]</obj_property>
+      <obj_property name="ObjectShortName">bram2_a_addr_s[14:0]</obj_property>
       <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/check_convolution_tb/bram2_a_wdata_s">
-      <obj_property name="ElementShortName">bram2_a_wdata_s[31:0]</obj_property>
-      <obj_property name="ObjectShortName">bram2_a_wdata_s[31:0]</obj_property>
+      <obj_property name="ElementShortName">bram2_a_wdata_s[29:0]</obj_property>
+      <obj_property name="ObjectShortName">bram2_a_wdata_s[29:0]</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/check_convolution_tb/convolution_HW/bram2_b_we">
       <obj_property name="ElementShortName">bram2_b_we[3:0]</obj_property>
       <obj_property name="ObjectShortName">bram2_b_we[3:0]</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/check_convolution_tb/bram2_b_addr_s">
-      <obj_property name="ElementShortName">bram2_b_addr_s[15:0]</obj_property>
-      <obj_property name="ObjectShortName">bram2_b_addr_s[15:0]</obj_property>
+      <obj_property name="ElementShortName">bram2_b_addr_s[14:0]</obj_property>
+      <obj_property name="ObjectShortName">bram2_b_addr_s[14:0]</obj_property>
       <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/check_convolution_tb/bram2_b_wdata_s">
-      <obj_property name="ElementShortName">bram2_b_wdata_s[31:0]</obj_property>
-      <obj_property name="ObjectShortName">bram2_b_wdata_s[31:0]</obj_property>
+      <obj_property name="ElementShortName">bram2_b_wdata_s[29:0]</obj_property>
+      <obj_property name="ObjectShortName">bram2_b_wdata_s[29:0]</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/check_convolution_tb/convolution_HW/kernel_rom_data">
       <obj_property name="ElementShortName">kernel_rom_data[15:0]</obj_property>
@@ -146,8 +142,8 @@
       <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/check_convolution_tb/convolution_HW/mul_reg_1">
-      <obj_property name="ElementShortName">mul_reg_1[31:0]</obj_property>
-      <obj_property name="ObjectShortName">mul_reg_1[31:0]</obj_property>
+      <obj_property name="ElementShortName">mul_reg_1[15:0]</obj_property>
+      <obj_property name="ObjectShortName">mul_reg_1[15:0]</obj_property>
       <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/check_convolution_tb/convolution_HW/sum2_next">
@@ -161,8 +157,8 @@
       <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/check_convolution_tb/convolution_HW/mul_reg_2">
-      <obj_property name="ElementShortName">mul_reg_2[31:0]</obj_property>
-      <obj_property name="ObjectShortName">mul_reg_2[31:0]</obj_property>
+      <obj_property name="ElementShortName">mul_reg_2[15:0]</obj_property>
+      <obj_property name="ObjectShortName">mul_reg_2[15:0]</obj_property>
       <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/check_convolution_tb/convolution_HW/sum3_next">
@@ -176,8 +172,8 @@
       <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/check_convolution_tb/convolution_HW/mul_reg_3">
-      <obj_property name="ElementShortName">mul_reg_3[31:0]</obj_property>
-      <obj_property name="ObjectShortName">mul_reg_3[31:0]</obj_property>
+      <obj_property name="ElementShortName">mul_reg_3[15:0]</obj_property>
+      <obj_property name="ObjectShortName">mul_reg_3[15:0]</obj_property>
       <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/check_convolution_tb/convolution_HW/sum4_next">
@@ -191,12 +187,16 @@
       <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/check_convolution_tb/convolution_HW/mul_reg_4">
-      <obj_property name="ElementShortName">mul_reg_4[31:0]</obj_property>
-      <obj_property name="ObjectShortName">mul_reg_4[31:0]</obj_property>
+      <obj_property name="ElementShortName">mul_reg_4[15:0]</obj_property>
+      <obj_property name="ObjectShortName">mul_reg_4[15:0]</obj_property>
       <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/check_convolution_tb/convolution_HW/x_add_2">
       <obj_property name="ElementShortName">x_add_2[15:0]</obj_property>
       <obj_property name="ObjectShortName">x_add_2[15:0]</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/check_convolution_tb/start_main">
+      <obj_property name="ElementShortName">start_main</obj_property>
+      <obj_property name="ObjectShortName">start_main</obj_property>
    </wvobject>
 </wave_config>

@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wave_config>
+   <wave_state>
+   </wave_state>
+   <db_ref_list>
+      <db_ref path="check_top_model_behav.wdb" id="1">
+         <top_modules>
+            <top_module name="check_top_model" />
+            <top_module name="txt_util" />
+            <top_module name="utils_pkg" />
+         </top_modules>
+      </db_ref>
+   </db_ref_list>
+   <zoom_setting>
+      <ZoomStartTime time="0.000000000 ms"></ZoomStartTime>
+      <ZoomEndTime time="19.001000000 ms"></ZoomEndTime>
+      <Cursor1Time time="0.540063000 ms"></Cursor1Time>
+   </zoom_setting>
+   <column_width_setting>
+      <NameColumnWidth column_width="298"></NameColumnWidth>
+      <ValueColumnWidth column_width="129"></ValueColumnWidth>
+   </column_width_setting>
+   <WVObjectSize size="47" />
+   <wvobject type="logic" fp_name="/check_top_model/clk_s">
+      <obj_property name="ElementShortName">clk_s</obj_property>
+      <obj_property name="ObjectShortName">clk_s</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/check_top_model/reset_s">
+      <obj_property name="ElementShortName">reset_s</obj_property>
+      <obj_property name="ObjectShortName">reset_s</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/check_top_model/start_s">
+      <obj_property name="ElementShortName">start_s</obj_property>
+      <obj_property name="ObjectShortName">start_s</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/check_top_model/ready_s">
+      <obj_property name="ElementShortName">ready_s</obj_property>
+      <obj_property name="ObjectShortName">ready_s</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/check_top_model/GAUSS/gauss_blur/end_y_conv">
+      <obj_property name="ElementShortName">end_y_conv</obj_property>
+      <obj_property name="ObjectShortName">end_y_conv</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/check_top_model/GAUSS/gauss_blur/start_x_conv">
+      <obj_property name="ElementShortName">start_x_conv</obj_property>
+      <obj_property name="ObjectShortName">start_x_conv</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/check_top_model/GAUSS/gauss_blur/end_x_conv">
+      <obj_property name="ElementShortName">end_x_conv</obj_property>
+      <obj_property name="ObjectShortName">end_x_conv</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/check_top_model/img_height_s">
+      <obj_property name="ElementShortName">img_height_s[15:0]</obj_property>
+      <obj_property name="ObjectShortName">img_height_s[15:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/check_top_model/img_width_s">
+      <obj_property name="ElementShortName">img_width_s[15:0]</obj_property>
+      <obj_property name="ObjectShortName">img_width_s[15:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/check_top_model/img_offset_up_s">
+      <obj_property name="ElementShortName">img_offset_up_s[15:0]</obj_property>
+      <obj_property name="ObjectShortName">img_offset_up_s[15:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/check_top_model/img_offset_down_s">
+      <obj_property name="ElementShortName">img_offset_down_s[15:0]</obj_property>
+      <obj_property name="ObjectShortName">img_offset_down_s[15:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/check_top_model/img_per_octave_s">
+      <obj_property name="ElementShortName">img_per_octave_s[15:0]</obj_property>
+      <obj_property name="ObjectShortName">img_per_octave_s[15:0]</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/check_top_model/main_a_en_s">
+      <obj_property name="ElementShortName">main_a_en_s</obj_property>
+      <obj_property name="ObjectShortName">main_a_en_s</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/check_top_model/GAUSS/main_bram_a_en_blur_s">
+      <obj_property name="ElementShortName">main_bram_a_en_blur_s</obj_property>
+      <obj_property name="ObjectShortName">main_bram_a_en_blur_s</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/check_top_model/main_a_we_s">
+      <obj_property name="ElementShortName">main_a_we_s[3:0]</obj_property>
+      <obj_property name="ObjectShortName">main_a_we_s[3:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/check_top_model/GAUSS/main_bram_a_we_blur_s">
+      <obj_property name="ElementShortName">main_bram_a_we_blur_s[3:0]</obj_property>
+      <obj_property name="ObjectShortName">main_bram_a_we_blur_s[3:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/check_top_model/GAUSS/main_bram_a_we_bram_s">
+      <obj_property name="ElementShortName">main_bram_a_we_bram_s[3:0]</obj_property>
+      <obj_property name="ObjectShortName">main_bram_a_we_bram_s[3:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/check_top_model/main_a_addr_s">
+      <obj_property name="ElementShortName">main_a_addr_s[14:0]</obj_property>
+      <obj_property name="ObjectShortName">main_a_addr_s[14:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/check_top_model/GAUSS/main_bram_a_addr_blur_s">
+      <obj_property name="ElementShortName">main_bram_a_addr_blur_s[14:0]</obj_property>
+      <obj_property name="ObjectShortName">main_bram_a_addr_blur_s[14:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/check_top_model/GAUSS/main_bram_a_addr_bram_s">
+      <obj_property name="ElementShortName">main_bram_a_addr_bram_s[14:0]</obj_property>
+      <obj_property name="ObjectShortName">main_bram_a_addr_bram_s[14:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/check_top_model/main_a_rdata_s">
+      <obj_property name="ElementShortName">main_a_rdata_s[29:0]</obj_property>
+      <obj_property name="ObjectShortName">main_a_rdata_s[29:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/check_top_model/GAUSS/main_bram_a_rdata_blur_s">
+      <obj_property name="ElementShortName">main_bram_a_rdata_blur_s[29:0]</obj_property>
+      <obj_property name="ObjectShortName">main_bram_a_rdata_blur_s[29:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/check_top_model/GAUSS/main_bram_a_rdata_bram_s">
+      <obj_property name="ElementShortName">main_bram_a_rdata_bram_s[29:0]</obj_property>
+      <obj_property name="ObjectShortName">main_bram_a_rdata_bram_s[29:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/check_top_model/main_a_wdata_s">
+      <obj_property name="ElementShortName">main_a_wdata_s[29:0]</obj_property>
+      <obj_property name="ObjectShortName">main_a_wdata_s[29:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/check_top_model/GAUSS/main_bram_a_wdata_blur_s">
+      <obj_property name="ElementShortName">main_bram_a_wdata_blur_s[29:0]</obj_property>
+      <obj_property name="ObjectShortName">main_bram_a_wdata_blur_s[29:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/check_top_model/GAUSS/main_bram_a_wdata_bram_s">
+      <obj_property name="ElementShortName">main_bram_a_wdata_bram_s[29:0]</obj_property>
+      <obj_property name="ObjectShortName">main_bram_a_wdata_bram_s[29:0]</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/check_top_model/main_b_en_s">
+      <obj_property name="ElementShortName">main_b_en_s</obj_property>
+      <obj_property name="ObjectShortName">main_b_en_s</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/check_top_model/GAUSS/main_bram_b_en_blur_s">
+      <obj_property name="ElementShortName">main_bram_b_en_blur_s</obj_property>
+      <obj_property name="ObjectShortName">main_bram_b_en_blur_s</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/check_top_model/GAUSS/main_bram_b_en_bram_s">
+      <obj_property name="ElementShortName">main_bram_b_en_bram_s</obj_property>
+      <obj_property name="ObjectShortName">main_bram_b_en_bram_s</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/check_top_model/main_b_we_s">
+      <obj_property name="ElementShortName">main_b_we_s[3:0]</obj_property>
+      <obj_property name="ObjectShortName">main_b_we_s[3:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/check_top_model/GAUSS/main_bram_b_we_blur_s">
+      <obj_property name="ElementShortName">main_bram_b_we_blur_s[3:0]</obj_property>
+      <obj_property name="ObjectShortName">main_bram_b_we_blur_s[3:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/check_top_model/GAUSS/main_bram_b_we_bram_s">
+      <obj_property name="ElementShortName">main_bram_b_we_bram_s[3:0]</obj_property>
+      <obj_property name="ObjectShortName">main_bram_b_we_bram_s[3:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/check_top_model/main_b_addr_s">
+      <obj_property name="ElementShortName">main_b_addr_s[14:0]</obj_property>
+      <obj_property name="ObjectShortName">main_b_addr_s[14:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/check_top_model/GAUSS/main_bram_b_addr_blur_s">
+      <obj_property name="ElementShortName">main_bram_b_addr_blur_s[14:0]</obj_property>
+      <obj_property name="ObjectShortName">main_bram_b_addr_blur_s[14:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/check_top_model/GAUSS/main_bram_b_addr_bram_s">
+      <obj_property name="ElementShortName">main_bram_b_addr_bram_s[14:0]</obj_property>
+      <obj_property name="ObjectShortName">main_bram_b_addr_bram_s[14:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/check_top_model/main_b_rdata_s">
+      <obj_property name="ElementShortName">main_b_rdata_s[29:0]</obj_property>
+      <obj_property name="ObjectShortName">main_b_rdata_s[29:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/check_top_model/GAUSS/main_bram_b_rdata_blur_s">
+      <obj_property name="ElementShortName">main_bram_b_rdata_blur_s[29:0]</obj_property>
+      <obj_property name="ObjectShortName">main_bram_b_rdata_blur_s[29:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/check_top_model/GAUSS/main_bram_b_rdata_bram_s">
+      <obj_property name="ElementShortName">main_bram_b_rdata_bram_s[29:0]</obj_property>
+      <obj_property name="ObjectShortName">main_bram_b_rdata_bram_s[29:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/check_top_model/main_b_wdata_s">
+      <obj_property name="ElementShortName">main_b_wdata_s[29:0]</obj_property>
+      <obj_property name="ObjectShortName">main_b_wdata_s[29:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/check_top_model/GAUSS/main_bram_b_wdata_blur_s">
+      <obj_property name="ElementShortName">main_bram_b_wdata_blur_s[29:0]</obj_property>
+      <obj_property name="ObjectShortName">main_bram_b_wdata_blur_s[29:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/check_top_model/GAUSS/main_bram_b_wdata_bram_s">
+      <obj_property name="ElementShortName">main_bram_b_wdata_bram_s[29:0]</obj_property>
+      <obj_property name="ObjectShortName">main_bram_b_wdata_bram_s[29:0]</obj_property>
+   </wvobject>
+   <wvobject type="other" fp_name="/check_top_model/DATA_WIDTH">
+      <obj_property name="ElementShortName">DATA_WIDTH</obj_property>
+      <obj_property name="ObjectShortName">DATA_WIDTH</obj_property>
+   </wvobject>
+   <wvobject type="other" fp_name="/check_top_model/BRAM_SIZE">
+      <obj_property name="ElementShortName">BRAM_SIZE</obj_property>
+      <obj_property name="ObjectShortName">BRAM_SIZE</obj_property>
+   </wvobject>
+   <wvobject type="other" fp_name="/check_top_model/KERNEL_ROM_SIZE">
+      <obj_property name="ElementShortName">KERNEL_ROM_SIZE</obj_property>
+      <obj_property name="ObjectShortName">KERNEL_ROM_SIZE</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/check_top_model/main_a_wdata_s">
+      <obj_property name="ElementShortName">main_a_wdata_s[29:0]</obj_property>
+      <obj_property name="ObjectShortName">main_a_wdata_s[29:0]</obj_property>
+   </wvobject>
+   <wvobject type="other" fp_name="/check_top_model/GAUSS/gauss_blur/x_conv_gen/state_reg">
+      <obj_property name="ElementShortName">state_reg</obj_property>
+      <obj_property name="ObjectShortName">state_reg</obj_property>
+   </wvobject>
+   <wvobject type="other" fp_name="/check_top_model/GAUSS/gauss_blur/y_conv_gen/state_reg">
+      <obj_property name="ElementShortName">state_reg</obj_property>
+      <obj_property name="ObjectShortName">state_reg</obj_property>
+   </wvobject>
+</wave_config>

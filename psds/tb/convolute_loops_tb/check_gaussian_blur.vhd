@@ -47,9 +47,6 @@ architecture Behavioral of check_gaussian_blur is
     constant DATA_WIDTH : integer :=16;
     constant BRAM_SIZE : integer :=30000;
     constant KERNEL_ROM_SIZE : integer :=76;
-    
-    file BRAM1_txt : text open read_mode is "bram_state_1_init.txt";
-    file BRAM2_txt : text open write_mode is "bram_state_1_save.txt";
 
     --signali
     signal clk_s : std_logic ;
@@ -64,13 +61,7 @@ architecture Behavioral of check_gaussian_blur is
     signal img_per_octave_s: std_logic_vector(DATA_WIDTH -1 downto 0);
     
     --signal sigma_size_s: std_logic_vector(DATA_WIDTH/2 -1 downto 0);
-    
-    signal main_a_en_s: std_logic;
-    signal main_a_we_s: std_logic_vector(3 downto 0);
-    signal main_a_addr_s: std_logic_vector(log2c(BRAM_SIZE) - 1 downto 0);
-    signal main_a_rdata_s: std_logic_vector(2 *(DATA_WIDTH -1) -1 downto 0); 
-    signal main_a_wdata_s: std_logic_vector(2 *(DATA_WIDTH -1) -1 downto 0);
-    
+
     signal main_b_en_s: std_logic;
     signal main_b_we_s: std_logic_vector(3 downto 0);
     signal main_b_addr_s: std_logic_vector(log2c(BRAM_SIZE) - 1 downto 0);
@@ -80,12 +71,6 @@ architecture Behavioral of check_gaussian_blur is
     --signal kernel_rom_en_s: std_logic;
     --signal kernel_rom_addr_s: std_logic_vector(log2c(KERNEL_ROM_SIZE) - 1 downto 0);
     --signal kernel_rom_data_s: std_logic_vector(DATA_WIDTH -1 downto 0);
-     
-    signal tmp_a_en_s: std_logic;
-    signal tmp_a_we_s: std_logic_vector(3 downto 0);
-    signal tmp_a_addr_s: std_logic_vector(log2c(BRAM_SIZE) - 1 downto 0);
-    signal tmp_a_rdata_s: std_logic_vector(2 *(DATA_WIDTH -1) -1 downto 0);
-    signal tmp_a_wdata_s: std_logic_vector(2 *(DATA_WIDTH -1) -1 downto 0);
     
     signal tmp_b_en_s: std_logic;
     signal tmp_b_we_s: std_logic_vector(3 downto 0);
@@ -120,23 +105,12 @@ GAUSS: entity work.gaussian_blur(Mixed)
     img_per_octave => img_per_octave_s,
     
     --BRAMS
-    main_bram_a_en => main_a_en_s,
-    main_bram_a_we => main_a_we_s,
-    main_bram_a_addr => main_a_addr_s,
-    main_bram_a_rdata => main_a_rdata_s,
-    main_bram_a_wdata => main_a_wdata_s,
-    
+    main_bram_a_en => '0',
     main_bram_b_en => main_b_en_s,
     main_bram_b_we => main_b_we_s,
     main_bram_b_addr => main_b_addr_s,
     main_bram_b_rdata => main_b_rdata_s,
     main_bram_b_wdata => main_b_wdata_s, 
-    
-    tmp_bram_a_en => tmp_a_en_s,
-    tmp_bram_a_we => tmp_a_we_s,
-    tmp_bram_a_addr => tmp_a_addr_s,
-    tmp_bram_a_rdata => tmp_a_rdata_s,
-    tmp_bram_a_wdata => tmp_a_wdata_s,
     
     tmp_bram_b_en => tmp_b_en_s,
     tmp_bram_b_we => tmp_b_we_s,
@@ -155,11 +129,11 @@ BRAM1: entity work.bram1(Behavioral)
         port map(clk_a => clk_s,
                  clk_b => clk_s,
                  
-                 en_a => '1',
-                 we_a => main_a_we_s,
-                 addr_a => main_a_addr_s,
-                 data_a_o => main_a_rdata_s,
-                 data_a_i => main_a_wdata_s,
+                 en_a => '0',
+                 we_a => (others => '0'),
+                 addr_a => (others => '0'),
+                 data_a_o => open,
+                 data_a_i => (others => '0'),
                  
                  en_b => '1',
                  we_b => main_b_we_s,
@@ -168,17 +142,17 @@ BRAM1: entity work.bram1(Behavioral)
                  data_b_i => main_b_wdata_s  );
        
     --u ovaj bram se upisuje tmp slika 
-BRAM2: entity work.bram2(Behavioral)
+BRAM2: entity work.bram(Behavioral)
         generic map(WIDTH => DATA_WIDTH -1,
                     SIZE => BRAM_SIZE)
         port map(clk_a => clk_s,
                  clk_b => clk_s,
                  
-                 en_a => '1',
-                 we_a => tmp_a_we_s,
-                 addr_a => tmp_a_addr_s,
-                 data_a_i => tmp_a_wdata_s,
-                 data_a_o => tmp_a_rdata_s,
+                 en_a => '0',
+                 we_a => (others => '0'),
+                 addr_a => (others => '0'),
+                 data_a_i => (others => '0'),
+                 data_a_o => open,
                  
                  en_b => '1',
                  we_b => tmp_b_we_s,
@@ -201,10 +175,10 @@ begin
     wait until falling_edge(clk_s);
     start_s <= '0';
            
-    img_height_s <= std_logic_vector(TO_SIGNED(110, 16));
+    img_height_s <= std_logic_vector(TO_SIGNED(100, 16));
     img_width_s <= std_logic_vector(TO_SIGNED(225, 16));
-    img_offset_up_s <= std_logic_vector(TO_SIGNED(10, 16));
-    img_offset_down_s <= std_logic_vector(TO_SIGNED(10, 16));
+    img_offset_up_s <= std_logic_vector(TO_SIGNED(0, 16));
+    img_offset_down_s <= std_logic_vector(TO_SIGNED(0, 16));
     img_per_octave_s <= std_logic_vector(TO_SIGNED(1, 16));               
     
     start_s <= '1';
