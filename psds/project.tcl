@@ -11,6 +11,8 @@ add_files -norecurse -fileset sim_1 {tb/convolute_loops_tb/check_convolution_tb.
 add_files -norecurse -fileset sim_1 {tb/convolute_loops_tb/check_convolution_tb_behav.wcfg }
 add_files -norecurse -fileset sim_1 {tb/convolute_loops_tb/check_gaussian_blur.vhd}
 add_files -norecurse -fileset sim_1 {tb/convolute_loops_tb/check_gaussian_blur_behav.wcfg }
+add_files -norecurse -fileset sim_1 {tb/convolute_loops_tb/check_top_model.vhd}
+add_files -norecurse -fileset sim_1 {tb/convolute_loops_tb/check_top_model_behav.wcfg }
 #Design sources
 add_files -norecurse {rtl/dsp_unit_add.vhd}
 add_files -norecurse {rtl/dsp_unit_mac_shift.vhd}
@@ -24,8 +26,10 @@ add_files -norecurse {tb/convolute_loops_tb/bram1.vhd}
 add_files -norecurse {rtl/gaussian_blur.vhd}
 add_files -norecurse {rtl/top_model.vhd}
 
-set_property file_type {VHDL 2008} [get_files rtl/kernel_rom.vhd]
-set_property file_type {VHDL 2008} [get_files rtl/convolute_loops.vhd]
+set_property file_type {VHDL 2008} [get_files tb/convolute_loops_tb/check_top_model.vhd]
+set_property file_type {VHDL 2008} [get_files tb/convolute_loops_tb/check_gaussian_blur.vhd]
+set_property file_type {VHDL 2008} [get_files tb/convolute_loops_tb/check_convolution_tb.vhd]
+set_property top check_top_model [get_filesets sim_1]
 
 import_files -force
 
