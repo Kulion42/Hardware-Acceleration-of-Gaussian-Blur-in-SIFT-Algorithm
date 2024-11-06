@@ -72,10 +72,10 @@ component dsp_unit_add
           out_res: out std_logic_vector(WIDTH1 - 1 downto 0));
 end component;
 
-signal size_s, size_shift: std_logic_vector(DATA_WIDTH/2 -1 downto 0);
+signal size_s, size_shift, size_odd: std_logic_vector(DATA_WIDTH/2 -1 downto 0);
 --signal add1_in1, add1_in2 : std_logic_vector(2 *DATA_WIDTH -1 downto 0);
 signal add1_out: std_logic_vector(2*DATA_WIDTH -1 downto 0);
-signal addr_a_out, addr_b_out, kernel_rom_addr_off_next_s: std_logic_vector(DATA_WIDTH/2 -1 downto 0);
+signal addr_a_out, addr_b_out, kernel_rom_addr_off_next_s, kernel_rom_addr_off_prev_s: std_logic_vector(DATA_WIDTH/2 -1 downto 0);
 type rom_type is array (0 to KERNEL_ROM_SIZE-1) of std_logic_vector(DATA_WIDTH -1 downto 0);
 signal ROM: rom_type := (   "0000000000011110", "0000000100100100", "0000010110101100", "0000111011010111", "0001010001110010", "0000111011010111", "0000010110101100", "0000000100100100", "0000000000011110", 
                             "0000000000011010", "0000000100001011", "0000010110000001", "0000111011101111", "0001010011010011", "0000111011101111", "0000010110000001", "0000000100001011", "0000000000011010", 
@@ -92,7 +92,7 @@ begin
     if (reset = '1') then
         kernel_rom_a_data <= (others => '0');
         kernel_rom_b_data <= (others => '0');
-    
+
     elsif (rising_edge(clk)) then
          if ( kernel_rom_a_en= '1') then
                 kernel_rom_a_data <= ROM(to_integer(unsigned(addr_a_out)));
@@ -108,7 +108,7 @@ end process;
 
 add1_out <= std_logic_vector(shift_right(unsigned(SIGMA_VALS(TO_INTEGER(unsigned(img_number)))), 23));
            
-size_s <= add1_out(DATA_WIDTH/2 -1 downto 0) when add1_out(0) = '1' else
+size_odd <= add1_out(DATA_WIDTH/2 -1 downto 0) when add1_out(0) = '1' else
           std_logic_vector(unsigned(add1_out(DATA_WIDTH/2 -1 downto 0)) + 1); 
                        
 addr1_gen: dsp_unit_add 
@@ -150,10 +150,11 @@ next_off_gen: dsp_unit_add
           out_res => kernel_rom_addr_off_next_s
            );
              
-sigma_size <= size_s when TO_INTEGER(unsigned(img_number)) = 4 or TO_INTEGER(unsigned(img_number)) = 5
-              else std_logic_vector(unsigned(size_s) + 2);
-kernel_rom_addr_off_next <= (others => '0') when TO_INTEGER(unsigned(img_number)) = 5
-                            else size_s when TO_INTEGER(unsigned(img_number)) = 0
+size_s <= size_odd when TO_INTEGER(unsigned(img_number)) = 4 or TO_INTEGER(unsigned(img_number)) = 5
+              else std_logic_vector(unsigned(size_odd) + 2);
+sigma_size <= size_s;
+kernel_rom_addr_off_next <= (others => '0') when TO_INTEGER(unsigned(img_number)) = 0
+                            else size_s when TO_INTEGER(unsigned(img_number)) = 1
                             else kernel_rom_addr_off_next_s;
                                                        
 end Mixed;

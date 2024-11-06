@@ -140,7 +140,7 @@ end component;
 signal rom_a_en,rom_b_en, start_x_conv, end_x_conv, end_y_conv: std_logic;
 signal rom_a_addr, rom_b_addr: std_logic_vector(log2c(KERNEL_ROM_SIZE) -1 downto 0);
 signal rom_a_data, rom_b_data: std_logic_vector(DATA_WIDTH -1 downto 0);
-signal rom_addr_off_prev, rom_addr_off, size: std_logic_vector(DATA_WIDTH/2 -1 downto 0);
+signal rom_addr_off_prev, rom_addr_off_next, size: std_logic_vector(DATA_WIDTH/2 -1 downto 0);
 signal write1_b_addr, read1_b_addr: std_logic_vector(log2c(BRAM_SIZE) - 1 downto 0);
 signal write2_b_addr, read2_b_addr: std_logic_vector(log2c(BRAM_SIZE) - 1 downto 0);
 
@@ -166,7 +166,7 @@ kernel_rom_gen: kernel_rom
         kernel_rom_b_data => rom_b_data,
     
         kernel_rom_addr_off_prev => rom_addr_off_prev,
-        kernel_rom_addr_off_next => rom_addr_off,
+        kernel_rom_addr_off_next => rom_addr_off_next,
         sigma_size => size
     );
     
@@ -252,12 +252,7 @@ x_conv_gen: convolute_loops
                      else end_y_conv; 
                        
     ready <= end_y_conv and end_x_conv and not(main_bram_a_en); 
-                                                       
-rom_offset: process(size)
-begin
-     rom_addr_off_prev <= rom_addr_off ;   
-end process;  
-             
+
     main_bram_b_en <= '1';
     tmp_bram_b_en <= '1';   
     
@@ -265,5 +260,12 @@ end process;
                         else "0000";
     tmp_bram_b_we <= "1111" when start_x_conv = '0'
                         else "0000";
+                                                       
+rom_offset: process(rom_addr_off_next)
+begin
+     		rom_addr_off_prev <= rom_addr_off_next;	
+end process;  
+             
+
                    
 end Mixed;

@@ -100,13 +100,12 @@ end component;
 signal x, y, k, dy, dx : signed(DATA_WIDTH -1 downto 0);
 signal x_next, y_next, k_next: signed(DATA_WIDTH - 1 downto 0);
 signal c_y, c_x, c_y_next, c_x_next: unsigned(DATA_WIDTH -1 downto 0);
-signal pix1, pix2: std_logic_vector(DATA_WIDTH -1 downto 0);
+signal pix1, pix2, kernel_val: std_logic_vector(DATA_WIDTH -1 downto 0);
 signal x_coord,y_coord, c_x_vec, c_y_vec: std_logic_vector(DATA_WIDTH -1 downto 0);
 signal sum1_reg, sum2_reg: unsigned(DATA_WIDTH -1  downto 0); 
 signal sum1_next, sum2_next: unsigned(DATA_WIDTH - 1 downto 0);
 signal mul_reg_1, mul_reg_2: std_logic_vector(DATA_WIDTH -1 downto 0);
 signal sigma_center: signed(DATA_WIDTH/2 -1 downto 0);
-signal addr1_b, addr2_b: std_logic_vector(log2c(BRAM_SIZE) - 1 downto 0);
 type state_t is (idle, loops, sum_calc, stal1, stal2, stal3);
 signal state_reg, state_next : state_t;
 
@@ -160,10 +159,7 @@ begin
     
     c_x_next <= c_x;  
     c_y_next <= c_y; 
-        
-    bram2_b_wdata <= std_logic_vector(sum1_reg(DATA_WIDTH -2 downto 0)&sum2_reg(DATA_WIDTH -2 downto 0));  
-     
-    kernel_rom_addr <= std_logic_vector(TO_UNSIGNED(TO_INTEGER(k), log2c(KERNEL_ROM_SIZE)));
+             
     dx <= sigma_center + k;
     dy <= sigma_center + k;           
     ready <= '0';
@@ -183,7 +179,7 @@ begin
                 ready <= '1';
                 state_next <= loops;          
             elsif ( HORIZONTAL = false and y>= signed(img_height) - signed(img_offset_down)) or ( HORIZONTAL = true and y>= signed(img_height) - signed(img_offset_down) - signed(img_offset_up)) then    
-                y_next <= (others => '0');
+                y_next <= (others => '0'); 
                 x_next <= x + 1;
                 state_next <= loops; 
                  
@@ -204,7 +200,7 @@ begin
                     c_y_next <= unsigned(y);
 
                 else
-                    if TO_INTEGER(signed(img_offset_up)) = 0 then                    
+                    if TO_INTEGER(signed(img_offset_down)) = 0 and TO_INTEGER(signed(img_offset_up)) = 0  then                    
                         if abs(dy) > y  then
                             c_y_next <= (others => '0');
                                     
@@ -215,20 +211,42 @@ begin
                         end if;
                     end if;
                     
-                    if TO_INTEGER(signed(img_offset_up)) = 10 then
-                        if dy < 0 and y + dy < signed(img_offset_up) then
+                    if TO_INTEGER(signed(img_offset_down)) = 10 and TO_INTEGER(signed(img_offset_up)) = 10  then
+                        if dy < 0 and y < signed(img_offset_up) then
                             c_y_next <= unsigned(signed(img_offset_up) + dy);
                             
-                        elsif y + dy >= signed(img_height) then
+                        elsif y + dy >= signed(img_height) - signed(img_offset_down) then
                             c_y_next <= unsigned(signed(img_height) - signed(img_offset_down) + dy);
                         else
                                 c_y_next <= unsigned(y + dy);
                         end if;
                     end if;
+                    
+                    if TO_INTEGER(signed(img_offset_down)) = 10 and TO_INTEGER(signed(img_offset_up)) = 0  then                    
+                        if abs(dy) > y  then
+                            c_y_next <= (others => '0');
+                                    
+                        elsif y + dy >= signed(img_height) - signed(img_offset_down) then
+                            c_y_next <= unsigned(signed(img_height) - signed(img_offset_down) + dy);                                   
+                        else
+                            c_y_next <= unsigned(y + dy);
+                        end if;
+                    end if;
+                    
+                    if TO_INTEGER(signed(img_offset_down)) = 0 and TO_INTEGER(signed(img_offset_up)) = 10  then
+                        if dy < 0 and y < signed(img_offset_up) then
+                            c_y_next <= unsigned(signed(img_offset_up) + dy);
                             
+                        elsif y + dy >= signed(img_height) then
+                            c_y_next <= unsigned(img_height) -1 ;  
+                        else
+                                c_y_next <= unsigned(y + dy);
+                        end if;
+                    end if;
+                        
                     c_x_next <= unsigned(x);                     
                 end if; 
-                state_next <= stal1;
+                state_next <= sum_calc;
              end if;
         when stal1 =>   
                 state_next <= sum_calc;
@@ -259,30 +277,36 @@ bram2_b_en <= '1';
             
 bram2_b_we <= "1111";
 
-y_coord <= std_logic_vector(y - signed(img_offset_up)) ;  
+y_coord <= std_logic_vector(y) ;  
 
 x_coord <= std_logic_vector(x);
 c_x_vec <= std_logic_vector(c_x);
 c_y_vec <= std_logic_vector(c_y);
 
+kernel_rom_addr <= std_logic_vector(TO_UNSIGNED(TO_INTEGER(k), log2c(KERNEL_ROM_SIZE)));
+bram2_b_wdata <= std_logic_vector(sum1_reg(DATA_WIDTH -2 downto 0)&sum2_reg(DATA_WIDTH -2 downto 0));  
+    
+pix1 <= '0'&bram1_b_rdata(2 *(DATA_WIDTH-1) -1 downto (DATA_WIDTH-1));
+pix2 <= '0'&bram1_b_rdata((DATA_WIDTH-1) -1 downto 0);
+
 dsp_mul1: dsp_unit_mul_shift
 generic map(WIDTH1 => DATA_WIDTH,
-            WIDTH2 => DATA_WIDTH -1,
+            WIDTH2 => DATA_WIDTH,
             SHIFT => 14)
 port map( clk => clk,
           rst => reset,
-          in_1 => bram1_b_rdata(2 *(DATA_WIDTH-1) -1 downto (DATA_WIDTH-1)),
+          in_1 => pix1,
           in_2 => kernel_rom_data,
           out_res => mul_reg_1
           );
 
 dsp_mul2: dsp_unit_mul_shift
 generic map(WIDTH1 => DATA_WIDTH,
-            WIDTH2 => DATA_WIDTH -1,
+            WIDTH2 => DATA_WIDTH,
             SHIFT => 14)
 port map( clk => clk,
           rst => reset,
-          in_1 => bram1_b_rdata((DATA_WIDTH-1) -1 downto 0),
+          in_1 => pix2,
           in_2 => kernel_rom_data,
           out_res => mul_reg_2
           );
