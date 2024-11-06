@@ -47,9 +47,6 @@ architecture Behavioral of check_top_model is
     constant DATA_WIDTH : integer :=16;
     constant BRAM_SIZE : integer :=30000;
     constant KERNEL_ROM_SIZE : integer :=76;
-    
-    file BRAM1_txt : text open read_mode is "bram_state_1_init.txt";
-    file BRAM2_txt : text open write_mode is "bram_state_1_save.txt";
 
     --signali
     signal clk_s : std_logic ;
@@ -137,18 +134,18 @@ begin
     wait for 45 ns;
     reset_s <= '0';
     
-    img_height_s <= std_logic_vector(TO_SIGNED(110, DATA_WIDTH));
+    img_height_s <= std_logic_vector(TO_SIGNED(100, DATA_WIDTH));
     img_width_s <= std_logic_vector(TO_SIGNED(225, DATA_WIDTH));
     img_offset_up_s <= std_logic_vector(TO_SIGNED(0, DATA_WIDTH));
     img_offset_down_s <= std_logic_vector(TO_SIGNED(0, DATA_WIDTH));
-    img_per_octave_s <= std_logic_vector(TO_SIGNED(1, DATA_WIDTH)); 
+    img_per_octave_s <= std_logic_vector(TO_SIGNED(0, DATA_WIDTH)); 
     
     wait until falling_edge(clk_s);
     main_a_we_s <= "1111"; 
     main_a_en_s <= '1';    
     for i in 0 to BRAM_SIZE-1 loop
-        main_a_addr_s <= std_logic_vector(TO_UNSIGNED(i, log2c(BRAM_SIZE))); 
         wait until rising_edge(clk_s);
+        main_a_addr_s <= std_logic_vector(TO_UNSIGNED(i, log2c(BRAM_SIZE))); 
     end loop;    
     wait until rising_edge(clk_s);
     main_a_en_s <= '0'; 
@@ -163,8 +160,8 @@ begin
     main_a_we_s <= "0000";
     main_a_en_s <= '1'; 
     for i in 0 to BRAM_SIZE-1 loop
-        main_a_addr_s <= std_logic_vector(TO_UNSIGNED(i, log2c(BRAM_SIZE)));
         wait until rising_edge(clk_s); 
+        main_a_addr_s <= std_logic_vector(TO_UNSIGNED(i, log2c(BRAM_SIZE)));
     end loop;
     wait until rising_edge(clk_s);
     main_a_we_s <= "1111";

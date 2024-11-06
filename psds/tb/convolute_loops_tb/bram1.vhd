@@ -9,8 +9,8 @@ use std.textio.all;
 use work.txt_util.all;
 
 entity bram1 is
-    generic (WIDTH: positive := 15;
-             SIZE: positive := 30000);
+    generic (WIDTH: positive := 16;
+             SIZE: positive := 60000);
     port (clk_a : in std_logic;
           clk_b : in std_logic;
           en_a: in std_logic;
@@ -44,7 +44,8 @@ architecture Behavioral of bram1 is
         return RAM;
     end function;
 
-    signal RAM : ram_type := InitRamFromFile("/home/luka/y24-g10/psds/tb/bram_init/bram_state_1_init.txt");  
+    --signal RAM : ram_type := InitRamFromFile("/home/luka/y24-g10/psds/tb/bram_init/bram_state_1_init.txt");  
+    signal RAM : ram_type := InitRamFromFile("/home/luka/sift-cpp-master/virtual_platform/test/bram_state_0_init.txt");
     attribute ram_style: string;
     attribute ram_style of RAM: signal is "block";   
 begin

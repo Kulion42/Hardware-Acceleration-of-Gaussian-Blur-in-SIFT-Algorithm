@@ -178,8 +178,8 @@ begin
     img_height_s <= std_logic_vector(TO_SIGNED(100, 16));
     img_width_s <= std_logic_vector(TO_SIGNED(225, 16));
     img_offset_up_s <= std_logic_vector(TO_SIGNED(0, 16));
-    img_offset_down_s <= std_logic_vector(TO_SIGNED(0, 16));
-    img_per_octave_s <= std_logic_vector(TO_SIGNED(1, 16));               
+    img_offset_down_s <= std_logic_vector(TO_SIGNED(10, 16));
+    img_per_octave_s <= std_logic_vector(TO_SIGNED(0, 16));               
     
     start_s <= '1';
     wait until falling_edge(clk_s);
