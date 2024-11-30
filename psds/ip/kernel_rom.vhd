@@ -53,33 +53,15 @@ Port (
 end kernel_rom;
 
 architecture Mixed of kernel_rom is
-    attribute use_dsp : string;
-    attribute use_dsp of Mixed : architecture is "yes";
-
     constant LUT_DEPTH : natural := 3;
     constant LUT_WIDTH : natural := 32; 
     
-    type sigma_lut is array (0 to 5) of unsigned(LUT_WIDTH -1 downto 0);
+    type sigma_lut is array (0 to 5) of std_logic_vector(LUT_WIDTH -1 downto 0);
     
-    constant SIGMA_VALS : sigma_lut := (
-        X"03BF3B56", X"03ADC730", X"04A290E6", X"05D712C8", X"075B8E66", X"094521D8"
-    );
-     
-component dsp_unit_mul_shift_23 is
-
-    generic (WIDTH1: natural := 32;
-             WIDTH2: natural := 32;
-             OUT_WIDTH: natural :=32);
-    port (clk: in std_logic;
-          rst: in std_logic;
-          in_1: in std_logic_vector(WIDTH1 - 1 downto 0);
-          in_2: in std_logic_vector(WIDTH2 - 1 downto 0);
-          out_res: out std_logic_vector(OUT_WIDTH - 1 downto 0)
-          );
-
-end component;
-
-component dsp_unit_add is
+    signal SIGMA_VALS : sigma_lut := (
+       "00000011101111110011101101010110", "00000011101011011100011100110000", "00000100101000101001000011100110", "00000101110101110001001011001000", "00000111010110111000111001100110", 	   	 	"00001001010001010010000111011000"
+    );	
+component dsp_unit_add
     generic (WIDTH1: natural := 16;
              WIDTH2: natural := 16
              );
@@ -90,19 +72,18 @@ component dsp_unit_add is
           out_res: out std_logic_vector(WIDTH1 - 1 downto 0));
 end component;
 
-signal size_s, size_shift: unsigned(DATA_WIDTH/2 -1 downto 0);
-signal add1_in1, add1_in2 : unsigned(2 *DATA_WIDTH -1 downto 0);
-signal add1_out: unsigned(2*DATA_WIDTH -1 downto 0);
-signal addr_a_out, addr_b_out, kernel_rom_addr_off_next_s: std_logic_vector(DATA_WIDTH/2 -1 downto 0);
-type rom_type is array (0 to KERNEL_ROM_SIZE-1) of unsigned(DATA_WIDTH -1 downto 0);
-signal ROM: rom_type := (
-                            X"001E", X"0124", X"05AC", X"0ED7", X"1472", X"0ED7", X"05AC", X"0124", X"001E", 
-                            X"001A", X"010B", X"0581", X"0EEF", X"14D3", X"0EEF", X"0581", X"010B", X"001A", 
-                            X"0016", X"0094", X"0282", X"0726", X"0D68", X"1087", X"0D68", X"0726", X"0282", X"0094", X"0016", 
-                            X"001C", X"007B", X"0196", X"0400", X"07BE", X"0B81", X"0D20", X"0B81", X"07BE", X"0400", X"0196", X"007B", X"001C", 
-                            X"002D", X"0085", X"014E", X"02C2", X"04EF", X"077B", X"0999", X"0A6E", X"0999", X"077B", X"04EF", X"02C2", X"014E", X"0085", X"002D", 
-                            X"001E", X"004A", X"00A2", X"0141", X"023C", X"0395", X"052A", X"06B7", X"07DB", X"0847", X"07DB", X"06B7", X"052A", X"0395", X"023C", X"0141", X"00A2", X"004A", X"001E"    
-                         );
+signal size_s, size_shift, size_odd: std_logic_vector(DATA_WIDTH/2 -1 downto 0);
+--signal add1_in1, add1_in2 : std_logic_vector(2 *DATA_WIDTH -1 downto 0);
+signal add1_out: std_logic_vector(2*DATA_WIDTH -1 downto 0);
+signal addr_a_out, addr_b_out, kernel_rom_addr_off_next_s, kernel_rom_addr_off_prev_s: std_logic_vector(DATA_WIDTH/2 -1 downto 0);
+type rom_type is array (0 to KERNEL_ROM_SIZE-1) of std_logic_vector(DATA_WIDTH -1 downto 0);
+signal ROM: rom_type := (   "0000000000011110", "0000000100100100", "0000010110101100", "0000111011010111", "0001010001110010", "0000111011010111", "0000010110101100", "0000000100100100", "0000000000011110", 
+                            "0000000000011010", "0000000100001011", "0000010110000001", "0000111011101111", "0001010011010011", "0000111011101111", "0000010110000001", "0000000100001011", "0000000000011010", 
+                            "0000000000010110", "0000000010010100", "0000001010000010", "0000011100100110", "0000110101101000", "0001000010000111", "0000110101101000", "0000011100100110", "0000001010000010", "0000000010010100", "0000000000010110", 
+                            "0000000000011100", "0000000001111011", "0000000110010110", "0000010000000000", "0000011110111110", "0000101110000001", "0000110100100000", "0000101110000001", "0000011110111110", "0000010000000000", "0000000110010110", "0000000001111011", "0000000000011100", 
+                            "0000000000101101", "0000000010000101", "0000000101001110", "0000001011000010", "0000010011101111", "0000011101111011", "0000100110011001", "0000101001101110", "0000100110011001", "0000011101111011", "0000010011101111", "0000001011000010", "0000000101001110", "0000000010000101", "0000000000101101", 
+                            "0000000000011110", "0000000001001010", "0000000010100010", "0000000101000001", "0000001000111100", "0000001110010101", "0000010100101010", "0000011010110111", "0000011111011011", "0000100001000111", "0000011111011011", "0000011010110111", "0000010100101010", "0000001110010101", "0000001000111100", "0000000101000001", "0000000010100010", "0000000001001010", "0000000000011110"
+                            );
 begin
 
 
@@ -111,13 +92,13 @@ begin
     if (reset = '1') then
         kernel_rom_a_data <= (others => '0');
         kernel_rom_b_data <= (others => '0');
-    
+
     elsif (rising_edge(clk)) then
          if ( kernel_rom_a_en= '1') then
-                kernel_rom_a_data <= std_logic_vector(ROM(to_integer(unsigned(addr_a_out))));
+                kernel_rom_a_data <= ROM(to_integer(unsigned(addr_a_out)));
         end if;
         if ( kernel_rom_b_en= '1') then
-                kernel_rom_b_data <= std_logic_vector(ROM(to_integer(unsigned(addr_b_out))));
+                kernel_rom_b_data <= ROM(to_integer(unsigned(addr_b_out)));
         end if;
     
     end if;
@@ -125,10 +106,10 @@ begin
 end process;
 --size_shift <= shift_right(SIGMA_VALS(TO_INTEGER(unsigned(img_number))), 23)(DATA_WIDTH/2 -1 downto 0);
 
-add1_out <= shift_right(SIGMA_VALS(TO_INTEGER(unsigned(img_number))), 23);
+add1_out <= std_logic_vector(shift_right(unsigned(SIGMA_VALS(TO_INTEGER(unsigned(img_number)))), 23));
            
-size_s <= add1_out(DATA_WIDTH/2 -1 downto 0) when add1_out(0) = '1' else
-          add1_out(DATA_WIDTH/2 -1 downto 0) + 1; 
+size_odd <= add1_out(DATA_WIDTH/2 -1 downto 0) when add1_out(0) = '1' else
+          std_logic_vector(unsigned(add1_out(DATA_WIDTH/2 -1 downto 0)) + 1); 
                        
 addr1_gen: dsp_unit_add 
     generic map(
@@ -139,7 +120,7 @@ addr1_gen: dsp_unit_add
           clk => clk,
           rst => reset,
           in_1 => kernel_rom_addr_off_prev,
-          in_2 => std_logic_vector(kernel_rom_a_addr),
+          in_2 => kernel_rom_a_addr,
           out_res => addr_a_out
            );
            
@@ -152,7 +133,7 @@ addr2_gen: dsp_unit_add
           clk => clk,
           rst => reset,
           in_1 => kernel_rom_addr_off_prev,
-          in_2 => std_logic_vector(kernel_rom_b_addr),
+          in_2 => kernel_rom_b_addr,
           out_res => addr_b_out
            );
            
@@ -165,19 +146,15 @@ next_off_gen: dsp_unit_add
           clk => clk,
           rst => reset,
           in_1 => kernel_rom_addr_off_prev,
-          in_2 => std_logic_vector(size_s),
+          in_2 => size_s,
           out_res => kernel_rom_addr_off_next_s
            );
-
-sigma_proc: process(size_s, img_number, kernel_rom_addr_off_next_s)
-begin              
-sigma_size <= std_logic_vector(size_s) when TO_INTEGER(unsigned(img_number)) = 4 or TO_INTEGER(unsigned(img_number)) = 5
-              else std_logic_vector(size_s + 2);
-kernel_rom_addr_off_next <= (others => '0') when TO_INTEGER(unsigned(img_number)) = 5
-                            else std_logic_vector(size_s) when TO_INTEGER(unsigned(img_number)) = 0
+             
+size_s <= size_odd when TO_INTEGER(unsigned(img_number)) = 4 or TO_INTEGER(unsigned(img_number)) = 5
+              else std_logic_vector(unsigned(size_odd) + 2);
+sigma_size <= size_s;
+kernel_rom_addr_off_next <= (others => '0') when TO_INTEGER(unsigned(img_number)) = 0
+                            else size_s when TO_INTEGER(unsigned(img_number)) = 1
                             else kernel_rom_addr_off_next_s;
-end process;
-                            
---ready <= '0' when kernel_rom_addr_off_prev = kernel_rom_addr_off_next_s
-            --else '1';                             
+                                                       
 end Mixed;
