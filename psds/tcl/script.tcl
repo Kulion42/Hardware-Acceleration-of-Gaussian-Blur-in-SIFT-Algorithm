@@ -15,31 +15,31 @@ add_peripheral_interface S00_AXI -interface_mode slave -axi_type lite [ipx::find
 set_property VALUE 8 [ipx::get_bus_parameters WIZ_NUM_REG -of_objects [ipx::get_bus_interfaces S00_AXI -of_objects [ipx::find_open_core xilinx.com:user:gaussian_blur_ip:1.0]]]
 generate_peripheral -driver -bfm_example_design -debug_hw_example_design [ipx::find_open_core xilinx.com:user:gaussian_blur_ip:1.0]
 write_peripheral [ipx::find_open_core xilinx.com:user:gaussian_blur_ip:1.0]
-set_property  ip_repo_paths  ip_repo/gaussian_blur_ip_1.0 [current_project]
+set_property  ip_repo_paths  ip_repo/gaussian_blur_ip_1_0 [current_project]
 update_ip_catalog -rebuild
-ipx::edit_ip_in_project -upgrade true -name edit_gaussian_blur_ip_v1_0 -directory ip_repo ip_repo/gaussian_blur_ip_1.0/component.xml
+ipx::edit_ip_in_project -upgrade true -name edit_gaussian_blur_ip_v1_0 -directory ip_repo ip_repo/gaussian_blur_ip_1_0/component.xml
 update_compile_order -fileset sources_1
 
 
 # Ucitavanje potrebnih fajlova i podesavanje vrha hijerarhije
-add_files -norecurse -copy_to ip_repo/gaussian_blur_ip_1.0/src ../ip/dsp_unit_mac_shift.vhd 
-add_files -norecurse -copy_to ip_repo/gaussian_blur_ip_1.0/src ../ip/utils_pkg.vhd 
-add_files -norecurse -copy_to ip_repo/gaussian_blur_ip_1.0/src ../ip/gaussian_blur_v1_0_S00_AXI.vhd 
-add_files -norecurse -copy_to ip_repo/gaussian_blur_ip_1.0/src ../ip/dsp_unit_add.vhd 
-add_files -norecurse -copy_to ip_repo/gaussian_blur_ip_1.0/src ../ip/gaussian_blur_v1_0.vhd 
-add_files -norecurse -copy_to ip_repo/gaussian_blur_ip_1.0/src ../ip/kernel_rom.vhd 
-add_files -norecurse -copy_to ip_repo/gaussian_blur_ip_1.0/src ../ip/bram.vhd 
-add_files -norecurse -copy_to ip_repo/gaussian_blur_ip_1.0/src ../ip/dsp_unit_mul_shift.vhd 
-add_files -norecurse -copy_to ip_repo/gaussian_blur_ip_1.0/src ../ip/gaussian_blur.vhd 
-add_files -norecurse -copy_to ip_repo/gaussian_blur_ip_1.0/src ../ip/convolute_loops.vhd 
-add_files -norecurse -copy_to ip_repo/gaussian_blur_ip_1.0/src ../ip/memory_subsystem.vhd
-#update_compile_order -fileset sources_1
+add_files -norecurse -copy_to ip_repo/gaussian_blur_ip_1_0/src ../ip/dsp_unit_mac_shift.vhd 
+add_files -norecurse -copy_to ip_repo/gaussian_blur_ip_1_0/src ../ip/utils_pkg.vhd 
+add_files -norecurse -copy_to ip_repo/gaussian_blur_ip_1_0/src ../ip/gaussian_blur_v1_0_S00_AXI.vhd 
+add_files -norecurse -copy_to ip_repo/gaussian_blur_ip_1_0/src ../ip/dsp_unit_add.vhd 
+add_files -norecurse -copy_to ip_repo/gaussian_blur_ip_1_0/src ../ip/gaussian_blur_v1_0.vhd 
+add_files -norecurse -copy_to ip_repo/gaussian_blur_ip_1_0/src ../ip/kernel_rom.vhd 
+add_files -norecurse -copy_to ip_repo/gaussian_blur_ip_1_0/src ../ip/bram.vhd 
+add_files -norecurse -copy_to ip_repo/gaussian_blur_ip_1_0/src ../ip/dsp_unit_mul_shift.vhd 
+add_files -norecurse -copy_to ip_repo/gaussian_blur_ip_1_0/src ../ip/gaussian_blur.vhd 
+add_files -norecurse -copy_to ip_repo/gaussian_blur_ip_1_0/src ../ip/convolute_loops.vhd 
+add_files -norecurse -copy_to ip_repo/gaussian_blur_ip_1_0/src ../ip/memory_subsystem.vhd
+update_compile_order -fileset sources_1
 
 # Postavi potrebne fajlove na VHDL 2008
-set_property file_type {VHDL 2008} [get_files  ip_repo/gaussian_blur_ip_1.0/src/convolute_loops.vhd]
+set_property file_type {VHDL 2008} [get_files  ip_repo/gaussian_blur_ip_1_0/src/convolute_loops.vhd]
 update_compile_order -fileset sources_1
-set_property file_type {VHDL 2008} [get_files  ip_repo/gaussian_blur_ip_1.0/src/kernel_rom.vhd]
-#update_compile_order -fileset sources_1
+set_property file_type {VHDL 2008} [get_files  ip_repo/gaussian_blur_ip_1_0/src/kernel_rom.vhd]
+update_compile_order -fileset sources_1
 
 # Postavi top na gaussian_blur_v1_0
 set_property top gaussian_blur_v1_0 [current_fileset]
@@ -64,11 +64,11 @@ ipx::merge_project_changes files [ipx::current_core]
 ipx::merge_project_changes hdl_parameters [ipx::current_core]
 ipx::create_xgui_files [ipx::current_core]
 ipx::update_checksums [ipx::current_core]
-#ipx::check_integrity [ipx::current_core]
+ipx::check_integrity [ipx::current_core]
 ipx::save_core [ipx::current_core]
 ipx::move_temp_component_back -component [ipx::current_core]
 close_project -delete
-update_ip_catalog -rebuild -repo_path ip_repo/gaussian_blur_ip_1.0
+update_ip_catalog -rebuild -repo_path ip_repo/gaussian_blur_ip_1_0
 
 # Stvaranje blok-dizajna
 create_bd_design "gaussian_blur_bd"
@@ -79,8 +79,8 @@ startgroup
 create_bd_cell -type ip -vlnv xilinx.com:ip:processing_system7:5.5 processing_system7_0
 endgroup
 apply_bd_automation -rule xilinx.com:bd_rule:processing_system7 -config {make_external "FIXED_IO, DDR" apply_board_preset "1" Master "Disable" Slave "Disable" }  [get_bd_cells processing_system7_0]
-#set_property -dict [list CONFIG.PCW_QSPI_PERIPHERAL_ENABLE {1} CONFIG.PCW_ENET0_PERIPHERAL_ENABLE {1} CONFIG.PCW_SD0_PERIPHERAL_ENABLE {1} CONFIG.PCW_UART1_PERIPHERAL_ENABLE {1} CONFIG.PCW_SPI0_PERIPHERAL_ENABLE {1} CONFIG.PCW_USB0_PERIPHERAL_ENABLE {1} CONFIG.PCW_I2C0_PERIPHERAL_ENABLE {1} CONFIG.PCW_GPIO_MIO_GPIO_ENABLE {1}] [get_bd_cells processing_system7_0]
-#set_property -dict [list CONFIG.PCW_FPGA0_PERIPHERAL_FREQMHZ {125}] [get_bd_cells processing_system7_0]
+set_property -dict [list CONFIG.PCW_QSPI_PERIPHERAL_ENABLE {1} CONFIG.PCW_ENET0_PERIPHERAL_ENABLE {1} CONFIG.PCW_SD0_PERIPHERAL_ENABLE {1} CONFIG.PCW_UART1_PERIPHERAL_ENABLE {1} CONFIG.PCW_SPI0_PERIPHERAL_ENABLE {1} CONFIG.PCW_USB0_PERIPHERAL_ENABLE {1} CONFIG.PCW_I2C0_PERIPHERAL_ENABLE {1} CONFIG.PCW_GPIO_MIO_GPIO_ENABLE {1}] [get_bd_cells processing_system7_0]
+set_property -dict [list CONFIG.PCW_FPGA0_PERIPHERAL_FREQMHZ {95}] [get_bd_cells processing_system7_0]
 
 # Ubacivanje gaussian_blur IP
 startgroup
@@ -117,7 +117,7 @@ validate_bd_design
 # Prostorno uredjivanje blok-dizajna
 set_property location {1.5 366 318} [get_bd_cells processing_system7_0]
 set_property location {2 690 51} [get_bd_cells axi_smc]
-set_property location {2 665 347} [get_bd_cells rst_ps7_0_49M]
+set_property location {2 665 347} [get_bd_cells rst_ps7_0_90M]
 set_property location {3 976 609} [get_bd_cells axi_bram_ctrl_0]
 set_property location {3.5 1513 602} [get_bd_cells gaussian_blur_ip_0]
 regenerate_bd_layout -routing
@@ -136,6 +136,6 @@ write_hw_platform -fixed -force -include_bit -file gaussian_blur_bd_wrapper.xsa
 
 # Kopiranje .xsa i .bit fajlova u vitis folder
 file copy -force gaussian_blur_bd_wrapper.xsa ../vitis/gaussian_blur_bd_wrapper.xsa
-file copy -force gaussian_blur_project/gaussian_blur_project.runs/impl_1/gaussian_blur_bd_wrapper.bit ../vitis/gaussian_blur_bd_wrapper.bit
+file copy -force gaussian_blur_project/gaussian_blur_project.runs/impl_1/gaussian_blur_bd_wrapper.bit ../vitis/#gaussian_blur_bd_wrapper.bit
 
 
