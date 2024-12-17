@@ -4,7 +4,7 @@ use IEEE.NUMERIC_STD.ALL;
 
 entity dsp_unit_mul_shift is
     generic (WIDTH1: natural := 16;
-	     WIDTH2: natural := 15;
+	     WIDTH2: natural := 16;
              SHIFT: natural := 14);
     port (clk: in std_logic;
           rst: in std_logic;

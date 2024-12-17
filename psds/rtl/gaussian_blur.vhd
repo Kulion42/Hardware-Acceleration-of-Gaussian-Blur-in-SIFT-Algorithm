@@ -30,8 +30,8 @@ Generic(
     DATA_WIDTH : natural := 16;
     
     --SIZE OF BRAMS AND ROM
-    KERNEL_ROM_SIZE : natural := 76; --FIXED 
-    BRAM_SIZE : natural := 30000 --FIXED
+    KERNEL_ROM_SIZE : natural := 77; --FIXED 
+    BRAM_SIZE : natural := 60000 --FIXED
 );
 Port ( 
     clk: in std_logic;
@@ -49,15 +49,21 @@ Port (
     main_bram_a_en: in std_logic; 
     main_bram_b_en: out std_logic;
     main_bram_b_we: out std_logic_vector(3 downto 0);
-    main_bram_b_addr: out std_logic_vector(log2c(BRAM_SIZE) - 1 downto 0);
+    main_bram_b_addr: out std_logic_vector(log2c(BRAM_SIZE/2) - 1 downto 0);
     main_bram_b_rdata: in std_logic_vector(2 *(DATA_WIDTH-1) -1 downto 0);
     main_bram_b_wdata: out std_logic_vector(2 *(DATA_WIDTH-1) -1 downto 0);    
+    
+    tmp_bram_a_en: out std_logic;
+    tmp_bram_a_we: out std_logic_vector(3 downto 0);
+    tmp_bram_a_addr: out std_logic_vector(log2c(BRAM_SIZE) - 1 downto 0);
+    tmp_bram_a_rdata: in std_logic_vector((DATA_WIDTH-1) -1 downto 0);
+    tmp_bram_a_wdata: out std_logic_vector((DATA_WIDTH-1) -1 downto 0);
     
     tmp_bram_b_en: out std_logic;
     tmp_bram_b_we: out std_logic_vector(3 downto 0);
     tmp_bram_b_addr: out std_logic_vector(log2c(BRAM_SIZE) - 1 downto 0);
-    tmp_bram_b_rdata: in std_logic_vector(2 *(DATA_WIDTH-1) -1 downto 0);
-    tmp_bram_b_wdata: out std_logic_vector(2 *(DATA_WIDTH-1) -1 downto 0);
+    tmp_bram_b_rdata: in std_logic_vector((DATA_WIDTH-1) -1 downto 0);
+    tmp_bram_b_wdata: out std_logic_vector((DATA_WIDTH-1) -1 downto 0);
     
     
     ready: out std_logic
@@ -66,17 +72,19 @@ Port (
 end gaussian_blur;
 
 architecture Mixed of gaussian_blur is
-component convolute_loops
+
+component convolute_loops is
 Generic(
     --WIDTH OF DATA
     DATA_WIDTH : natural := 16; -- FIXED
     
-    --DIRECTION OF CONVOLUTION
-    HORIZONTAL: boolean := true;
+    --PARAMETRS OF CONVOLUTION
+    R_PIXEL: natural := 1;
+    W_PIXEL: natural := 2;  
     
     --SIZE OF BRAMS AND ROM
-    KERNEL_ROM_SIZE : natural := 76; --FIXED 
-    BRAM_SIZE : natural := 30000 --FIXED
+    KERNEL_ROM_SIZE : natural := 77; --FIXED 
+    BRAM_SIZE : natural := 60000 --FIXED
 
 );
 Port ( 
@@ -91,20 +99,28 @@ Port (
     img_offset_down: in std_logic_vector(DATA_WIDTH -1 downto 0);
     
     sigma_size : in std_logic_vector(DATA_WIDTH/2 -1 downto 0);
-    
+      
+    bram1_a_en: out std_logic;
+    bram1_a_we: out std_logic_vector(3 downto 0);
+    bram1_a_addr: out std_logic_vector(log2c(BRAM_SIZE/R_PIXEL) - 1 downto 0);
+    bram1_a_rdata: in std_logic_vector(R_PIXEL *(DATA_WIDTH -1) -1 downto 0);
     bram1_b_en: out std_logic;
     bram1_b_we: out std_logic_vector(3 downto 0);
-    bram1_b_addr: out std_logic_vector(log2c(BRAM_SIZE) - 1 downto 0);
-    bram1_b_rdata: in std_logic_vector(2 *(DATA_WIDTH-1) -1 downto 0);
+    bram1_b_addr: out std_logic_vector(log2c(BRAM_SIZE/R_PIXEL) - 1 downto 0);
+    bram1_b_rdata: in std_logic_vector(R_PIXEL *(DATA_WIDTH -1) -1 downto 0);
     
     kernel_rom_en: out std_logic;
     kernel_rom_addr: out std_logic_vector(log2c(KERNEL_ROM_SIZE) - 1 downto 0);
     kernel_rom_data: in std_logic_vector(DATA_WIDTH -1 downto 0);
-    
+       
+    bram2_a_en: out std_logic;
+    bram2_a_we: out std_logic_vector(3 downto 0);
+    bram2_a_addr: out std_logic_vector(log2c(BRAM_SIZE/W_PIXEL) - 1 downto 0);
+    bram2_a_wdata: out std_logic_vector(W_PIXEL *(DATA_WIDTH -1) -1 downto 0);
     bram2_b_en: out std_logic;
     bram2_b_we: out std_logic_vector(3 downto 0);
-    bram2_b_addr: out std_logic_vector(log2c(BRAM_SIZE) - 1 downto 0);
-    bram2_b_wdata: out std_logic_vector(2 *(DATA_WIDTH-1) -1 downto 0);
+    bram2_b_addr: out std_logic_vector(log2c(BRAM_SIZE/W_PIXEL) - 1 downto 0);
+    bram2_b_wdata: out std_logic_vector(W_PIXEL *(DATA_WIDTH -1) -1 downto 0);
     
     ready : out std_logic
       
@@ -114,7 +130,7 @@ end component;
 component kernel_rom 
 Generic (
     DATA_WIDTH : natural := 16; -- FIXED
-    KERNEL_ROM_SIZE : natural := 76 --FIXED     
+    KERNEL_ROM_SIZE : natural := 77 --FIXED     
 );
 Port ( 
     clk: in std_logic;
@@ -130,9 +146,6 @@ Port (
     kernel_rom_a_data: out std_logic_vector(DATA_WIDTH -1 downto 0); 
     kernel_rom_b_data: out std_logic_vector(DATA_WIDTH -1 downto 0); 
     
-    kernel_rom_addr_off_prev: in std_logic_vector(DATA_WIDTH/2 -1 downto 0);
-    kernel_rom_addr_off_next: out std_logic_vector(DATA_WIDTH/2 -1 downto 0);
-    
     sigma_size: out std_logic_vector(DATA_WIDTH/2 -1 downto 0)
 );
 end component;
@@ -140,9 +153,10 @@ end component;
 signal rom_a_en,rom_b_en, start_x_conv, end_x_conv, end_y_conv: std_logic;
 signal rom_a_addr, rom_b_addr: std_logic_vector(log2c(KERNEL_ROM_SIZE) -1 downto 0);
 signal rom_a_data, rom_b_data: std_logic_vector(DATA_WIDTH -1 downto 0);
-signal rom_addr_off_prev, rom_addr_off_next, size: std_logic_vector(DATA_WIDTH/2 -1 downto 0);
-signal write1_b_addr, read1_b_addr: std_logic_vector(log2c(BRAM_SIZE) - 1 downto 0);
-signal write2_b_addr, read2_b_addr: std_logic_vector(log2c(BRAM_SIZE) - 1 downto 0);
+signal size: std_logic_vector(DATA_WIDTH/2 -1 downto 0);
+signal main_we_x, tmp_we_a_y, tmp_we_b_y, tmp_we_a_x, tmp_we_b_x, main_we_y: std_logic_vector(3 downto 0);
+signal write_x_b_addr, read_y_b_addr: std_logic_vector(log2c(BRAM_SIZE/2) - 1 downto 0);
+signal write_y_a_addr, write_y_b_addr, read_x_a_addr, read_x_b_addr: std_logic_vector(log2c(BRAM_SIZE) - 1 downto 0);
 
 begin
 
@@ -164,16 +178,14 @@ kernel_rom_gen: kernel_rom
     
         kernel_rom_a_data => rom_a_data,
         kernel_rom_b_data => rom_b_data,
-    
-        kernel_rom_addr_off_prev => rom_addr_off_prev,
-        kernel_rom_addr_off_next => rom_addr_off_next,
         sigma_size => size
     );
     
 y_conv_gen: convolute_loops
     Generic map(
         DATA_WIDTH => DATA_WIDTH,
-        HORIZONTAL => false,
+        R_PIXEL => 2,
+        W_PIXEL => 1,
         KERNEL_ROM_SIZE => KERNEL_ROM_SIZE,
         BRAM_SIZE => BRAM_SIZE  
     )
@@ -189,18 +201,28 @@ y_conv_gen: convolute_loops
         
         sigma_size => size,     
         
-        --bram1_b_en => main_bram_b_en,
-        bram1_b_we => open,
-        bram1_b_addr => read1_b_addr,
+        bram1_a_en => open,
+        bram1_a_we => open,
+        bram1_a_addr => open,
+        bram1_a_rdata => (others => '0'),
+        
+        bram1_b_en => main_bram_b_en,
+        bram1_b_we => main_we_y,
+        bram1_b_addr => read_y_b_addr,
         bram1_b_rdata => main_bram_b_rdata,
          
         kernel_rom_en => rom_a_en,
         kernel_rom_addr => rom_a_addr,
         kernel_rom_data => rom_a_data,
         
-        --bram2_b_en => tmp_bram_b_en,
-        --bram2_b_we => tmp_bram_b_we,
-        bram2_b_addr => write2_b_addr,
+        bram2_a_en => tmp_bram_a_en,
+        bram2_a_we => tmp_we_a_y,
+        bram2_a_addr => write_y_a_addr,
+        bram2_a_wdata => tmp_bram_a_wdata,
+        
+        bram2_b_en => tmp_bram_b_en,
+        bram2_b_we => tmp_we_b_y,
+        bram2_b_addr => write_y_b_addr,
         bram2_b_wdata => tmp_bram_b_wdata,
         
         ready => end_y_conv
@@ -209,7 +231,8 @@ y_conv_gen: convolute_loops
 x_conv_gen: convolute_loops
     Generic map(
         DATA_WIDTH => DATA_WIDTH,
-        HORIZONTAL => true,
+        R_PIXEL => 1,
+        W_PIXEL => 2,
         KERNEL_ROM_SIZE => KERNEL_ROM_SIZE,
         BRAM_SIZE => BRAM_SIZE  
     )
@@ -223,49 +246,61 @@ x_conv_gen: convolute_loops
         img_offset_up => img_offset_up,
         img_offset_down => img_offset_down,
         
-        sigma_size => size,
-  
-        bram1_b_we => open,
-        bram1_b_addr => read2_b_addr,
-        bram1_b_rdata => tmp_bram_b_rdata,
+        sigma_size => size,     
         
+        bram1_a_en => tmp_bram_a_en,
+        bram1_a_we => tmp_we_a_x,
+        bram1_a_addr => read_x_a_addr,
+        bram1_a_rdata => tmp_bram_a_rdata,
+        
+        bram1_b_en => tmp_bram_b_en,
+        bram1_b_we => tmp_we_b_x,
+        bram1_b_addr => read_x_b_addr,
+        bram1_b_rdata => tmp_bram_b_rdata,
+         
         kernel_rom_en => rom_b_en,
         kernel_rom_addr => rom_b_addr,
-        kernel_rom_data => rom_b_data,       
+        kernel_rom_data => rom_b_data,
         
-        --bram2_b_en => main_bram_b_en,
-        --bram2_b_we => main_bram_b_we,
-        bram2_b_addr => write1_b_addr,
+        bram2_a_en => open,
+        bram2_a_we => open,
+        bram2_a_addr => open,
+        bram2_a_wdata => open,
+        
+        bram2_b_en => main_bram_b_en,
+        bram2_b_we => main_we_x,
+        bram2_b_addr => write_x_b_addr,
         bram2_b_wdata => main_bram_b_wdata,
         
         ready => end_x_conv
     );
     
-    
-
-    main_bram_b_addr <= read1_b_addr when end_y_conv = '0'
-                        else write1_b_addr;                   
-    tmp_bram_b_addr <= read2_b_addr when start_x_conv = '1'
-                        else write2_b_addr;
-                                              
-    start_x_conv <= '0' when reset = '1' or main_bram_a_en = '1'
-                     else end_y_conv; 
-                       
-    ready <= end_y_conv and end_x_conv and not(main_bram_a_en); 
-
-    main_bram_b_en <= '1';
-    tmp_bram_b_en <= '1';   
-    
-    main_bram_b_we <= "1111" when start_x_conv = '1'
-                        else "0000";
-    tmp_bram_b_we <= "1111" when start_x_conv = '0'
-                        else "0000";
-                                                       
-rom_offset: process(rom_addr_off_next)
+    main_bram_b_we <= main_we_x when start_x_conv = '1'
+                      else main_we_y;
+    tmp_bram_a_we <= tmp_we_a_x when start_x_conv = '1'
+                      else tmp_we_a_y;
+    tmp_bram_b_we <= tmp_we_b_x when start_x_conv = '1'
+                      else tmp_we_b_y;
+                      
+    main_bram_b_addr <= read_y_b_addr when end_y_conv = '0'
+                        else write_x_b_addr;                   
+    tmp_bram_b_addr <= read_x_b_addr when start_x_conv = '1'
+                        else write_y_b_addr;
+    tmp_bram_a_addr <= read_x_a_addr when start_x_conv = '1'
+                        else write_y_a_addr;
+start_x_proc: process(end_y_conv)
 begin
-     		rom_addr_off_prev <= rom_addr_off_next;	
-end process;  
-             
+    if falling_edge(end_y_conv) then
+        start_x_conv <= '0';    
+    end if;    
+    if rising_edge(end_y_conv) then
+        start_x_conv <= '1';
+    end if;
 
-                   
+end process;
+                                                               
+   -- start_x_conv <= '0' when main_bram_a_en = '1' else end_y_conv; 
+    ready <= end_y_conv and end_x_conv when reset = '0'
+             else '1';                     
+                                
 end Mixed;

@@ -21,7 +21,7 @@ architecture Behavioral of dsp_unit_mac_shift is
     signal mult_reg, alu_reg: std_logic_vector(2 *WIDTH_IN - 1 downto 0);
     signal tmp_reg: std_logic_vector(WIDTH_IN - 1 downto 0);
 begin
-    process(clk) is
+    process(clk)
     begin
         if (rising_edge(clk)) then
             if (rst = '1') then

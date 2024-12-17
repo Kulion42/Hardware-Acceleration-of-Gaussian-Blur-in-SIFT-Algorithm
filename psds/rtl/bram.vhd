@@ -5,24 +5,25 @@ use work.utils_pkg.ALL;
 
 entity bram is
     generic (WIDTH: positive := 15;
-             SIZE: positive := 30000);
+             R_W_BYTES: positive := 2;
+             SIZE: positive := 60000);
     port (clk_a : in std_logic;
           clk_b : in std_logic;
           en_a: in std_logic;
           en_b: in std_logic;
           we_a: in std_logic_vector(3 downto 0);
           we_b: in std_logic_vector(3 downto 0);
-          addr_a: in std_logic_vector(log2c(SIZE) -1 downto 0);
-          addr_b: in std_logic_vector(log2c(SIZE) -1 downto 0);
-          data_a_i: in std_logic_vector(2 *WIDTH-1 downto 0);
-          data_b_i: in std_logic_vector(2 *WIDTH-1 downto 0);
-          data_a_o: out std_logic_vector(2 *WIDTH-1 downto 0);
-          data_b_o: out std_logic_vector(2 *WIDTH-1 downto 0));
+          addr_a: in std_logic_vector(log2c(SIZE/R_W_BYTES) -1 downto 0);
+          addr_b: in std_logic_vector(log2c(SIZE/R_W_BYTES) -1 downto 0);
+          data_a_i: in std_logic_vector(R_W_BYTES *WIDTH-1 downto 0);
+          data_b_i: in std_logic_vector(R_W_BYTES *WIDTH-1 downto 0);
+          data_a_o: out std_logic_vector(R_W_BYTES *WIDTH-1 downto 0);
+          data_b_o: out std_logic_vector(R_W_BYTES *WIDTH-1 downto 0));
 end bram;
 
 architecture Behavioral of bram is
 
-    type ram_type is array(SIZE-1 downto 0) of bit_vector(2*WIDTH-1 downto 0);
+    type ram_type is array(SIZE/R_W_BYTES-1 downto 0) of bit_vector(R_W_BYTES*WIDTH-1 downto 0);
     signal RAM: ram_type;
     
     attribute ram_style: string;
