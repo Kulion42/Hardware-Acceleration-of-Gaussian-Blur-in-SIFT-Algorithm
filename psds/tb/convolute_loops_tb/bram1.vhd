@@ -9,7 +9,8 @@ use std.textio.all;
 use work.txt_util.all;
 
 entity bram1 is
-    generic (WIDTH: positive := 16;
+    generic (WIDTH: positive := 15;
+             R_W_BYTES: positive := 1;
              SIZE: positive := 60000);
     port (clk_a : in std_logic;
           clk_b : in std_logic;
@@ -17,18 +18,18 @@ entity bram1 is
           en_b: in std_logic;
           we_a: in std_logic_vector(3 downto 0);
           we_b: in std_logic_vector(3 downto 0);
-          addr_a: in std_logic_vector(log2c(SIZE) -1 downto 0);
-          addr_b: in std_logic_vector(log2c(SIZE) -1 downto 0);
-          data_a_i: in std_logic_vector(2 *WIDTH-1 downto 0);
-          data_b_i: in std_logic_vector(2 *WIDTH-1 downto 0);
-          data_a_o: out std_logic_vector(2*WIDTH-1 downto 0);
-          data_b_o: out std_logic_vector(2 *WIDTH-1 downto 0));
+          addr_a: in std_logic_vector(log2c(SIZE/R_W_BYTES) -1 downto 0);
+          addr_b: in std_logic_vector(log2c(SIZE/R_W_BYTES) -1 downto 0);
+          data_a_i: in std_logic_vector(R_W_BYTES *WIDTH-1 downto 0);
+          data_b_i: in std_logic_vector(R_W_BYTES *WIDTH-1 downto 0);
+          data_a_o: out std_logic_vector(R_W_BYTES *WIDTH-1 downto 0);
+          data_b_o: out std_logic_vector(R_W_BYTES *WIDTH -1 downto 0));
           
 end bram1;
 
 architecture Behavioral of bram1 is
  
-    type ram_type is array(SIZE/2-1 downto 0) of bit_vector(2*WIDTH-1 downto 0);     
+    type ram_type is array(SIZE/R_W_BYTES-1 downto 0) of bit_vector(R_W_BYTES*WIDTH-1  downto 0);     
     impure function InitRamFromFile(RamFileName : in string) return ram_type is
         FILE RamFile : text is in RamFileName;
         variable RamFileLine : line;
@@ -44,8 +45,8 @@ architecture Behavioral of bram1 is
         return RAM;
     end function;
 
-    --signal RAM : ram_type := InitRamFromFile("/home/luka/y24-g10/psds/tb/bram_init/bram_state_1_init.txt");  
-    signal RAM : ram_type := InitRamFromFile("/home/luka/sift-cpp-master/virtual_platform/test/bram_state_0_init.txt");
+    signal RAM : ram_type := InitRamFromFile("/home/luka/sift-cpp-master/virtual_platform/test/bram_state_00_init.txt");  
+    --signal RAM : ram_type := InitRamFromFile("/home/luka/sift-cpp-master/virtual_platform/convolutions/convolute_y_0bit.txt");
     attribute ram_style: string;
     attribute ram_style of RAM: signal is "block";   
 begin

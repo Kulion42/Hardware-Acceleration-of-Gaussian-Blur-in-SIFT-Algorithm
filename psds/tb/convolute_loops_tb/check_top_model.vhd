@@ -50,8 +50,8 @@ architecture Behavioral of check_top_model is
     constant SHIFT_W1: integer := 1;
     constant SHIFT_W2: integer := 15;
         
-    file init_txt : text open write_mode is "/home/luka/sift-cpp-master/psds/tb/saved/bram_init_top.txt";
-    file save_txt : text open write_mode is "/home/luka/sift-cpp-master/psds/tb/saved/bram_save_top.txt";
+    file init_txt : text open write_mode is "/home/luka/y24-g10/psds/tb/bram_init/bram_state_00_init.txt";
+    file save_txt : text open write_mode is "/home/luka/y24-g10/psds/tb/bram_save/bram_state_00_save.txt";
 
     --signali
     signal clk_s : std_logic ;
