@@ -1,5 +1,5 @@
 set PROJECT_NAME              gaussian_blur_rtl
-set PROJECT_CONSTRAINT_FILE ./constraints/Zybo-Z7-Master.xdc
+set PROJECT_CONSTRAINT_FILE ./rtl/Zybo-Z7-Master.xdc
 
 set DIR_OUTPUT project_gaussian_blur
             
@@ -23,6 +23,7 @@ add_files -norecurse {rtl/kernel_rom.vhd}
 add_files -norecurse {rtl/convolute_loops.vhd}
 add_files -norecurse {rtl/bram.vhd}
 add_files -norecurse {tb/convolute_loops_tb/bram1.vhd}
+add_files -norecurse {tb/convolute_loops_tb/bram2.vhd}
 add_files -norecurse {rtl/gaussian_blur.vhd}
 add_files -norecurse {rtl/top_model.vhd}
 
