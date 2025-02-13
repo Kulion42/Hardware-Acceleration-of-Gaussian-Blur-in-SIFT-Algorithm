@@ -22,23 +22,25 @@ update_compile_order -fileset sources_1
 
 
 # Ucitavanje potrebnih fajlova i podesavanje vrha hijerarhije
-add_files -norecurse -copy_to ip_repo/gaussian_blur_ip_1_0/src ../ip/dsp_unit_mac_shift.vhd 
-add_files -norecurse -copy_to ip_repo/gaussian_blur_ip_1_0/src ../ip/utils_pkg.vhd 
-add_files -norecurse -copy_to ip_repo/gaussian_blur_ip_1_0/src ../ip/gaussian_blur_v1_0_S00_AXI.vhd 
-add_files -norecurse -copy_to ip_repo/gaussian_blur_ip_1_0/src ../ip/dsp_unit_add.vhd 
-add_files -norecurse -copy_to ip_repo/gaussian_blur_ip_1_0/src ../ip/gaussian_blur_v1_0.vhd 
-add_files -norecurse -copy_to ip_repo/gaussian_blur_ip_1_0/src ../ip/kernel_rom.vhd 
-add_files -norecurse -copy_to ip_repo/gaussian_blur_ip_1_0/src ../ip/bram.vhd 
-add_files -norecurse -copy_to ip_repo/gaussian_blur_ip_1_0/src ../ip/dsp_unit_mul_shift.vhd 
-add_files -norecurse -copy_to ip_repo/gaussian_blur_ip_1_0/src ../ip/gaussian_blur.vhd 
-add_files -norecurse -copy_to ip_repo/gaussian_blur_ip_1_0/src ../ip/convolute_loops.vhd 
-add_files -norecurse -copy_to ip_repo/gaussian_blur_ip_1_0/src ../ip/memory_subsystem.vhd
+add_files -norecurse -copy_to ip_repo/gaussian_blur_ip_1_0/src ../rtl/dsp_unit_mac_shift.vhd 
+add_files -norecurse -copy_to ip_repo/gaussian_blur_ip_1_0/src ../rtl/utils_pkg.vhd 
+add_files -norecurse -copy_to ip_repo/gaussian_blur_ip_1_0/src ../rtl/gaussian_blur_v1_0_S00_AXI.vhd 
+add_files -norecurse -copy_to ip_repo/gaussian_blur_ip_1_0/src ../rtl/dsp_unit_add.vhd 
+add_files -norecurse -copy_to ip_repo/gaussian_blur_ip_1_0/src ../rtl/gaussian_blur_v1_0.vhd 
+add_files -norecurse -copy_to ip_repo/gaussian_blur_ip_1_0/src ../rtl/kernel_rom.vhd 
+add_files -norecurse -copy_to ip_repo/gaussian_blur_ip_1_0/src ../rtl/bram.vhd 
+add_files -norecurse -copy_to ip_repo/gaussian_blur_ip_1_0/src ../rtl/dsp_unit_mul_shift.vhd 
+add_files -norecurse -copy_to ip_repo/gaussian_blur_ip_1_0/src ../rtl/gaussian_blur.vhd 
+add_files -norecurse -copy_to ip_repo/gaussian_blur_ip_1_0/src ../rtl/convolute_loops.vhd 
+add_files -norecurse -copy_to ip_repo/gaussian_blur_ip_1_0/src ../rtl/memory_subsystem.vhd
+add_files -norecurse -copy_to ip_repo/gaussian_blur_ip_1_0/src ../rtl/top_model.vhd
 update_compile_order -fileset sources_1
 
 # Postavi potrebne fajlove na VHDL 2008
 set_property file_type {VHDL 2008} [get_files  ip_repo/gaussian_blur_ip_1_0/src/convolute_loops.vhd]
 update_compile_order -fileset sources_1
 set_property file_type {VHDL 2008} [get_files  ip_repo/gaussian_blur_ip_1_0/src/kernel_rom.vhd]
+
 update_compile_order -fileset sources_1
 
 # Postavi top na gaussian_blur_v1_0
@@ -136,6 +138,6 @@ write_hw_platform -fixed -force -include_bit -file gaussian_blur_bd_wrapper.xsa
 
 # Kopiranje .xsa i .bit fajlova u vitis folder
 file copy -force gaussian_blur_bd_wrapper.xsa ../vitis/gaussian_blur_bd_wrapper.xsa
-file copy -force gaussian_blur_project/gaussian_blur_project.runs/impl_1/gaussian_blur_bd_wrapper.bit ../vitis/#gaussian_blur_bd_wrapper.bit
+file copy -force gaussian_blur_project/gaussian_blur_project.runs/impl_1/gaussian_blur_bd_wrapper.bit ../vitis/gaussian_blur_bd_wrapper.bit
 
 
