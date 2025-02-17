@@ -1,3 +1,4 @@
+`timescale 1ns / 1ps
 //////////////////////////////////////////////////////////////////////////////////
 // Company: 
 // Engineer: 
@@ -59,6 +60,6 @@ interface gaussian_blur_if (input clk, logic rst);
     logic s00_axi_rvalid;
     logic s00_axi_rready;
 
-endinterface: gaussian_blur_if
+endinterface : gaussian_blur_if
 
 `endif

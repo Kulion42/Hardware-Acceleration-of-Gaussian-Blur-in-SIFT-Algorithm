@@ -21,9 +21,6 @@
 
 `ifndef AGENT_SV
 `define AGENT_SV
-
-    import uvm_pkg::*;
-    //`include "uvm_macros.svh"
     
 class gaussian_blur_agent extends uvm_agent;
 

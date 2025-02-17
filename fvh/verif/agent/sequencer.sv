@@ -22,11 +22,8 @@
 
 `ifndef SEQUENCER_SV
 `define SEQUENCER_EV
-    import uvm_pkg::*;
-    import agent_pkg::*;
-    `include "uvm_macros.svh"
     
-class gaussian_blur_sequencer extends uvm_sequencer#(gaussian_blur_seq_item);
+class gaussian_blur_sequencer extends uvm_sequencer#(agent_pkg::gaussian_blur_seq_item);
 
     `uvm_component_utils(gaussian_blur_sequencer)
     
@@ -37,7 +34,7 @@ class gaussian_blur_sequencer extends uvm_sequencer#(gaussian_blur_seq_item);
         
         if (!uvm_config_db#(gaussian_blur_config)::get(this, "", "gaussian_blur_config", cfg))
             `uvm_fatal("NOCONFIG", {"Config object must be set for: ", get_full_name(), ".cfg"})
-    endfunction
+    endfunction : new
 
 endclass : gaussian_blur_sequencer
 

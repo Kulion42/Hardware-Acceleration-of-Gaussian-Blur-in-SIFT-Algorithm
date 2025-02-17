@@ -71,15 +71,50 @@ class gaussian_blur_config extends uvm_object;
         `uvm_field_enum(uvm_active_passive_enum,is_active,UVM_DEFAULT)
     `uvm_object_utils_end
     
-     constraint rand_constr1 {rand_img >= 0 ; rand_img < NUMBER_OF_IMAGES;}; 
-     constraint rand_constr2 {rand_oct >= 0 ; rand_oct < NUMBER_OF_OCTAVES;}; 
-     constraint rand_constr3 {rand_ipo >= 0 ; rand_ipo < NUMBER_OF_IMGS_PER_OCTAVE;}; 
-     constraint rand_constr4 {rand_part >= 0 ; rand_part < NUMBER_OF_IMAGE_PARTS;}; 
+    covergroup img_cover();
+        option.per_instance = 1;
+        img_num_cover : coverpoint rand_img {
+            bins img0 = {0};
+            bins img1 = {1};
+            bins img2 = {2}; 
+        }
+        
+        part_num_cover : coverpoint rand_part {
+            bins part0 = {0};
+            bins part1 = {1};
+            bins part2 = {2}; 
+            bins part3 = {3};
+            bins part4 = {4};
+        }
+        
+        oct_num_cover : coverpoint rand_oct {
+            bins oct0 = {0};
+            bins oct1 = {1};
+            bins oct2 = {2}; 
+            bins oct3 = {3};
+        }
+        
+        ipo_num_cover : coverpoint rand_ipo {
+            bins ipo0 = {0};
+            bins ipo1 = {1};
+            bins ipo2 = {2}; 
+            bins ipo3 = {3};
+            bins ipo4 = {4};
+            bins ipo5 = {5};
+       }   
+    endgroup
+    
+     constraint rand_constr_img {rand_img >= 0 ; rand_img < NUMBER_OF_IMAGES;}; 
+     constraint rand_constr_oct {rand_oct >= 0 ; rand_oct < NUMBER_OF_OCTAVES;}; 
+     constraint rand_constr_ipo1 {rand_ipo >= 0 ; rand_ipo < NUMBER_OF_IMGS_PER_OCTAVE;}; 
+     constraint rand_constr_ipo2 {(rand_ipo == 0)-> (rand_oct == 0);};
+     constraint rand_constr_ipart {rand_part >= 0 ; rand_part < NUMBER_OF_IMAGE_PARTS;}; 
         
      
      function new(string name = "gaussian_blur_config");
         super.new(name);
-           
+        img_cover = new(); 
+                   
         for (i = 0; i < NUMBER_OF_IMAGES; i++)
         begin
             for (j = 0; j < NUMBER_OF_IMAGE_PARTS; j++)
@@ -87,7 +122,7 @@ class gaussian_blur_config extends uvm_object;
                 num1.itoa(i);
                 num2.itoa(j);
                 num3.itoa(0);
-                img_dimensions_file[((i*NUMBER_OF_IMAGE_PARTS + j) *NUMBER_OF_OCTAVES * NUMBER_OF_IMGS_PER_OCTAVE)] = {"../../../../../img_dimensions/dim_file_img_", num1, "_ipart_", num2, "_num_oct_", num3, ".txt"};
+                img_dimensions_file[((i*NUMBER_OF_IMAGE_PARTS + j) *NUMBER_OF_OCTAVES * NUMBER_OF_IMGS_PER_OCTAVE)] = {"../../../../../img_dimensions/dim_file_img_", num1, "_ipart_", num2, "_", num3, ".txt"};
                 main_bram_load_file[(i*NUMBER_OF_IMAGE_PARTS + j) * NUMBER_OF_OCTAVES * NUMBER_OF_IMGS_PER_OCTAVE] = {"../../../../../img_files/img_file_img_", num1, "_ipart_", num2, "_", num3, ".txt"};
                 main_bram_gv_file[(i*NUMBER_OF_IMAGE_PARTS + j) * NUMBER_OF_OCTAVES * NUMBER_OF_IMGS_PER_OCTAVE] = {"../../../../../golden_vectors/gv_file_img_", num1, "_ipart_", num2, "_", num3, ".txt"};
                 main_bram_read_file[(i*NUMBER_OF_IMAGE_PARTS + j) * NUMBER_OF_OCTAVES * NUMBER_OF_IMGS_PER_OCTAVE] = {"../../../../../result_files/res_file_img_", num1, "_ipart_", num2, "_", num3, ".txt"};
@@ -97,7 +132,7 @@ class gaussian_blur_config extends uvm_object;
                     for (l = 1; l < NUMBER_OF_IMGS_PER_OCTAVE; l++)
                     begin
                         num3.itoa(k * NUMBER_OF_IMGS_PER_OCTAVE + l);
-                        img_dimensions_file[((i*NUMBER_OF_IMAGE_PARTS + j) *NUMBER_OF_OCTAVES + k) * NUMBER_OF_IMGS_PER_OCTAVE + l] = {"../../../../../img_dimensions/dim_file_img_, num1, "_ipart_", num2, "_", num3, ".txt"};
+                        img_dimensions_file[((i*NUMBER_OF_IMAGE_PARTS + j) *NUMBER_OF_OCTAVES + k) * NUMBER_OF_IMGS_PER_OCTAVE + l] = {"../../../../../img_dimensions/dim_file_img_", num1, "_ipart_", num2, "_", num3, ".txt"};
                         main_bram_gv_file[((i*NUMBER_OF_IMAGE_PARTS + j) *NUMBER_OF_OCTAVES + k) * NUMBER_OF_IMGS_PER_OCTAVE + l] = {"../../../../../img_files/img_file_img_", num1, "_ipart_", num2, "_", num3, ".txt"};
                         main_bram_read_file[((i*NUMBER_OF_IMAGE_PARTS + j) *NUMBER_OF_OCTAVES + k) * NUMBER_OF_IMGS_PER_OCTAVE + l] = {"../../../../../golden_vectors/gv_file_img_", num1, "_ipart_", num2, "_", num3, ".txt"}; 
                         main_bram_load_file[((i*NUMBER_OF_IMAGE_PARTS + j) *NUMBER_OF_OCTAVES + k) * NUMBER_OF_IMGS_PER_OCTAVE + l] = {"../../../../../result_files/res_file_img_", num1, "_ipart_", num2, "_", num3, ".txt"};                    
@@ -114,6 +149,9 @@ class gaussian_blur_config extends uvm_object;
         $display("Random image part num : %d", rand_part);
         $display("Random octave num : %d", rand_oct);
         $display("Random scale per octave num : %d", rand_ipo);
+        
+        //COLLECT COVERAGE
+        img_cover.sample();
         
         //IMAGE DIMENSIONS LOADING
         fd = $fopen(img_dimensions_file[((rand_img*NUMBER_OF_IMAGE_PARTS + rand_part) *NUMBER_OF_OCTAVES + rand_oct) * NUMBER_OF_IMGS_PER_OCTAVE + rand_ipo], "r");
@@ -173,7 +211,27 @@ class gaussian_blur_config extends uvm_object;
         
         //MAIN BRAM READING
         
-        fd = $fopen(main_bram_read_file[((rand_img*NUMBER_OF_IMAGE_PARTS + rand_part) *NUMBER_OF_OCTAVES + rand_oct) * NUMBER_OF_IMGS_PER_OCTAVE + rand_ipo], "r");
+        fd = $fopen(main_bram_read_file[((rand_img*NUMBER_OF_IMAGE_PARTS + rand_part) *NUMBER_OF_OCTAVES + rand_oct) * NUMBER_OF_IMGS_PER_OCTAVE + rand_ipo], "w+");
+        
+        if (fd) begin
+            `uvm_info(get_name(), $sformatf("Successfully opened main_bram_read_file"),UVM_HIGH)
+            
+           /* while(!$feof(fd)) begin
+                $fscanf(fd, "%d\t%d\n", tmp1, tmp2);
+                tmp = {tmp1, tmp2};
+                main_bram_rdata_arr.push_back(tmp);
+            end */
+            tmp = main_bram_rdata_arr.pop_front();
+            tmp1 = tmp >> 16;
+            tmp2 = tmp & 16'hffff;
+            $fdisplay(fd, "%d\t%d\n", tmp1, tmp2);
+            
+        end
+        else
+            `uvm_info(get_name(), $sformatf("Error opening main_bram_read_file"),UVM_HIGH)        
+        $fclose(fd);
+        
+       /* fd = $fopen(main_bram_read_file[((rand_img*NUMBER_OF_IMAGE_PARTS + rand_part) *NUMBER_OF_OCTAVES + rand_oct) * NUMBER_OF_IMGS_PER_OCTAVE + rand_ipo], "r");
         
         if (fd) begin
             `uvm_info(get_name(), $sformatf("Successfully opened main_bram_read_file"),UVM_HIGH)
@@ -187,7 +245,7 @@ class gaussian_blur_config extends uvm_object;
         else
             `uvm_info(get_name(), $sformatf("Error opening main_bram_read_file"),UVM_HIGH)        
         $fclose(fd);
-        
+        */
           
      endfunction : random_configuration
      

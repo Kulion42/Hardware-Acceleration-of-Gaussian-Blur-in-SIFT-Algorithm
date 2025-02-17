@@ -27,7 +27,6 @@ class gaussian_blur_driver extends uvm_driver#(gaussian_blur_seq_item);
 
     `uvm_component_utils(gaussian_blur_driver)
     
-    int loop_ready = 0;
     virtual interface gaussian_blur_if vif;
     
     function new(string name = "driver", uvm_component parent = null);
@@ -45,12 +44,12 @@ class gaussian_blur_driver extends uvm_driver#(gaussian_blur_seq_item);
    
       forever begin
 		@(posedge vif.clk);	 
-		if (vif.rst)
+		if (!vif.rst)
 		begin
 		seq_item_port.get_next_item(req);  //uzme jedan seq item 
 		`uvm_info(get_type_name(), $sformatf("Driver sending...\n%s", req.sprint()), UVM_HIGH)
 
-        seq_item_port.item_done();
+        //seq_item_port.item_done();
         
         if (req.bram_axi_ctrl == 0) begin
             //BRAM           
@@ -85,51 +84,114 @@ class gaussian_blur_driver extends uvm_driver#(gaussian_blur_seq_item);
             $display("Data sent to AXI Lite registers");
             
             //Waiting for ready
-            if (req.s00_axi_awaddr == 0 && req.s00_axi_wdata == 0)
-            begin
-                loop_ready = 0;
-                while (!loop_ready) begin
-                    @(posedge vif.clk)
-                    vif.s00_axi_araddr = 5'b10000; //ready register
-                    vif.s00_axi_arvalid = 1'b1;
-                    vif.s00_axi_rready = 1'b1;
-                    
-                    @(posedge vif.clk iff vif.s00_axi_arready);
-                    @(posedge vif.clk iff !vif.s00_axi_arready);
-                    #20
-                    vif.s00_axi_araddr = 1'b0; 
-                    vif.s00_axi_arvalid = 1'b0;
-                    vif.s00_axi_rready = 1'b0;
-                    
-                    if (vif.s00_axi_rdata == 1)
+            if(req.s00_axi_awaddr == AXI_BASE + START_REG_OFFSET && req.s00_axi_wdata == 1)
                     begin
-                        //ready = 1, exit loop
-                        loop_ready = 1;
-                        
-                        @(posedge vif.clk);
-                        //Read sum2
-                       // vif.s00_axi_araddr = 5'b10100; //data register
+                        $display("\n Entering final detection...\n");
+                        vif.s00_axi_arprot = 3'b000;
+                        vif.s00_axi_araddr = AXI_BASE + READY_REG_OFFSET;
                         vif.s00_axi_arvalid = 1'b1;
-                        vif.s00_axi_rready = 1'b1;
-                        
-                        @(posedge vif.clk iff vif.s00_axi_arready);
-                        #5
-                        $display("Pix1 = %d\tPix2 = %d", vif.s00_axi_rdata >> 16, vif.s00_axi_rdata & 32'hFFFF);
-                        @(posedge vif.clk iff !vif.s00_axi_arready);
-                        #20
-                        vif.s00_axi_araddr = 1'b0;
+                        vif.s00_axi_rready  = 1'b1; 
+
+                        @(posedge vif.clk iff vif.s00_axi_arready == 0);
+                        @(posedge vif.clk iff vif.s00_axi_arready == 1);
+            
+
+                        vif.s00_axi_araddr = 5'd0;
                         vif.s00_axi_arvalid = 1'b0;
                         vif.s00_axi_rready = 1'b0;
-                        
-                        break;
-                    end
-                end
-            end
-          end  
-       
-		
-		//`uvm_info(get_type_name(),$sformatf("Item done: %s\n",req.sprint()), UVM_HIGH)
 
+                        wait(vif.s00_axi_rdata == 0)
+
+                            $display("\nSystem on the go!\n");
+                            vif.s00_axi_awaddr = AXI_BASE + START_REG_OFFSET;
+                            vif.s00_axi_wdata = 32'd0;
+                            vif.s00_axi_wstrb = 4'b1111;
+                            vif.s00_axi_awvalid = 1'b1;
+                            vif.s00_axi_wvalid = 1'b1;
+                            vif.s00_axi_bready = 1'b1;
+                    
+                            @(posedge vif.clk iff vif.s00_axi_awready);
+                            @(posedge vif.clk iff !vif.s00_axi_awready);
+                            #20
+                            
+                            vif.s00_axi_awvalid = 1'b0;
+                            vif.s00_axi_awaddr = 1'b0;
+                            vif.s00_axi_wdata = 1'b0;
+                            vif.s00_axi_wvalid = 1'b0;
+                            vif.s00_axi_wstrb = 4'b0000;
+                    
+                            @(posedge vif.clk iff !vif.s00_axi_bvalid); 
+                            #20
+                            vif.s00_axi_bready = 1'b0;
+                            $display("\nStart signal taken down! \n");
+                            //////////////////////////////////////////////////////
+                            $display("\nWaiting for a finishing ready...\n");
+                            #20
+                            vif.s00_axi_arprot = 3'b000;
+                            vif.s00_axi_araddr = AXI_BASE + READY_REG_OFFSET;
+                            vif.s00_axi_arvalid = 1'b1;
+                            vif.s00_axi_rready  = 1'b1;  
+
+                            @(posedge vif.clk iff vif.s00_axi_arready == 0);
+                            @(posedge vif.clk iff vif.s00_axi_arready == 1);
+            
+                            wait(vif.s00_axi_rdata == 1)
+                            vif.s00_axi_araddr = 5'd0;
+                            vif.s00_axi_arvalid = 1'b0;
+
+                            
+
+                            $display("\nDUT finished! \n");
+
+                    end   
+
+
+                    if(req.s00_axi_awaddr == AXI_BASE + RESET_REG_OFFSET && req.s00_axi_wdata == 1)
+                    begin
+
+                        $display("\n Waiting for a ready on the initialization... \n");
+                        vif.s00_axi_arprot = 3'b000;
+                        vif.s00_axi_araddr = AXI_BASE + READY_REG_OFFSET;
+                        vif.s00_axi_arvalid = 1'b1;
+                        vif.s00_axi_rready  = 1'b1; 
+
+                        @(posedge vif.clk iff vif.s00_axi_arready == 0);
+                        @(posedge vif.clk iff vif.s00_axi_arready == 1);
+            
+
+                        vif.s00_axi_araddr = 5'd0;
+                        vif.s00_axi_arvalid = 1'b0;
+                        
+                        wait(vif.s00_axi_rdata == 1)
+                            $display("\nReady detected!\n");
+                            vif.s00_axi_awaddr = AXI_BASE + RESET_REG_OFFSET;
+                            vif.s00_axi_wdata = 32'd1;
+                            vif.s00_axi_wstrb = 4'b1111;
+                            vif.s00_axi_awvalid = 1'b1;
+                            vif.s00_axi_wvalid = 1'b1;
+                            vif.s00_axi_bready = 1'b1;
+                    
+                            @(posedge vif.clk iff vif.s00_axi_awready);
+                            @(posedge vif.clk iff !vif.s00_axi_awready);
+                            #20
+                            
+                            vif.s00_axi_awvalid = 1'b0;
+                            vif.s00_axi_awaddr = 1'b0;
+                            vif.s00_axi_wdata = 1'b0;
+                            vif.s00_axi_wvalid = 1'b0;
+                            vif.s00_axi_wstrb = 4'b0000;
+                    
+                            @(posedge vif.clk iff !vif.s00_axi_bvalid); 
+                            #20
+                            vif.s00_axi_bready = 1'b0;
+                            $display("\nReset signal taken down! \n");
+
+                        vif.s00_axi_rready = 1'b0;
+
+                    end
+                    $display("\nAxi Lite transaction completed! \n");
+                end    
+            seq_item_port.item_done();
 		end
       end
    endtask : main_phase

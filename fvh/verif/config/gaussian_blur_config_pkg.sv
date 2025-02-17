@@ -1,3 +1,4 @@
+`timescale 1ns / 1ps
 //////////////////////////////////////////////////////////////////////////////////
 // Company: 
 // Engineer: 
@@ -20,13 +21,13 @@
 
 
 `ifndef GAUSSIAN_BLUR_CONFIG_PKG_SV
-    `define GAUSSIAN_BLUR_CONFIG_PKG_SV
+`define GAUSSIAN_BLUR_CONFIG_PKG_SV
 
     package gaussian_blur_config_pkg;
 
         
-        import uvm_pkg::*;     
-        `include "uvm_macros.svh" 
+        //import uvm_pkg::*;     
+        //`include "uvm_macros.svh" 
         `include "gaussian_blur_config.sv" 
 
     endpackage : gaussian_blur_config_pkg

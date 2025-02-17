@@ -28,11 +28,18 @@
     parameter BRAM_ADDR_WIDTH = 15;
     parameter BYTE_OFFSET = 2;
     
+    parameter AXI_BASE = 5'b00000;
+    parameter START_REG_OFFSET = 0;
+    parameter RESET_REG_OFFSET = 4;  
+    parameter IMG_WIDTH_REG_OFFSET = 8; 
+    parameter IMG_HEIGHT_REG_OFFSET = 12;
+    parameter IMG_OFFSET_UP_REG_OFFSET = 16; 
+    parameter IMG_OFFSET_DOWN_REG_OFFSET = 20;
+    parameter NUM_IMG_OCT_REG_OFFSET = 24;
+    parameter READY_REG_OFFSET = 28;
+    
     parameter C_S00_AXI_DATA_WIDTH = 32;
     parameter C_S00_AXI_ADDR_WIDTH = 5;
-
-     import uvm_pkg::*;
-    `include "uvm_macros.svh"
     
 class gaussian_blur_seq_item extends uvm_sequence_item;    
     

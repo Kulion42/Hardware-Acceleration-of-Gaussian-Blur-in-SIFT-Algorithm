@@ -1,3 +1,4 @@
+`timescale 1ns / 1ps
 //////////////////////////////////////////////////////////////////////////////////
 // Company: 
 // Engineer: 
@@ -34,6 +35,6 @@ package agent_pkg;
     `include "driver.sv"
     `include "monitor.sv"
     `include "agent.sv"
-endpackage
+endpackage : agent_pkg
 
 `endif

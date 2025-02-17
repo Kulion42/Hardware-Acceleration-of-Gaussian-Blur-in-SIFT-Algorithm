@@ -1,3 +1,4 @@
+`timescale 1ns / 1ps
 //////////////////////////////////////////////////////////////////////////////////
 // Company: 
 // Engineer: 
@@ -34,10 +35,8 @@ package test_pkg;
 	`include "env.sv"   
 	`include "base_test.sv"
 	`include "simple_test.sv"
-
+    `include "gaussian_blur_if.sv"    
 
 endpackage : test_pkg
-
- `include "gaussian_blur_if.sv"
 
 `endif

@@ -5,8 +5,8 @@ set resultDir ../uvm_project
 
 file mkdir $resultDir
 
-create_project gaussian_blur_verif $resultDir -part xc7z010clg400-1
-set_property board_part digilentinc.com:zybo-z7-10:part0:1.0 [current_project]
+create_project gaussian_blur_verif $resultDir -part xc7z010clg400-1 -force
+set_property board_part digilentinc.com:zybo-z7-10:part0:1.2 [current_project]
 
 
 # Ukljucivanje svih izvornih i simulacionih fajlova u projekat
@@ -14,7 +14,7 @@ set_property board_part digilentinc.com:zybo-z7-10:part0:1.0 [current_project]
 add_files -norecurse ../../psds/rtl/gaussian_blur_v1_0.vhd
 add_files -norecurse ../../psds/rtl/gaussian_blur_v1_0_S00_AXI.vhd
 add_files -norecurse ../../psds/rtl/top_model.vhd
-add_files -norecurse ../../psds/rtl/gausian_blur.vhd
+add_files -norecurse ../../psds/rtl/gaussian_blur.vhd
 add_files -norecurse ../../psds/rtl/memory_subsystem.vhd
 add_files -norecurse ../../psds/rtl/bram.vhd
 add_files -norecurse ../../psds/rtl/convolute_loops.vhd
@@ -42,9 +42,17 @@ add_files -fileset sim_1 -norecurse ../verif/gaussian_blur_top.sv
 update_compile_order -fileset sources_1
 update_compile_order -fileset sim_1
 
+#Povecanje osjetljivosti(verbosity) elaboracije
+
+set_property -name {xsim.elaborate.mt_level} -value {off} -objects [get_filesets sim_1]
+set_property -name {xsim.elaborate.xelab.more_options} -value {-v 1} -objects [get_filesets sim_1]
 
 # Ukljucivanje uvm biblioteke
 
 set_property -name {xsim.compile.xvlog.more_options} -value {-L uvm} -objects [get_filesets sim_1]
 set_property -name {xsim.elaborate.xelab.more_options} -value {-L uvm} -objects [get_filesets sim_1]
 set_property -name {xsim.simulate.xsim.more_options} -value {-testplusarg UVM_TESTNAME=test_hough_simple -testplusarg UVM_VERBOSITY=UVM_LOW} -objects [get_filesets sim_1]
+
+#Pokretanje simulacije
+
+launch_simulation

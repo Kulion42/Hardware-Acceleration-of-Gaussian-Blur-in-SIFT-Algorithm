@@ -1,3 +1,4 @@
+`timescale 1ns / 1ps
 //////////////////////////////////////////////////////////////////////////////////
 // Company: 
 // Engineer: 
@@ -20,9 +21,6 @@
 
 `ifndef ENV_SV
 `define ENV_SV
-
-import test_pkg::*;
-import agent_pkg::*;
 
 class gaussian_blur_env extends uvm_env;
 

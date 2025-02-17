@@ -23,7 +23,10 @@
 `define GAUSSIAN_BLUR_TOP_SV
 
 module gaussian_blur_top;
+
+    `include "uvm_macros.svh"
     import uvm_pkg::*;
+    
     import test_pkg::*;
     
     logic clk;
@@ -33,7 +36,7 @@ module gaussian_blur_top;
    gaussian_blur_if gaussian_blur_vif(clk, rst);
    
    //DUT
-   GAUSSIAN_BLUR_v1_0  DUT (
+   GAUSSIAN_BLUR_v1_0  DUT(
                       .s00_axi_aclk     (clk),
                       .s00_axi_aresetn  (rst),
                       .main_bram_a_en_i (gaussian_blur_vif.main_bram_a_en_i),
@@ -79,6 +82,6 @@ module gaussian_blur_top;
    // clock generation
    always #50 clk = ~clk;                      
     
-endmodule
+endmodule : gaussian_blur_top
 
 `endif
