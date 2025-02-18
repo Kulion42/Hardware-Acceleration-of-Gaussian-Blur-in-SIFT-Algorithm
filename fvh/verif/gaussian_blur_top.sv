@@ -68,7 +68,7 @@ module gaussian_blur_top;
     
      // run test
    initial begin      
-      uvm_config_db#(virtual gaussian_blur_if)::set(null, "uvm_test_top.gaussian_blur_env", "gaussian_blur_if", gaussian_blur_vif);
+      uvm_config_db#(virtual gaussian_blur_if)::set(null, "uvm_test_top.env", "gaussian_blur_if", gaussian_blur_vif);
       run_test("gaussian_blur_simple_test");
    end
     
