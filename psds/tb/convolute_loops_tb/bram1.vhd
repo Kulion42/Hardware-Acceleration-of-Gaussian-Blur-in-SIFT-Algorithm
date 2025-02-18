@@ -45,8 +45,7 @@ architecture Behavioral of bram1 is
         return RAM;
     end function;
 
-    signal RAM : ram_type := InitRamFromFile("/home/luka/sift-cpp-master/virtual_platform/test/bram_state_00_init.txt");  
-    --signal RAM : ram_type := InitRamFromFile("/home/luka/sift-cpp-master/virtual_platform/convolutions/convolute_y_0bit.txt");
+    signal RAM : ram_type := InitRamFromFile("../../../../../../load_bram/bram_state_0_ipart_0_0.txt");  
     attribute ram_style: string;
     attribute ram_style of RAM: signal is "block";   
 begin
