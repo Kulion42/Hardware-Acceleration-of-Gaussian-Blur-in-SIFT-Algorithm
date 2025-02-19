@@ -39,10 +39,11 @@ class gaussian_blur_simple_seq extends seq_pkg::gaussian_blur_base_seq;
     int img_offset_up;
     int img_offset_down;
     int num_img_per_oct;
+    int pix_up, pix_down;
     
     covergroup img_data_cover();
         option.per_instance = 1;
-        img_up_pix_value : coverpoint seq_item.main_bram_a_wdata_i[31 : 16]{
+        img_up_pix_value : coverpoint pix_up{
             bins group_up_1 = {[0:4096]};
             bins group_up_2 = {[4097:6144]};
             bins group_up_3 = {[6145:8192]};
@@ -51,10 +52,10 @@ class gaussian_blur_simple_seq extends seq_pkg::gaussian_blur_base_seq;
             bins group_up_6 = {[12289:14336]};
             bins group_up_7 = {[14337:15360]};
             bins group_up_8 = {[15361:16384]};
-            illegal_bins ignore_vals_up = {[16385:65536]};
+            illegal_bins illegal_vals_up = {[16385:65536]};
         }
         
-        img_down_pix_value : coverpoint seq_item.main_bram_a_wdata_i[15 : 0]{
+        img_down_pix_value : coverpoint pix_down{
             bins group_down_1 = {[0:4096]};
             bins group_down_2 = {[4097:6144]};
             bins group_down_3 = {[6145:8192]};
@@ -63,7 +64,7 @@ class gaussian_blur_simple_seq extends seq_pkg::gaussian_blur_base_seq;
             bins group_down_6 = {[12289:14336]};
             bins group_down_7 = {[14337:15360]};
             bins group_down_8 = {[15361:16384]};
-            illegal_bins ignore_vals_down = {[16385:65536]};
+            illegal_bins illegal_vals_down = {[16385:65536]};
         }
     endgroup
     
@@ -99,6 +100,9 @@ class gaussian_blur_simple_seq extends seq_pkg::gaussian_blur_base_seq;
         num_img_per_oct = p_sequencer.cfg.num_img_per_oct;
         
         seq_item = gaussian_blur_seq_item::type_id::create("gaussian_blur_seq_item");  
+        if (seq_item == null) begin
+            `uvm_fatal("SEQ_ITEM_NULL", "Seq_item is null!")
+        end
         
          //     INITALIZATION OF THE SYSTEM    
         
@@ -124,6 +128,9 @@ class gaussian_blur_simple_seq extends seq_pkg::gaussian_blur_base_seq;
                 seq_item.main_bram_a_we_i = 4'b1111;
                 seq_item.main_bram_a_addr_i = i;         
                 seq_item.main_bram_a_wdata_i = p_sequencer.cfg.main_bram_wdata_arr[i];
+                $display("Data sent = %d", seq_item.main_bram_a_wdata_i);
+                pix_up =  p_sequencer.cfg.main_bram_wdata_arr[i] >> 16;
+                pix_down =  p_sequencer.cfg.main_bram_wdata_arr[i] & 16'hffff;
                 //COLLECT COVERAGE
                 img_data_cover.sample();
                 data_parity_cover.sample();

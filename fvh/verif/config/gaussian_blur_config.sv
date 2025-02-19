@@ -48,6 +48,7 @@ class gaussian_blur_config extends uvm_object;
     int img_offset_down;
     int num_img_per_oct;
     
+    int read_bram = 0;
     int tmp;
     int tmp1;
     int tmp2;
@@ -183,7 +184,7 @@ class gaussian_blur_config extends uvm_object;
             
             while(!$feof(fd)) begin
                 $fscanf(fd, "%d\t%d\n", tmp1, tmp2);
-                tmp = {tmp1, tmp2};
+                tmp =  (tmp1 << 16) | tmp2;
                 main_bram_gv_arr.push_back(tmp);
             end
         end
@@ -193,14 +194,15 @@ class gaussian_blur_config extends uvm_object;
         //----------------------------------------------------------------------------------------
        
         //LOADING IMAGE IN BRAM
-        fd = $fopen(main_bram_load_file[((rand_img*NUMBER_OF_IMAGE_PARTS + rand_part) *NUMBER_OF_OCTAVES + rand_oct) * NUMBER_OF_IMGS_PER_OCTAVE + rand_ipo], "r+");
+        fd = $fopen(main_bram_load_file[((rand_img*NUMBER_OF_IMAGE_PARTS + rand_part) *NUMBER_OF_OCTAVES + rand_oct) * NUMBER_OF_IMGS_PER_OCTAVE + rand_ipo], "r");
         
         if (fd) begin
             `uvm_info(get_name(), $sformatf("Successfully opened main_bram_load_file"),UVM_HIGH)
             
             while(!$feof(fd)) begin
                 $fscanf(fd, "%d\t%d\n", tmp1, tmp2);
-                tmp = {tmp1, tmp2};
+                tmp =  (tmp1 << 16) | tmp2;
+                //$display("Tmp value = %d", tmp);
                 main_bram_wdata_arr.push_back(tmp);
             end
         end
@@ -221,11 +223,15 @@ class gaussian_blur_config extends uvm_object;
                 tmp = {tmp1, tmp2};
                 main_bram_rdata_arr.push_back(tmp);
             end */
-            tmp = main_bram_rdata_arr.pop_front();
-            tmp1 = tmp >> 16;
-            tmp2 = tmp & 16'hffff;
-            $fdisplay(fd, "%d\t%d\n", tmp1, tmp2);
-            
+            while ((main_bram_rdata_arr.size == img_width * img_height/2 || read_bram == 1) && main_bram_rdata_arr.size() > 0) begin
+                tmp = main_bram_rdata_arr.pop_front();
+                tmp1 = (tmp >> 16) & 16'hffff;
+                tmp2 = tmp & 16'hffff;
+                $fdisplay(fd, "%d\t%d\n", tmp1, tmp2);
+                read_bram = 1;
+           end
+           main_bram_wdata_arr.delete();
+           main_bram_gv_arr.delete(); 
         end
         else
             `uvm_info(get_name(), $sformatf("Error opening main_bram_read_file"),UVM_HIGH)        
