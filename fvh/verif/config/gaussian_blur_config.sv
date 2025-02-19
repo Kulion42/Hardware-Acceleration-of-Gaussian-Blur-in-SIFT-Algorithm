@@ -133,9 +133,9 @@ class gaussian_blur_config extends uvm_object;
                     begin
                         num3.itoa(k * NUMBER_OF_IMGS_PER_OCTAVE + l);
                         img_dimensions_file[((i*NUMBER_OF_IMAGE_PARTS + j) *NUMBER_OF_OCTAVES + k) * NUMBER_OF_IMGS_PER_OCTAVE + l] = {"../../../../../img_dimensions/dim_file_img_", num1, "_ipart_", num2, "_", num3, ".txt"};
-                        main_bram_gv_file[((i*NUMBER_OF_IMAGE_PARTS + j) *NUMBER_OF_OCTAVES + k) * NUMBER_OF_IMGS_PER_OCTAVE + l] = {"../../../../../image_files/img_file_img_", num1, "_ipart_", num2, "_", num3, ".txt"};
-                        main_bram_read_file[((i*NUMBER_OF_IMAGE_PARTS + j) *NUMBER_OF_OCTAVES + k) * NUMBER_OF_IMGS_PER_OCTAVE + l] = {"../../../../../golden_vectors/gv_file_img_", num1, "_ipart_", num2, "_", num3, ".txt"}; 
-                        main_bram_load_file[((i*NUMBER_OF_IMAGE_PARTS + j) *NUMBER_OF_OCTAVES + k) * NUMBER_OF_IMGS_PER_OCTAVE + l] = {"../../../../../result_files/res_file_img_", num1, "_ipart_", num2, "_", num3, ".txt"};                    
+                        main_bram_load_file[((i*NUMBER_OF_IMAGE_PARTS + j) *NUMBER_OF_OCTAVES + k) * NUMBER_OF_IMGS_PER_OCTAVE + l] = {"../../../../../image_files/img_file_img_", num1, "_ipart_", num2, "_", num3, ".txt"};
+                        main_bram_gv_file[((i*NUMBER_OF_IMAGE_PARTS + j) *NUMBER_OF_OCTAVES + k) * NUMBER_OF_IMGS_PER_OCTAVE + l] = {"../../../../../golden_vectors/gv_file_img_", num1, "_ipart_", num2, "_", num3, ".txt"}; 
+                        main_bram_read_file[((i*NUMBER_OF_IMAGE_PARTS + j) *NUMBER_OF_OCTAVES + k) * NUMBER_OF_IMGS_PER_OCTAVE + l] = {"../../../../../result_files/res_file_img_", num1, "_ipart_", num2, "_", num3, ".txt"};                    
                     end
                     
                 end
