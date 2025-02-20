@@ -229,9 +229,7 @@ class gaussian_blur_config extends uvm_object;
                 tmp2 = tmp & 16'hffff;
                 $fdisplay(fd, "%d\t%d\n", tmp1, tmp2);
                 read_bram = 1;
-           end
-           main_bram_wdata_arr.delete();
-           main_bram_gv_arr.delete(); 
+           end 
         end
         else
             `uvm_info(get_name(), $sformatf("Error opening main_bram_read_file"),UVM_HIGH)        
@@ -252,7 +250,7 @@ class gaussian_blur_config extends uvm_object;
             `uvm_info(get_name(), $sformatf("Error opening main_bram_read_file"),UVM_HIGH)        
         $fclose(fd);
         */
-          
+      $display("Queues size -> main_bram_wdata_arr=%d, main_bram_gv_arr=%d", main_bram_wdata_arr.size(), main_bram_gv_arr.size());    
      endfunction : random_configuration
      
         

@@ -51,8 +51,11 @@ set_property -name {xsim.elaborate.xelab.more_options} -value {-v 1} -objects [g
 
 set_property -name {xsim.compile.xvlog.more_options} -value {-L uvm} -objects [get_filesets sim_1]
 set_property -name {xsim.elaborate.xelab.more_options} -value {-L uvm} -objects [get_filesets sim_1]
-set_property -name {xsim.simulate.xsim.more_options} -value {-testplusarg UVM_TESTNAME=simple_test -testplusarg UVM_VERBOSITY=UVM_LOW} -objects [get_filesets sim_1]
+set_property -name {xsim.simulate.xsim.more_options} -value {-testplusarg UVM_TESTNAME=simple_test -testplusarg UVM_VERBOSITY=UVM_LOW -sv_seed random} -objects [get_filesets sim_1]
 
 #Pokretanje simulacije
-
 launch_simulation
+run 100 ms
+exec xcrg -report_format html -dir uvm_project/gaussian_blur_verif.sim/sim_1/behav/xsim -report_dir coverage
+#start_gui
+
