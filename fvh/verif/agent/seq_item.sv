@@ -28,15 +28,15 @@
     parameter BRAM_ADDR_WIDTH = 15;
     parameter BYTE_OFFSET = 2;
     
-    parameter AXI_BASE = 5'b00000;
-    parameter START_REG_OFFSET = 0;
-    parameter RESET_REG_OFFSET = 4;  
-    parameter IMG_WIDTH_REG_OFFSET = 8; 
-    parameter IMG_HEIGHT_REG_OFFSET = 12;
-    parameter IMG_OFFSET_UP_REG_OFFSET = 16; 
-    parameter IMG_OFFSET_DOWN_REG_OFFSET = 20;
-    parameter NUM_IMG_OCT_REG_OFFSET = 24;
-    parameter READY_REG_OFFSET = 28;
+    parameter AXI_BASE = 5'b00000;  
+    parameter IMG_WIDTH_REG_OFFSET = 5'b00000; 
+    parameter IMG_HEIGHT_REG_OFFSET = 5'b00100;
+    parameter IMG_OFFSET_UP_REG_OFFSET = 5'b01000; 
+    parameter IMG_OFFSET_DOWN_REG_OFFSET = 5'b01100;
+    parameter NUM_IMG_OCT_REG_OFFSET = 5'b10000;
+    parameter START_REG_OFFSET = 5'b11000;
+    parameter RESET_REG_OFFSET = 5'b10100;
+    parameter READY_REG_OFFSET = 5'b11100;
     
     parameter C_S00_AXI_DATA_WIDTH = 32;
     parameter C_S00_AXI_ADDR_WIDTH = 5;
@@ -79,6 +79,7 @@ class gaussian_blur_seq_item extends uvm_sequence_item;
 		`uvm_field_int(main_bram_a_en_i, UVM_DEFAULT)	   
 		`uvm_field_int(main_bram_a_we_i, UVM_DEFAULT)
 		`uvm_field_int(main_bram_a_addr_i, UVM_DEFAULT)
+		`uvm_field_int(main_bram_a_rdata_o, UVM_DEFAULT)
 		`uvm_field_int(main_bram_a_wdata_i, UVM_DEFAULT)
 		
 		`uvm_field_int(s00_axi_awaddr, UVM_DEFAULT)
@@ -109,7 +110,7 @@ class gaussian_blur_seq_item extends uvm_sequence_item;
    	constraint axi_wstrb_constr {s00_axi_wstrb inside {4'b1111, 4'b0000};};
    	
    	//Constraint for bram adress
-   	constraint main_bram_addr_constr {main_bram_a_addr_i < BRAM_SIZE; };
+   	constraint main_bram_addr_constr {main_bram_a_addr_i < 4*BRAM_SIZE; };
    	
    	//Constraints for bram data
    	constraint main_bram_wdata_up_constr {main_bram_a_wdata_i[2 * DATA_WIDTH -1] == 1'b0; main_bram_a_wdata_i[2 * DATA_WIDTH -2] == 1'b0;};

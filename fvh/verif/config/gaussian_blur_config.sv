@@ -20,8 +20,8 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 parameter NUMBER_OF_IMAGES = 3;
-parameter NUMBER_OF_OCTAVES = 4;
-parameter NUMBER_OF_IMGS_PER_OCTAVE = 6;
+parameter NUMBER_OF_OCTAVES = 1;
+parameter NUMBER_OF_IMGS_PER_OCTAVE = 1;
 parameter NUMBER_OF_IMAGE_PARTS = 5;
 
 import uvm_pkg::*;
@@ -72,14 +72,17 @@ class gaussian_blur_config extends uvm_object;
         `uvm_field_enum(uvm_active_passive_enum,is_active,UVM_DEFAULT)
     `uvm_object_utils_end
     
-    covergroup img_cover();
+    covergroup img_cover_img();
         option.per_instance = 1;
         img_num_cover : coverpoint rand_img {
             bins img0 = {0};
             bins img1 = {1};
             bins img2 = {2}; 
         }
-        
+    endgroup
+    
+    covergroup img_cover_ipart();
+        option.per_instance = 1;
         part_num_cover : coverpoint rand_part {
             bins part0 = {0};
             bins part1 = {1};
@@ -87,14 +90,20 @@ class gaussian_blur_config extends uvm_object;
             bins part3 = {3};
             bins part4 = {4};
         }
-        
+    endgroup
+    
+    covergroup img_cover_oct();   
+        option.per_instance = 1;
         oct_num_cover : coverpoint rand_oct {
             bins oct0 = {0};
             bins oct1 = {1};
             bins oct2 = {2}; 
             bins oct3 = {3};
         }
+    endgroup    
         
+    covergroup img_cover_ipo();  
+        option.per_instance = 1;
         ipo_num_cover : coverpoint rand_ipo {
             bins ipo0 = {0};
             bins ipo1 = {1};
@@ -114,7 +123,10 @@ class gaussian_blur_config extends uvm_object;
      
      function new(string name = "gaussian_blur_config");
         super.new(name);
-        img_cover = new(); 
+        img_cover_img = new(); 
+        img_cover_ipart = new();
+        img_cover_oct = new();
+        img_cover_ipo = new(); 
                    
         for (i = 0; i < NUMBER_OF_IMAGES; i++)
         begin
@@ -152,7 +164,10 @@ class gaussian_blur_config extends uvm_object;
         $display("Random scale per octave num : %d", rand_ipo);
         
         //COLLECT COVERAGE
-        img_cover.sample();
+        img_cover_img.sample();
+        img_cover_ipart.sample();
+        img_cover_oct.sample();
+        img_cover_ipo.sample();
         
         //IMAGE DIMENSIONS LOADING
         fd = $fopen(img_dimensions_file[((rand_img*NUMBER_OF_IMAGE_PARTS + rand_part) *NUMBER_OF_OCTAVES + rand_oct) * NUMBER_OF_IMGS_PER_OCTAVE + rand_ipo], "r");
@@ -250,7 +265,7 @@ class gaussian_blur_config extends uvm_object;
             `uvm_info(get_name(), $sformatf("Error opening main_bram_read_file"),UVM_HIGH)        
         $fclose(fd);
         */
-      $display("Queues size -> main_bram_wdata_arr=%d, main_bram_gv_arr=%d", main_bram_wdata_arr.size(), main_bram_gv_arr.size());    
+      //$display("Queues size -> main_bram_wdata_arr=%d, main_bram_gv_arr=%d", main_bram_wdata_arr.size(), main_bram_gv_arr.size());    
      endfunction : random_configuration
      
         

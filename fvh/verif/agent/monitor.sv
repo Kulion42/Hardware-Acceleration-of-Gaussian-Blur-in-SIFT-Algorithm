@@ -71,7 +71,7 @@ class gaussian_blur_monitor extends uvm_monitor;
         
         forever begin
         @(posedge vif.clk);
-        if(!vif.rst)
+        if(vif.rst)
         begin
             curr_it = gaussian_blur_seq_item::type_id::create("curr_it",this);
             if (curr_it == null) begin

@@ -162,10 +162,10 @@ class gaussian_blur_driver extends uvm_driver#(gaussian_blur_seq_item);
                     end   
 
 
-                    if(req.s00_axi_awaddr == AXI_BASE + RESET_REG_OFFSET && req.s00_axi_wdata == 1)
+                    if(req.s00_axi_awaddr == AXI_BASE + RESET_REG_OFFSET && req.s00_axi_wdata == 32'd1)
                     begin
 
-                        /*$display("\nWaiting for a ready on the initialization... \n");
+                        $display("\nWaiting for a ready on the initialization... \n");
                         vif.s00_axi_arprot = 3'b000;
                         vif.s00_axi_araddr = AXI_BASE + READY_REG_OFFSET;
                         vif.s00_axi_arvalid = 1'b1;
@@ -179,7 +179,7 @@ class gaussian_blur_driver extends uvm_driver#(gaussian_blur_seq_item);
                         vif.s00_axi_arvalid = 1'b0;
                         
                         wait(vif.s00_axi_rdata == 1)
-                        */
+                        
                             $display("\nReset detected!\n");
                             vif.s00_axi_awaddr = AXI_BASE + RESET_REG_OFFSET;
                             vif.s00_axi_wdata = 32'd0;
@@ -203,7 +203,7 @@ class gaussian_blur_driver extends uvm_driver#(gaussian_blur_seq_item);
                             vif.s00_axi_bready = 1'b0;
                             $display("\nReset signal taken down! \n");
 
-                        vif.s00_axi_rready = 1'b0;
+                        //vif.s00_axi_rready = 1'b0;
 
                     end
                     $display("Axi Lite transaction completed! \n");

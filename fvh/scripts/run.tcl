@@ -55,7 +55,12 @@ set_property -name {xsim.simulate.xsim.more_options} -value {-testplusarg UVM_TE
 
 #Pokretanje simulacije
 launch_simulation
-run 100 ms
+
+add_wave {{/gaussian_blur_top/DUT/top_model_instance/start}} 
+add_wave {{/gaussian_blur_top/DUT/top_model_instance/ready}} 
+add_wave {{/gaussian_blur_top/DUT/top_model_instance/gauss_blur/start_x_conv}} {{/gaussian_blur_top/DUT/top_model_instance/gauss_blur/end_x_conv}}
+
+run all
 exec xcrg -report_format html -dir uvm_project/gaussian_blur_verif.sim/sim_1/behav/xsim -report_dir coverage
 #start_gui
 
