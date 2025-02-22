@@ -50,8 +50,8 @@ architecture Behavioral of check_top_model is
     constant SHIFT_W1: integer := 1;
     constant SHIFT_W2: integer := 15;
         
-    file init_txt : text open write_mode is "../../../../../../bram_init/bram_state_00_init.txt";
-    file save_txt : text open write_mode is "../../../../../../bram_save/bram_state_00_save.txt";
+    file init_txt : text open write_mode is "../../../../../../bram_init/bram_state_write.txt";
+    file save_txt : text open write_mode is "../../../../../../bram_save/bram_state_read.txt";
 
     --signali
     signal clk_s : std_logic ;
@@ -198,12 +198,19 @@ begin
         main_a_addr_s <= std_logic_vector(TO_UNSIGNED(i , log2c(BRAM_SIZE/2))); 
         wait until rising_edge(clk_s);
         wait until rising_edge(clk_s);
+        write(row, string'("Read_Pix1: "), left, SHIFT_W1);
+        write(row, TO_INTEGER(unsigned(bram2_a_rdata_s(2 * DATA_WIDTH -1 downto DATA_WIDTH))), left , SHIFT_W2);
+        write(row, string'("Read_Pix2: "), left, SHIFT_W1);
+        write(row, TO_INTEGER(unsigned(bram2_a_rdata_s(DATA_WIDTH -1 downto 0))), left , SHIFT_W2);    
+        write(row, string'("Read_Pixs_addr: "), left, SHIFT_W1);
+        write(row, TO_INTEGER(unsigned(main_a_addr_s)), left , SHIFT_W2);
+        writeline(save_txt, row);
     end loop;
     main_a_en_s <= '0';             
 wait;
 end process;  
               
-write_proc_y: process(main_a_wdata_s, main_a_addr_s, main_a_we_s)
+write_proc: process(main_a_wdata_s, main_a_addr_s, main_a_we_s)
 variable row: line;
 begin
 if main_a_we_s = "1111" then
@@ -216,20 +223,5 @@ if main_a_we_s = "1111" then
     writeline(init_txt, row);
 end if;
 end process;
-
-write_proc_x: process(bram2_a_rdata_s, main_a_addr_s, main_a_we_s)
-variable row: line;
-begin
-if bram_a_en_s = '1' and TO_INTEGER(unsigned(bram2_a_rdata_s)) /= 0 then
-    write(row, string'("Read_Pix1: "), left, SHIFT_W1);
-    write(row, TO_INTEGER(unsigned(bram2_a_rdata_s(2 * DATA_WIDTH -1 downto DATA_WIDTH))), left , SHIFT_W2);
-    write(row, string'("Read_Pix2: "), left, SHIFT_W1);
-    write(row, TO_INTEGER(unsigned(bram2_a_rdata_s(DATA_WIDTH -1 downto 0))), left , SHIFT_W2);    
-    write(row, string'("Read_Pixs_addr: "), left, SHIFT_W1);
-    write(row, TO_INTEGER(unsigned(main_a_addr_s)), left , SHIFT_W2);
-    writeline(save_txt, row); 
-end if;     
-end process;
-
 end Behavioral;
 
