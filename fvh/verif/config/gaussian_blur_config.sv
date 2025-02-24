@@ -58,15 +58,12 @@ class gaussian_blur_config extends uvm_object;
     string main_bram_gv_file[NUMBER_OF_IMAGES * NUMBER_OF_OCTAVES * NUMBER_OF_IMGS_PER_OCTAVE * NUMBER_OF_IMAGE_PARTS];
     string main_bram_load_file[NUMBER_OF_IMAGES * NUMBER_OF_OCTAVES * NUMBER_OF_IMGS_PER_OCTAVE * NUMBER_OF_IMAGE_PARTS];
     string main_bram_read_file[NUMBER_OF_IMAGES * NUMBER_OF_OCTAVES * NUMBER_OF_IMGS_PER_OCTAVE * NUMBER_OF_IMAGE_PARTS];
-    //string tmp_bram_read_file[NUMBER_OF_IMAGES * NUM_OF_OCTAVES * NUMBER_OF_SCALES_PER_OCTAVE * NUMBER_OF_IMAGE_PARTS];
     //--------------------------------------------------------------------------------------------------------------------
     
     int fd;
     
     int main_bram_gv_arr[$];
-    int main_bram_rdata_arr[$];
     int main_bram_wdata_arr[$];    
-    //int tmp_bram_rdata[$];
     
     `uvm_object_utils_begin(gaussian_blur_config)
         `uvm_field_enum(uvm_active_passive_enum,is_active,UVM_DEFAULT)
@@ -225,46 +222,6 @@ class gaussian_blur_config extends uvm_object;
             `uvm_info(get_name(), $sformatf("Error opening main_bram_load_file"),UVM_HIGH)        
         $fclose(fd);
         //------------------------------------------------------------------------------------------
-        
-        //MAIN BRAM READING
-        
-        fd = $fopen(main_bram_read_file[((rand_img*NUMBER_OF_IMAGE_PARTS + rand_part) *NUMBER_OF_OCTAVES + rand_oct) * NUMBER_OF_IMGS_PER_OCTAVE + rand_ipo], "w+");
-        
-        if (fd) begin
-            `uvm_info(get_name(), $sformatf("Successfully opened main_bram_read_file"),UVM_HIGH)
-            
-           /* while(!$feof(fd)) begin
-                $fscanf(fd, "%d\t%d\n", tmp1, tmp2);
-                tmp = {tmp1, tmp2};
-                main_bram_rdata_arr.push_back(tmp);
-            end */
-            while ((main_bram_rdata_arr.size == img_width * img_height/2 || read_bram == 1) && main_bram_rdata_arr.size() > 0) begin
-                tmp = main_bram_rdata_arr.pop_front();
-                tmp1 = (tmp >> 16) & 16'hffff;
-                tmp2 = tmp & 16'hffff;
-                $fdisplay(fd, "%d\t%d\n", tmp1, tmp2);
-                read_bram = 1;
-           end 
-        end
-        else
-            `uvm_info(get_name(), $sformatf("Error opening main_bram_read_file"),UVM_HIGH)        
-        $fclose(fd);
-        
-       /* fd = $fopen(main_bram_read_file[((rand_img*NUMBER_OF_IMAGE_PARTS + rand_part) *NUMBER_OF_OCTAVES + rand_oct) * NUMBER_OF_IMGS_PER_OCTAVE + rand_ipo], "r");
-        
-        if (fd) begin
-            `uvm_info(get_name(), $sformatf("Successfully opened main_bram_read_file"),UVM_HIGH)
-            
-            while(!$feof(fd)) begin
-                $fscanf(fd, "%d\t%d\n", tmp1, tmp2);
-                tmp = {tmp1, tmp2};
-                main_bram_rdata_arr.push_back(tmp);
-            end
-        end
-        else
-            `uvm_info(get_name(), $sformatf("Error opening main_bram_read_file"),UVM_HIGH)        
-        $fclose(fd);
-        */
       //$display("Queues size -> main_bram_wdata_arr=%d, main_bram_gv_arr=%d", main_bram_wdata_arr.size(), main_bram_gv_arr.size());    
      endfunction : random_configuration
      

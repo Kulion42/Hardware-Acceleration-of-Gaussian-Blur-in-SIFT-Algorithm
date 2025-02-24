@@ -26,7 +26,8 @@ class gaussian_blur_monitor extends uvm_monitor;
 
     bit checks_enable = 1;
     bit coverage_enable = 1;
-    
+    int fd;
+    int tmp, tmp1, tmp2;
     gaussian_blur_config cfg;
     
     uvm_analysis_port #(gaussian_blur_seq_item) item_collected_port;
@@ -69,6 +70,12 @@ class gaussian_blur_monitor extends uvm_monitor;
         wait(vif.s00_axi_rdata == 0)
         wait(vif.s00_axi_rdata == 1)
         
+        fd = $fopen(cfg.main_bram_read_file[((cfg.rand_img*NUMBER_OF_IMAGE_PARTS + cfg.rand_part) *NUMBER_OF_OCTAVES + cfg.rand_oct) * NUMBER_OF_IMGS_PER_OCTAVE + cfg.rand_ipo], "w+");
+        if (fd) 
+            `uvm_info(get_name(), $sformatf("Successfully opened main_bram_read_file"),UVM_HIGH)
+        else
+            `uvm_info(get_name(), $sformatf("Error opening main_bram_read_file"),UVM_HIGH)
+                        
         forever begin
         @(posedge vif.clk);
         if(vif.rst)
@@ -83,13 +90,22 @@ class gaussian_blur_monitor extends uvm_monitor;
                 //bram_cover.sample();
                 `uvm_info(get_type_name(), $sformatf("[Monitor] Gathering information..."), UVM_MEDIUM);
                 
-                curr_it.main_bram_a_addr_i = vif.main_bram_a_addr_i;
+                curr_it.main_bram_a_addr_i = vif.main_bram_a_addr_i - 4;
                 curr_it.main_bram_a_rdata_o = vif.main_bram_a_rdata_o;
-
+                
+                //MAIN BRAM READING      
+                
+                if (fd) begin                  
+                    tmp = vif.main_bram_a_rdata_o;
+                    tmp1 = (tmp >> 16) & 16'hffff;
+                    tmp2 = tmp & 16'hffff;
+                    $fdisplay(fd, "Pix1 = %0d\tPix2 = %0d\t Addr = %0d", tmp1, tmp2, curr_it.main_bram_a_addr_i/4);
+                end 
                 item_collected_port.write(curr_it);
             end 
-        end 
-        end   
+        end
+        end
+        $fclose(fd);    
    endtask 
 
 endclass : gaussian_blur_monitor

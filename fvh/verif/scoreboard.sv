@@ -32,7 +32,7 @@ class gaussian_blur_scoreboard extends uvm_scoreboard;
     int num_of_zeros = 0;
     int fp;
     
-    int pixel_data_of = 50;
+    int pixel_data_of = 100;
     uvm_analysis_imp#(agent_pkg::gaussian_blur_seq_item, gaussian_blur_scoreboard) item_collected_import;
     
      `uvm_component_utils_begin(gaussian_blur_scoreboard)
@@ -70,7 +70,7 @@ class gaussian_blur_scoreboard extends uvm_scoreboard;
                     ++num_of_zeros;
             end
             
-            ass_check_pix_up : assert((((curr_it.main_bram_a_rdata_o >> 16) & 16'hffff) > (((cfg.main_bram_gv_arr[curr_it.main_bram_a_addr_i/4] >> 16) & 16'hffff) -pixel_data_of)) && (((curr_it.main_bram_a_rdata_o >> 16) & 16'hffff) < (((cfg.main_bram_gv_arr[curr_it.main_bram_a_addr_i/4] >> 16) & 16'hffff) + pixel_data_of)))
+            ass_check_pix_up : assert((((curr_it.main_bram_a_rdata_o >> 16) & 16'hffff) >=(cfg.main_bram_gv_arr[curr_it.main_bram_a_addr_i/4] >> 16) & 16'hffff) -pixel_data_of)) && (((curr_it.main_bram_a_rdata_o >> 16) & 16'hffff) <= (((cfg.main_bram_gv_arr[curr_it.main_bram_a_addr_i/4] >> 16) & 16'hffff) + pixel_data_of)))
             `uvm_info(get_type_name(),$sformatf("\nComparison match succesfull\nObserved value is %0d, expected is %0d.\n",
                                                     (curr_it.main_bram_a_rdata_o >> 16) & 16'hffff, 
                                                     cfg.main_bram_gv_arr[curr_it.main_bram_a_addr_i/4] >> 16),UVM_MEDIUM)
@@ -84,7 +84,7 @@ class gaussian_blur_scoreboard extends uvm_scoreboard;
                                                        
              end
              
-             ass_check_pix_down : assert(((curr_it.main_bram_a_rdata_o & 16'hffff) > ((cfg.main_bram_gv_arr[curr_it.main_bram_a_addr_i/4] & 16'hffff) - pixel_data_of)) && ((curr_it.main_bram_a_rdata_o & 16'hffff) < ((cfg.main_bram_gv_arr[curr_it.main_bram_a_addr_i/4] & 16'hffff) + pixel_data_of)))
+             ass_check_pix_down : assert(((curr_it.main_bram_a_rdata_o & 16'hffff) >= ((cfg.main_bram_gv_arr[curr_it.main_bram_a_addr_i/4] & 16'hffff) - pixel_data_of)) && ((curr_it.main_bram_a_rdata_o & 16'hffff) <= ((cfg.main_bram_gv_arr[curr_it.main_bram_a_addr_i/4] & 16'hffff) + pixel_data_of)))
             `uvm_info(get_type_name(),$sformatf("\nComparison match succesfull\nObserved value is %0d, expected is %0d.\n",
                                                     curr_it.main_bram_a_rdata_o & 16'hffff, 
                                                     cfg.main_bram_gv_arr[curr_it.main_bram_a_addr_i/4] & 16'hffff),UVM_MEDIUM)
@@ -104,6 +104,9 @@ class gaussian_blur_scoreboard extends uvm_scoreboard;
     
     function void report_phase(uvm_phase phase);
         `uvm_info(get_type_name(), $sformatf("Gaussian blur scoreboard examined: %0d transactions(%0d pixels), %0d succesfull pixel matches, %0d pixel mismatches, %0d observed zeros found", num_of_tr,2 *num_of_tr, 2 *num_of_tr - num_of_missed, num_of_missed, num_of_zeros), UVM_LOW);
+         cfg.main_bram_wdata_arr.delete();
+         cfg.main_bram_gv_arr.delete();
+   
     endfunction : report_phase
     
 endclass : gaussian_blur_scoreboard

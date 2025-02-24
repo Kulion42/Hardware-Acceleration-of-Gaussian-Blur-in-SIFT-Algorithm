@@ -11,7 +11,8 @@ use work.txt_util.all;
 entity bram1 is
     generic (WIDTH: positive := 15;
              R_W_BYTES: positive := 1;
-             SIZE: positive := 60000);
+             SIZE: positive := 60000;
+             LOAD_FILE_NAME : string := "/home/luka/sift-cpp-master/virtual_platform/test/bram_state_2_ipart_0_0.txt");
     port (clk_a : in std_logic;
           clk_b : in std_logic;
           en_a: in std_logic;
@@ -45,7 +46,8 @@ architecture Behavioral of bram1 is
         return RAM;
     end function;
 
-    signal RAM : ram_type := InitRamFromFile("../../../../../../load_bram/bram_state_0_ipart_0_0.txt");  
+    signal RAM : ram_type := InitRamFromFile(LOAD_FILE_NAME);  
+    --signal RAM : ram_type := InitRamFromFile("/home/luka/sift-cpp-master/virtual_platform/convolutions/convolute_y_0bit.txt");
     attribute ram_style: string;
     attribute ram_style of RAM: signal is "block";   
 begin
