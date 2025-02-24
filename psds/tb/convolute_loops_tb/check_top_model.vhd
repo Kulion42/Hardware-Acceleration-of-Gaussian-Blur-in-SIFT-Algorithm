@@ -49,10 +49,11 @@ architecture Behavioral of check_top_model is
     constant KERNEL_ROM_SIZE : integer :=77;
     constant SHIFT_W1: integer := 1;
     constant SHIFT_W2: integer := 8;
-    constant FILE_NAME: string := "/home/luka/sift-cpp-master/virtual_platform/test/bram_state_2_ipart_0_0.txt";
+    constant FILE_NAME: string := "../../../../../../../tb/load_bram/bram_state_2_ipart_0_0.txt";
+    --/home/luka/y24-g10/psds/tb/load_bram/bram_state_2_ipart_0_0.txt
    
-    file init_txt : text open write_mode is "/home/luka/sift-cpp-master/psds/tb/saved/bram_init_top.txt";
-    file save_txt : text open write_mode is "/home/luka/sift-cpp-master/psds/tb/saved/bram_save_top.txt";
+    file init_txt : text open write_mode is "../../../../../../../tb/bram_init/bram_init_top.txt";
+    file save_txt : text open write_mode is "../../../../../../../tb/bram_save/bram_save_top.txt";
     --signali
     signal clk_s : std_logic ;
     signal reset_s : std_logic;
