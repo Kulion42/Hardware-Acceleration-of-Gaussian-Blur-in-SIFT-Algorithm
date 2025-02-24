@@ -70,7 +70,7 @@ class gaussian_blur_scoreboard extends uvm_scoreboard;
                     ++num_of_zeros;
             end
             
-            ass_check_pix_up : assert((((curr_it.main_bram_a_rdata_o >> 16) & 16'hffff) >=(cfg.main_bram_gv_arr[curr_it.main_bram_a_addr_i/4] >> 16) & 16'hffff) -pixel_data_of)) && (((curr_it.main_bram_a_rdata_o >> 16) & 16'hffff) <= (((cfg.main_bram_gv_arr[curr_it.main_bram_a_addr_i/4] >> 16) & 16'hffff) + pixel_data_of)))
+            ass_check_pix_up : assert((((curr_it.main_bram_a_rdata_o >> 16) & 16'hffff) >= ((cfg.main_bram_gv_arr[curr_it.main_bram_a_addr_i/4] >> 16) & 16'hffff) -pixel_data_of) && (((curr_it.main_bram_a_rdata_o >> 16) & 16'hffff) <= (((cfg.main_bram_gv_arr[curr_it.main_bram_a_addr_i/4] >> 16) & 16'hffff) + pixel_data_of)))
             `uvm_info(get_type_name(),$sformatf("\nComparison match succesfull\nObserved value is %0d, expected is %0d.\n",
                                                     (curr_it.main_bram_a_rdata_o >> 16) & 16'hffff, 
                                                     cfg.main_bram_gv_arr[curr_it.main_bram_a_addr_i/4] >> 16),UVM_MEDIUM)

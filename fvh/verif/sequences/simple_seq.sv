@@ -117,7 +117,7 @@ class gaussian_blur_simple_seq extends seq_pkg::gaussian_blur_base_seq;
          for (i = 0 ; i < p_sequencer.cfg.img_width*p_sequencer.cfg.img_height/2 ; i++)
             begin
                 `uvm_do_with(req_item,{   req_item.bram_axi_ctrl == 0;    req_item.main_bram_a_en_i == 1'b1;    req_item.main_bram_a_we_i == 4'b1111;    req_item.main_bram_a_addr_i == i*4; req_item.main_bram_a_wdata_i == p_sequencer.cfg.main_bram_wdata_arr[i];});                    
-                    $display("Data sent=%0d[%0d]", req_item.main_bram_a_wdata_i, i);
+                    //$display("Data sent=%0d[%0d]", req_item.main_bram_a_wdata_i, i);
                     pix_up =  p_sequencer.cfg.main_bram_wdata_arr[i] >> 16;
                     pix_down =  p_sequencer.cfg.main_bram_wdata_arr[i] & 16'hffff;
                     //COLLECT COVERAGE
@@ -151,7 +151,7 @@ class gaussian_blur_simple_seq extends seq_pkg::gaussian_blur_base_seq;
             begin
                 `uvm_do_with(req_item,{   req_item.bram_axi_ctrl == 0;    req_item.main_bram_a_en_i == 1'b1;    req_item.main_bram_a_we_i == 4'b0000;    req_item.main_bram_a_addr_i == i*4;});
             end
-            $display("Queues size -> main_bram_wdata_arr=%d, main_bram_gv_arr=%d", p_sequencer.cfg.main_bram_wdata_arr.size(), p_sequencer.cfg.main_bram_gv_arr.size())
+            $display("Queues size -> main_bram_wdata_arr=%d, main_bram_gv_arr=%d", p_sequencer.cfg.main_bram_wdata_arr.size(), p_sequencer.cfg.main_bram_gv_arr.size());
             
         // ----------------------------------------------------------------------------------------------------------------------------------------------        
         $display("\nFinished\n");
