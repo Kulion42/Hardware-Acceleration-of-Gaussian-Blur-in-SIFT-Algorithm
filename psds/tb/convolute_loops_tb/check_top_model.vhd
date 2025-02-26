@@ -73,7 +73,6 @@ architecture Behavioral of check_top_model is
     signal main_a_we_s: std_logic_vector(3 downto 0);
     signal main_a_addr_s: std_logic_vector(log2c(BRAM_SIZE/2) - 1 downto 0);
     signal main_a_rdata_s: std_logic_vector(2 *DATA_WIDTH -1 downto 0);
-    signal bram2_a_rdata_s: std_logic_vector(2 *DATA_WIDTH -1 downto 0);
     signal main_a_wdata_s: std_logic_vector(2 *DATA_WIDTH -1 downto 0);
     
     

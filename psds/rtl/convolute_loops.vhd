@@ -181,10 +181,10 @@ begin
     case state_reg is    
         when idle =>
             if start = '1' then
-                state_next <= loops;  
-                                               
+                state_next <= loops;                                                
             else
-                state_next <= idle;                                                                
+                ready <= '1';                                                                
+                state_next <= idle;
             end if;
             
         when loops => 
@@ -326,12 +326,11 @@ y_coord <= std_logic_vector(y) ;
 
 x1_coord <= std_logic_vector(x + 1) when W_PIXEL = 1
             else std_logic_vector(x/2);
-x2_coord <= std_logic_vector(x) when W_PIXEL = 1
-            else (others => '0');
+x2_coord <= std_logic_vector(x) ;
 
 c_x1_vec <= std_logic_vector(c_x1);
-c_x2_vec <= std_logic_vector(c_x2 -1) when W_PIXEL =1 and c_x2 /=0
-            else std_logic_vector(c_x2);
+c_x2_vec <= std_logic_vector(c_x2 -1) when W_PIXEL =1 and c_x2 /=0 else 
+            std_logic_vector(c_x2);
 c_y_vec <= std_logic_vector(c_y);
 
 img_w1 <= img_width when W_PIXEL = 1

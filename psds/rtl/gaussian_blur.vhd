@@ -150,7 +150,7 @@ Port (
 );
 end component;
 
-signal rom_a_en,rom_b_en, start_x_conv, end_x_conv, end_y_conv: std_logic;
+signal rom_a_en,rom_b_en, start_x_conv, end_x_conv, end_y_conv, edge_reg_o: std_logic;
 signal rom_a_addr, rom_b_addr: std_logic_vector(log2c(KERNEL_ROM_SIZE) -1 downto 0);
 signal rom_a_data, rom_b_data: std_logic_vector(DATA_WIDTH -1 downto 0);
 signal size: std_logic_vector(DATA_WIDTH/2 -1 downto 0);
@@ -288,19 +288,15 @@ x_conv_gen: convolute_loops
                         else write_y_b_addr;
     tmp_bram_a_addr <= read_x_a_addr when start_x_conv = '1'
                         else write_y_a_addr;
-start_x_proc: process(end_y_conv)
-begin
-    if falling_edge(end_y_conv) then
-        start_x_conv <= '0';    
-    end if;    
-    if rising_edge(end_y_conv) then
-        start_x_conv <= '1';
+                        
+start_x_proc: process(clk)
+begin    
+    if rising_edge(clk) then
+        edge_reg_o <= not(end_y_conv);   
     end if;
-
+    start_x_conv <= edge_reg_o and end_y_conv;
 end process;
-                                                               
-   -- start_x_conv <= '0' when main_bram_a_en = '1' else end_y_conv; 
-    ready <= end_y_conv and end_x_conv when reset = '0'
-             else '1';                     
+
+ready <= end_y_conv and end_x_conv and not(edge_reg_o);                                                                                    
                                 
 end Mixed;
