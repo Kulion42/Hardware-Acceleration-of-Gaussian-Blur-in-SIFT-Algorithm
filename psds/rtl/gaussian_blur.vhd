@@ -275,19 +275,28 @@ x_conv_gen: convolute_loops
         ready => end_x_conv
     );
     
-    main_bram_b_we <= main_we_x when start_x_conv = '1'
-                      else main_we_y;
-    tmp_bram_a_we <= tmp_we_a_x when start_x_conv = '1'
-                      else tmp_we_a_y;
-    tmp_bram_b_we <= tmp_we_b_x when start_x_conv = '1'
-                      else tmp_we_b_y;
-                      
-    main_bram_b_addr <= read_y_b_addr when end_y_conv = '0'
-                        else write_x_b_addr;                   
-    tmp_bram_b_addr <= read_x_b_addr when start_x_conv = '1'
-                        else write_y_b_addr;
-    tmp_bram_a_addr <= read_x_a_addr when start_x_conv = '1'
-                        else write_y_a_addr;
+write_read_ctrl: process(end_y_conv, main_we_y, tmp_we_a_y, tmp_we_b_y, read_y_b_addr, write_y_b_addr, 
+write_y_a_addr, main_we_x, tmp_we_a_x, tmp_we_b_x, write_x_b_addr, read_x_b_addr, read_x_a_addr)
+begin    
+    if (end_y_conv = '0') then
+        main_bram_b_we <= main_we_y;
+        tmp_bram_a_we <= tmp_we_a_y;
+        tmp_bram_b_we <= tmp_we_b_y;
+                          
+        main_bram_b_addr <= read_y_b_addr;                   
+        tmp_bram_b_addr <= write_y_b_addr;
+        tmp_bram_a_addr <= write_y_a_addr;
+    else
+        main_bram_b_we <= main_we_x;
+        tmp_bram_a_we <= tmp_we_a_x;
+        tmp_bram_b_we <= tmp_we_b_x;
+                          
+        main_bram_b_addr <= write_x_b_addr;                   
+        tmp_bram_b_addr <= read_x_b_addr;
+        tmp_bram_a_addr <= read_x_a_addr;
+    end if;              
+
+end process;                        
                         
 start_x_proc: process(clk)
 begin    

@@ -45,6 +45,8 @@ launch_simulation
 
 add_wave {{/check_top_model/TOP/gauss_blur/end_y_conv}} 
 add_wave {{/check_top_model/TOP/gauss_blur/start_x_conv}}
+add_wave {{/check_top_model/TOP/gauss_blur/main_bram_b_we}} {{/check_top_model/TOP/gauss_blur/main_bram_b_addr}} {{/check_top_model/TOP/gauss_blur/tmp_bram_a_we}} {{/check_top_model/TOP/gauss_blur/tmp_bram_a_addr}} {{/check_top_model/TOP/gauss_blur/tmp_bram_b_we}} {{/check_top_model/TOP/gauss_blur/tmp_bram_b_addr}} 
+
 
 run 20 ms
 start_gui
