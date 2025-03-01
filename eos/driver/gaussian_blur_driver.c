@@ -270,9 +270,9 @@ static int gaussian_blur_close(struct inode *i, struct file *f)
 
 
 //*****//
-int main_bram_i = 0;
+u32 main_bram_i = 0;
 int endRead = 0;
-int width, height;
+u16 width, height;
 int ready = 1;
 //*****//
 
@@ -284,8 +284,8 @@ ssize_t gaussian_blur_read(struct file *pfile, char __user *buf, size_t length, 
 {
 	char buff[BUFF_SIZE];
 	long int len = 0;
-	int main_bram_val;
-	int gaussian_blur_val[8];
+	u32 main_bram_val;
+	u16 gaussian_blur_val[8];
 	int minor = MINOR(pfile->f_inode->i_rdev);
   
 	if(down_interruptible(&sem))
@@ -314,10 +314,13 @@ ssize_t gaussian_blur_read(struct file *pfile, char __user *buf, size_t length, 
 			if(main_bram_i < width*height/2) //na svaku lokaciju idu po 2 piksela
 			{	
 			  //citaju se 2 piksela od jednom od strane drajvera i prosledjuju u aplikaciju, tamo se dele
-				main_bram_val = ioread32(main_bram->base_addr + ADDR_FACTOR * main_bram_i);
-				len = scnprintf(buff, BUFF_SIZE, "%d ", main_bram_val);
-				main_bram_i++;
-				//printk(KERN_INFO "gaussian_blur_read: main_bram[%d] = %d\n", main_bram_i, main_bram_val);
+				main_bram_val = ioread32(main_bram->base_addr + ADDR_FACTOR * main_bram_i/2);
+				len = scnprintf(buff, BUFF_SIZE, "%u ", main_bram_val);
+				
+				printk(KERN_INFO "gaussian_blur_read: main_bram[%" PRIu32 "] = %" PRIu16 "\n", main_bram_i, (main_bram_val & 0xFFFF));
+				printk(KERN_INFO "gaussian_blur_read: main_bram[%" PRIu32 "] = %" PRIu16 "\n", main_bram_i + 1, ((main_bram_val >> 16) & 0xFFFF));
+				
+				main_bram_i+=2;
 
 				if (copy_to_user(buf, buff, len))
 				{
@@ -341,15 +344,15 @@ ssize_t gaussian_blur_read(struct file *pfile, char __user *buf, size_t length, 
 			gaussian_blur_val[2] = ioread32(gaussian_blur_core->base_addr + IMG_OFFSET_UP_REG_OFFSET); 
 			gaussian_blur_val[3] = ioread32(gaussian_blur_core->base_addr + IMG_OFFSET_UP_DOWN_REG_OFFSET); 
 			gaussian_blur_val[4] = ioread32(gaussian_blur_core->base_addr + IMG_OCTAVE_NUM_REG_OFFSET); 
-			//gaussian_blur_val[5] = ioread32(gaussian_blur_core->base_addr + RESET_REG_OFFSET); 
-			//gaussian_blur_val[6] = ioread32(gaussian_blur_core->base_addr + START_REG_OFFSET); 
+			gaussian_blur_val[5] = ioread32(gaussian_blur_core->base_addr + RESET_REG_OFFSET); 
+			gaussian_blur_val[6] = ioread32(gaussian_blur_core->base_addr + START_REG_OFFSET); 
 			gaussian_blur_val[7] = ioread32(gaussian_blur_core->base_addr + READY_REG_OFFSET); 
 
 			ready = gaussian_blur_val[7];
 			wake_up_interruptible(&readyQ);
 
-			len = scnprintf(buff, BUFF_SIZE, "%d %d %d %d %d %d %d %d ", gaussian_blur_val[0], gaussian_blur_val[1], gaussian_blur_val[2], gaussian_blur_val[3], gaussian_blur_val[4], gaussian_blur_val[5], gaussian_blur_val[6], gaussian_blur_val[7]);
-			//printk(KERN_INFO "gaussian_blur_read: ready_reg = %d\n", gaussian_blur_val[7]);
+			len = scnprintf(buff, BUFF_SIZE, "%" PRIu16 " %" PRIu16 " %" PRIu16 " %" PRIu16 " %" PRIu16 " %" PRIu16 " %" PRIu16 " %" PRIu16 " ", gaussian_blur_val[0], gaussian_blur_val[1], gaussian_blur_val[2], gaussian_blur_val[3], gaussian_blur_val[4], gaussian_blur_val[5], gaussian_blur_val[6], gaussian_blur_val[7]);
+			printk(KERN_INFO "gaussian_blur_read: ready_reg = %" PRIu16 "\n", gaussian_blur_val[7]);
 
 			if (copy_to_user(buf, buff, len))
 			{	
@@ -375,9 +378,9 @@ ssize_t gaussian_blur_write(struct file *pfile, const char __user *buf, size_t l
 	char buff[BUFF_SIZE];
 	int minor = MINOR(pfile->f_inode->i_rdev);
 	
-	//mozda trebaju da budu uint16_t i uint32_t?
-	int pos = 0;
-	int val = 0;
+	//mozda trebaju da budu u16 i u32?
+	u32 val = 0;
+	u16 pos = 0;
 
 	if(down_interruptible(&sem))
 		return -ERESTARTSYS;
@@ -387,7 +390,8 @@ ssize_t gaussian_blur_write(struct file *pfile, const char __user *buf, size_t l
 	buff[length]='\0';
 
   //izvlacim vrednost 2 spojena piksela i poziciju u bram-u
-	sscanf(buff, "%d, %d\n", &val, &pos);
+  //hu je za short unsigned
+	sscanf(buff, "%u, %hu\n", &val, &pos);
 	
 	switch (minor)
 	{
@@ -403,7 +407,8 @@ ssize_t gaussian_blur_write(struct file *pfile, const char __user *buf, size_t l
 			
 			//dobijam 32 bitnu vrednost val i nju upisujem na 4*pos (pos je i/2 u aplikaciji)
 			iowrite32(val, main_bram->base_addr + ADDR_FACTOR * pos);
-			// printk(KERN_INFO "gaussian_blur_write: main_bram[%d] = %d\n", pos, val);
+			printk(KERN_INFO "gaussian_blur_write: main_bram[%d] = %d\n", pos, (val & 0xFFFF));
+			printk(KERN_INFO "gaussian_blur_write: main_bram[%d] = %d\n", pos+1, ((val >> 16) & 0xFFFF));
 			//**********************************************
 			
 			break;
