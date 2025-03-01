@@ -188,16 +188,16 @@ begin
             end if;
             
         when loops => 
-            if x>= signed(img_width) then             
+            if (R_PIXEL = 1 and y>= signed(img_height) - signed(img_offset_down) - signed(img_offset_up)) or (W_PIXEl = 1 and y>= signed(img_height) - signed(img_offset_down)) then             
                 state_next <= conv_end;          
-            elsif (R_PIXEL = 1 and y>= signed(img_height) - signed(img_offset_down) - signed(img_offset_up)) or (W_PIXEl = 1 and y>= signed(img_height) - signed(img_offset_down)) then    
-                y_next <= (others => '0'); 
-                x_next <= x + 2;
+            elsif x>= signed(img_width) then    
+                y_next <= y + 1; 
+                x_next <= (others => '0');
                 state_next <= loops; 
                  
             elsif k>= signed(sigma_size)  then
                 k_next <= (others => '0');          
-                y_next <= y + 1;                   
+                x_next <= x + 2;                   
                 state_next <= stal3;                   
             else
                if  R_PIXEL = 1 then --and W_PIXEL = 2 then 
@@ -329,8 +329,8 @@ x1_coord <= std_logic_vector(x + 1) when W_PIXEL = 1
 x2_coord <= std_logic_vector(x) ;
 
 c_x1_vec <= std_logic_vector(c_x1);
-c_x2_vec <= std_logic_vector(c_x2 -1) when W_PIXEL =1 and c_x2 /=0 else 
-            std_logic_vector(c_x2);
+c_x2_vec <= std_logic_vector(c_x2) when R_PIXEL = 1 else 
+            std_logic_vector(c_x2/2);
 c_y_vec <= std_logic_vector(c_y);
 
 img_w1 <= img_width when W_PIXEL = 1
