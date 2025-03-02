@@ -3005,4 +3005,4 @@ u16 image_data[] = {13491, 11499, 7516, 5749, 6199, 6504, 6664, 6841, 7034, 6922
 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
-uint16_t end_buffer[IMG_WIDTH_C*IMG_HEIGHT_C];
+uint16_t end_buffer[(IMG_WIDTH_C)*(IMG_HEIGHT_C - IMG_OFFSET_UP_C - IMG_OFFSET_DOWN_C)];
