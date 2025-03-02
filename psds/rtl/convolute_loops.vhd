@@ -99,7 +99,7 @@ component dsp_unit_mul_shift
              WIDTH2: natural := 16;
              SHIFT: natural := 14);
     port (clk: in std_logic;
-          rst: in std_logic;
+          mul_valid: in std_logic;
           in_1: in std_logic_vector(WIDTH2 - 1 downto 0);
           in_2: in std_logic_vector(WIDTH1 - 1 downto 0);
           out_res: out std_logic_vector(WIDTH1 - 1 downto 0)
@@ -116,6 +116,7 @@ signal sum1_next, sum2_next: unsigned(DATA_WIDTH - 1 downto 0);
 signal mul_reg_1, mul_reg_2: std_logic_vector(DATA_WIDTH -1 downto 0);
 signal sigma_center: signed(DATA_WIDTH/2 -1 downto 0);
 signal img_w1, img_w2: std_logic_vector(DATA_WIDTH -1 downto 0);
+signal valid_reg, valid_next: std_logic;
 type state_t is (idle, loops, sum_calc, stal1, stal2, stal3, stal4, conv_end);
 signal state_reg, state_next : state_t;
 
@@ -139,7 +140,7 @@ begin
         
         sum1_reg <= (others => '0');
         sum2_reg <= (others => '0');
-
+        valid_reg <= '0';
         
     elsif (rising_edge(clk) and reset = '0') then
         state_reg <= state_next;
@@ -154,12 +155,14 @@ begin
         c_x1 <= c_x1_next; 
         c_x2 <= c_x2_next;         
         c_y <= c_y_next;
+        
+        valid_reg <= valid_next;
     end if;
 
 end process;
 
 combinational_logic_process: process(start, state_reg, state_next, sigma_size, x, x_next, y, y_next, k, k_next, kernel_rom_data, img_width, img_height, img_offset_up, img_offset_down, 
-sum1_reg, sum2_reg, c_x1, c_x2,  c_y, dx, dy, mul_reg_1, mul_reg_2, sigma_center, bram1_b_rdata) 
+sum1_reg, sum2_reg, c_x1, c_x2,  c_y, dx, dy, mul_reg_1, mul_reg_2, sigma_center, bram1_b_rdata, valid_reg) 
 begin
     
     x_next <= x;
@@ -172,12 +175,14 @@ begin
     c_x1_next <= c_x1;  
     c_x2_next <= c_x2;      
     c_y_next <= c_y; 
+    
+    valid_next <= valid_reg;
              
     dx <= sigma_center + k;
     dy <= sigma_center + k;           
     ready <= '0';
-    kernel_rom_addr <= std_logic_vector(TO_UNSIGNED(TO_INTEGER(k), log2c(KERNEL_ROM_SIZE))); 
-               
+    
+    kernel_rom_addr <= std_logic_vector(TO_UNSIGNED(TO_INTEGER(k), log2c(KERNEL_ROM_SIZE)));                
     case state_reg is    
         when idle =>
             if start = '1' then
@@ -188,6 +193,7 @@ begin
             end if;
             
         when loops => 
+            
             if (R_PIXEL = 1 and y>= signed(img_height) - signed(img_offset_down) - signed(img_offset_up)) or (W_PIXEl = 1 and y>= signed(img_height) - signed(img_offset_down)) then             
                 state_next <= conv_end;          
             elsif x>= signed(img_width) then    
@@ -195,9 +201,10 @@ begin
                 x_next <= (others => '0');
                 state_next <= loops; 
                  
-            elsif k>= signed(sigma_size)  then
+            elsif k > signed(sigma_size)    then
                 k_next <= (others => '0');          
-                x_next <= x + 2;                   
+                x_next <= x + 2;     
+                valid_next <= '0';              
                 state_next <= stal3;                   
             else
                if  R_PIXEL = 1 then --and W_PIXEL = 2 then 
@@ -271,9 +278,10 @@ begin
         when stal1 =>   
                 state_next <= stal2;
         when stal2 => 
-                state_next <= sum_calc;
-        when stal3 =>
-                state_next <= stal4;                
+                valid_next <= '1';
+                state_next <= sum_calc;                
+        when stal3 =>   
+                state_next <= stal4;
         when stal4 => 
                 sum1_next <= (others => '0');
                 sum2_next <= (others => '0');
@@ -344,7 +352,7 @@ generic map(WIDTH1 => DATA_WIDTH,
             WIDTH2 => DATA_WIDTH,
             SHIFT => 14)
 port map( clk => clk,
-          rst => reset,
+          mul_valid => valid_reg,
           in_1 => pix1,
           in_2 => kernel_rom_data,
           out_res => mul_reg_1
@@ -355,7 +363,7 @@ generic map(WIDTH1 => DATA_WIDTH,
             WIDTH2 => DATA_WIDTH,
             SHIFT => 14)
 port map( clk => clk,
-          rst => reset,
+          mul_valid => valid_reg,
           in_1 => pix2,
           in_2 => kernel_rom_data,
           out_res => mul_reg_2

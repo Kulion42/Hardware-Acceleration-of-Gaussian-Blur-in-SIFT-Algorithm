@@ -7,7 +7,7 @@ entity dsp_unit_mul_shift is
 	     WIDTH2: natural := 16;
              SHIFT: natural := 14);
     port (clk: in std_logic;
-          rst: in std_logic;
+          mul_valid: in std_logic;
           in_1: in std_logic_vector(WIDTH2 - 1 downto 0);
           in_2: in std_logic_vector(WIDTH1 - 1 downto 0);
           out_res: out std_logic_vector(WIDTH1 - 1 downto 0)
@@ -23,8 +23,12 @@ begin
     process(clk)
     begin
         if (rising_edge(clk)) then
+            if mul_valid = '1' then
                 mult_reg <= std_logic_vector(unsigned(in_1) * unsigned(in_2));
-                shift_reg <= std_logic_vector(shift_right(unsigned(mult_reg), SHIFT));
+            else
+                mult_reg <= (others => '0');
+            end if;
+        shift_reg <= std_logic_vector(shift_right(unsigned(mult_reg), SHIFT));            
         end if;
     end process;
     
