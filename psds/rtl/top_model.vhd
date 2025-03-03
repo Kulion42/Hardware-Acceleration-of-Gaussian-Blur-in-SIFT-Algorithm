@@ -127,8 +127,8 @@ component bram
           data_b_o: out std_logic_vector(R_W_BYTES *WIDTH-1 downto 0));
 end component;
 
-signal main_bram_b_en_blur_s, main_bram_b_en_bram_s, tmp_bram_a_en_blur_s, tmp_bram_b_en_blur_s: std_logic;
-signal main_bram_b_we_blur_s, tmp_bram_a_we_blur_s, tmp_bram_b_we_blur_s: std_logic_vector(3 downto 0);
+signal main_bram_b_en_blur_s, tmp_bram_a_en_blur_s, tmp_bram_b_en_blur_s: std_logic;
+signal main_bram_b_we_blur_s, main_bram_b_we_bram_s,tmp_bram_a_we_blur_s, tmp_bram_b_we_blur_s: std_logic_vector(3 downto 0);
 signal tmp_bram_a_addr_blur_s, tmp_bram_b_addr_blur_s: std_logic_vector(log2c(BRAM_SIZE) -1 downto 0);
 signal main_bram_b_addr_blur_s: std_logic_vector(log2c(BRAM_SIZE/2) -1 downto 0); 
 signal main_bram_b_rdata_blur_s, main_bram_b_wdata_blur_s: std_logic_vector(2*(DATA_WIDTH-1) -1 downto 0);
@@ -191,7 +191,7 @@ Port map(
     clk_a => clk,
     clk_b => clk,
     en_a => main_bram_a_cpu_en ,
-    en_b => main_bram_b_en_bram_s,
+    en_b => main_bram_b_en_blur_s,
     we_a => main_bram_a_cpu_we,
     we_b => main_bram_b_we_blur_s,
     addr_a => main_bram_a_cpu_addr,
@@ -226,8 +226,7 @@ Port map(
     main_bram_a_cpu_wdata_crop <= main_bram_a_cpu_wdata(2 *DATA_WIDTH -2 downto DATA_WIDTH)&main_bram_a_cpu_wdata(DATA_WIDTH -2 downto 0);
     main_bram_a_cpu_rdata <= '0'&main_bram_a_cpu_rdata_crop(2 *(DATA_WIDTH -1) -1 downto DATA_WIDTH -1)&'0'&main_bram_a_cpu_rdata_crop(DATA_WIDTH -2 downto 0);
     
-    main_bram_b_en_bram_s <= main_bram_b_en_blur_s when main_bram_a_cpu_en = '0'
-                             else '0';
+
 end Structural;
 
 

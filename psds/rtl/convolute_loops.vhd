@@ -199,6 +199,7 @@ begin
             elsif x>= signed(img_width) then    
                 y_next <= y + 1; 
                 x_next <= (others => '0');
+                valid_next <= '0';
                 state_next <= loops; 
                  
             elsif k > signed(sigma_size)    then
@@ -208,18 +209,18 @@ begin
                 state_next <= stal3;                   
             else
                if  R_PIXEL = 1 then --and W_PIXEL = 2 then 
-                    if x+ dx < TO_SIGNED(0, 16)  then
+                    if (x + dx) < TO_SIGNED(0, 16)  then
                         c_x1_next <= (others => '0');
-                    elsif x + dx >= signed(img_width) then 
+                    elsif (x + dx) >= signed(img_width) then 
                         c_x1_next <= unsigned(img_width) -1;
                     else
                         c_x1_next <= unsigned(x + dx);
                     end if;
                     
-                    if x+ dx + 1 < TO_SIGNED(1, 16)  then
+                    if (x+ dx + 1) < TO_SIGNED(1, 16)  then
                         c_x2_next <= TO_UNSIGNED(1, 16);
-                    elsif x + dx + 1>= signed(img_width) then 
-                        c_x2_next <= unsigned(img_width) -1;
+                    elsif (x + dx + 1)>= (signed(img_width) + 1) then 
+                        c_x2_next <= unsigned(img_width);
                     else
                          c_x2_next <= unsigned(x + dx + 1);
                     end if;                      

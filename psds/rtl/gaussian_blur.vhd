@@ -275,10 +275,10 @@ x_conv_gen: convolute_loops
         ready => end_x_conv
     );
     
-write_read_ctrl: process(end_y_conv, main_we_y, tmp_we_a_y, tmp_we_b_y, read_y_b_addr, write_y_b_addr, 
+write_read_ctrl_hazard_solve: process(end_y_conv, end_x_conv, main_we_y, tmp_we_a_y, tmp_we_b_y, read_y_b_addr, write_y_b_addr, 
 write_y_a_addr, main_we_x, tmp_we_a_x, tmp_we_b_x, write_x_b_addr, read_x_b_addr, read_x_a_addr)
 begin    
-    if (end_y_conv = '0') then
+    if (end_y_conv = '0' and end_x_conv = '1') then
         main_bram_b_we <= main_we_y;
         tmp_bram_a_we <= tmp_we_a_y;
         tmp_bram_b_we <= tmp_we_b_y;
@@ -286,7 +286,7 @@ begin
         main_bram_b_addr <= read_y_b_addr;                   
         tmp_bram_b_addr <= write_y_b_addr;
         tmp_bram_a_addr <= write_y_a_addr;
-    else
+    elsif (end_y_conv = '1' and end_x_conv = '0') then
         main_bram_b_we <= main_we_x;
         tmp_bram_a_we <= tmp_we_a_x;
         tmp_bram_b_we <= tmp_we_b_x;
@@ -294,6 +294,14 @@ begin
         main_bram_b_addr <= write_x_b_addr;                   
         tmp_bram_b_addr <= read_x_b_addr;
         tmp_bram_a_addr <= read_x_a_addr;
+    else
+        main_bram_b_we <= (others => '0');
+        tmp_bram_a_we <= (others => '0');
+        tmp_bram_b_we <= (others => '0');
+                          
+        main_bram_b_addr <= (others => '0');                   
+        tmp_bram_b_addr <= (others => '0');
+        tmp_bram_a_addr <= (others => '0');    
     end if;              
 
 end process;                        
@@ -303,9 +311,9 @@ begin
     if rising_edge(clk) then
         edge_reg_o <= not(end_y_conv);   
     end if;
-    start_x_conv <= edge_reg_o and end_y_conv;
 end process;
 
+start_x_conv <= edge_reg_o and end_y_conv;
 ready <= end_y_conv and end_x_conv and not(edge_reg_o);                                                                                    
                                 
 end Mixed;
