@@ -84,7 +84,7 @@ class gaussian_blur_monitor extends uvm_monitor;
             if (curr_it == null) begin
                 `uvm_fatal("CURR_IT_NULL", "Curr_it is null!")
             end
-            if(vif.s00_axi_rdata == 1 && vif.s00_axi_araddr == 0)
+            if(vif.s00_axi_rdata == 1 && vif.s00_axi_araddr == 0 && vif.main_bram_a_addr_i > 0)
             begin
                 //COLLECT COVERAGE
                 //bram_cover.sample();

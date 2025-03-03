@@ -32,7 +32,7 @@ class gaussian_blur_scoreboard extends uvm_scoreboard;
     int num_of_zeros = 0;
     int fp;
     
-    int pixel_data_of = 100;
+    int pixel_data_of = 1;
     uvm_analysis_imp#(agent_pkg::gaussian_blur_seq_item, gaussian_blur_scoreboard) item_collected_import;
     
      `uvm_component_utils_begin(gaussian_blur_scoreboard)
