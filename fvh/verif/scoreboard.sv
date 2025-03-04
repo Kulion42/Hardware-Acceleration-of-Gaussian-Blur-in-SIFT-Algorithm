@@ -30,7 +30,7 @@ class gaussian_blur_scoreboard extends uvm_scoreboard;
     gaussian_blur_config cfg;
     int num_of_tr, num_of_missed = 0;
     int num_of_zeros = 0;
-    int fp;
+    int fd;
     
     int pixel_data_of = 1;
     uvm_analysis_imp#(agent_pkg::gaussian_blur_seq_item, gaussian_blur_scoreboard) item_collected_import;
@@ -54,7 +54,7 @@ class gaussian_blur_scoreboard extends uvm_scoreboard;
 
     function void connect_phase(uvm_phase phase);
         super.connect_phase(phase);
-    endfunction : connect_phase
+    endfunction : connect_phase               
     
     function void write(agent_pkg::gaussian_blur_seq_item curr_it);
         if(checks_enable) begin
@@ -106,7 +106,15 @@ class gaussian_blur_scoreboard extends uvm_scoreboard;
         `uvm_info(get_type_name(), $sformatf("Gaussian blur scoreboard examined: %0d transactions(%0d pixels), %0d succesfull pixel matches, %0d pixel mismatches, %0d observed zeros found", num_of_tr,2 *num_of_tr, 2 *num_of_tr - num_of_missed, num_of_missed, num_of_zeros), UVM_LOW);
          cfg.main_bram_wdata_arr.delete();
          cfg.main_bram_gv_arr.delete();
-   
+         
+         fd = $fopen("../../../../../regression_log.txt", "a+");
+           if (fd) 
+                 `uvm_info(get_name(), $sformatf("Successfully opened log file"),UVM_HIGH)
+           else
+                 `uvm_info(get_name(), $sformatf("Error log file"),UVM_HIGH)
+         $fdisplay(fd, "File img_file_img_%0d_ipart_%0d_%0d.txt examined: %0d pixels, %0d succesfull pixel matches, %0d pixel mismatches",cfg.rand_img, cfg.rand_part, cfg.rand_oct * NUMBER_OF_IMGS_PER_OCTAVE + cfg.rand_ipo, 2 *num_of_tr, 2 *num_of_tr - num_of_missed, num_of_missed);
+        $fclose(fd); 
+            
     endfunction : report_phase
     
 endclass : gaussian_blur_scoreboard

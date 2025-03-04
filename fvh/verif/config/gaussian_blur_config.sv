@@ -20,9 +20,9 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 parameter NUMBER_OF_IMAGES = 3;
-parameter NUMBER_OF_OCTAVES = 1;
-parameter NUMBER_OF_IMGS_PER_OCTAVE = 1;
 parameter NUMBER_OF_IMAGE_PARTS = 5;
+parameter NUMBER_OF_OCTAVES = 4;
+parameter NUMBER_OF_IMGS_PER_OCTAVE = 6;
 
 import uvm_pkg::*;
 `include "uvm_macros.svh"

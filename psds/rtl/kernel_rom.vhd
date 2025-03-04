@@ -28,7 +28,7 @@ use work.utils_pkg.ALL;
 entity kernel_rom is
 Generic (
     DATA_WIDTH : natural := 16; -- FIXED
-    KERNEL_ROM_SIZE : natural := 76 --FIXED     
+    KERNEL_ROM_SIZE : natural := 77 --FIXED     
 );
 Port ( 
     clk: in std_logic;

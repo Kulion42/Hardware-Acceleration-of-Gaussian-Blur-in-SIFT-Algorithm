@@ -3,6 +3,23 @@ set root_dir [pwd]
 cd scripts
 set resultDir ../uvm_project
 
+if {$argc > 1} {
+    puts "Error: Too many arguments. Usage: $argv0 [<test_count>]"
+    exit 1
+}
+
+# Set the default value to 1 if no argument is provided
+if {$argc == 0} {
+    set test_count 1
+} else {
+    set test_count [lindex $argv 0]
+}
+
+if {$test_count > 300} {
+    puts "Error: Too big test_count. At least one test will be reapeted"
+    exit 1
+}
+
 file mkdir $resultDir
 
 create_project gaussian_blur_verif $resultDir -part xc7z010clg400-1 -force
@@ -51,16 +68,20 @@ set_property -name {xsim.elaborate.xelab.more_options} -value {-v 1} -objects [g
 
 set_property -name {xsim.compile.xvlog.more_options} -value {-L uvm} -objects [get_filesets sim_1]
 set_property -name {xsim.elaborate.xelab.more_options} -value {-L uvm} -objects [get_filesets sim_1]
-set_property -name {xsim.simulate.xsim.more_options} -value {-testplusarg UVM_TESTNAME=simple_test -testplusarg UVM_VERBOSITY=UVM_LOW -sv_seed random} -objects [get_filesets sim_1]
+#set_property -name {xsim.simulate.xsim.more_options} -value {-testplusarg UVM_TESTNAME=simple_test -testplusarg UVM_VERBOSITY=UVM_LOW -sv_seed random} -objects [get_filesets sim_1]
 
-#Pokretanje simulacije
-launch_simulation
-
-add_wave {{/gaussian_blur_top/DUT/top_model_instance/start}} 
-add_wave {{/gaussian_blur_top/DUT/top_model_instance/ready}} 
-add_wave {{/gaussian_blur_top/DUT/top_model_instance/gauss_blur/start_x_conv}} {{/gaussian_blur_top/DUT/top_model_instance/gauss_blur/end_x_conv}}
-
-run all
+#Pokretanje regresije
+for {set i 0} {$i < $test_count} {incr i} {
+    set db_name "covdb_$i" ;
+    set xsim_command "set_property -name \{xsim.simulate.xsim.more_options\} -value \{-testplusarg UVM_TESTNAME=simple_test -testplusarg UVM_VERBOSITY=UVM_LOW -sv_seed random -runall -cov_db_name $db_name\} -objects \[get_filesets sim_1\]"
+    eval $xsim_command
+    launch_simulation
+    run all
+    if {$i+1 < $test_count} {
+        close_sim
+		puts "Test $i is over !!!!"
+    }
+}
 exec xcrg -report_format html -dir uvm_project/gaussian_blur_verif.sim/sim_1/behav/xsim -report_dir coverage
-#start_gui
+puts "Regression is over !!!!"
 
