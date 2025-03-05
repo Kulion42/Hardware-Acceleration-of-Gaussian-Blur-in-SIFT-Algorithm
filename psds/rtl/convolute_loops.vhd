@@ -131,7 +131,11 @@ begin
         state_reg <= idle;
         
         x <= (others => '0');
-        y <= (others => '0');
+        if W_PIXEL = 1 then
+            y <= signed(img_offset_up);
+        else
+            y <= (others => '0');
+        end if;
         k <= (others => '0');
         
         c_x1 <= (others => '0');
@@ -192,8 +196,7 @@ begin
                 state_next <= idle;
             end if;
             
-        when loops => 
-            
+        when loops =>           
             if (R_PIXEL = 1 and y>= signed(img_height) - signed(img_offset_down) - signed(img_offset_up)) or (W_PIXEl = 1 and y>= signed(img_height) - signed(img_offset_down)) then             
                 state_next <= conv_end;          
             elsif x>= signed(img_width) then    
@@ -222,16 +225,15 @@ begin
                     elsif (x + dx + 1)>= (signed(img_width) + 1) then 
                         c_x2_next <= unsigned(img_width);
                     else
-                         c_x2_next <= unsigned(x + dx + 1);
+                        c_x2_next <= unsigned(x + dx + 1);
                     end if;                      
                     c_y_next <= unsigned(y);
 
                 else
                     if TO_INTEGER(signed(img_offset_down)) = 0 and TO_INTEGER(signed(img_offset_up)) = 0  then                    
-                        if  y + dy < TO_SIGNED(0, 16)  then
-                            c_y_next <= (others => '0');
-                                    
-                        elsif y + dy >= signed(img_height) then
+                        if  (y + dy) < TO_SIGNED(0, 16)  then
+                            c_y_next <= (others => '0');                                   
+                        elsif (y + dy) >= signed(img_height) then
                             c_y_next <= unsigned(img_height) -1 ;                                   
                         else
                             c_y_next <= unsigned(y + dy);
@@ -239,21 +241,19 @@ begin
                     end if;
                     
                     if TO_INTEGER(signed(img_offset_down)) = 10 and TO_INTEGER(signed(img_offset_up)) = 10  then
-                        if dy < 0 and y < signed(img_offset_up) then
-                            c_y_next <= unsigned(signed(img_offset_up) + dy);
-                            
-                        elsif y + dy >= signed(img_height) - signed(img_offset_down) then
+                        if  (y + dy) < signed(img_offset_up) then
+                            c_y_next <= unsigned(signed(img_offset_up) + dy);                           
+                        elsif (y + dy) >= signed(img_height) - signed(img_offset_down) then
                             c_y_next <= unsigned(signed(img_height) - signed(img_offset_down) + dy);
                         else
-                                c_y_next <= unsigned(y + dy);
+                            c_y_next <= unsigned(y + dy);
                         end if;
                     end if;
                     
                     if TO_INTEGER(signed(img_offset_down)) = 10 and TO_INTEGER(signed(img_offset_up)) = 0  then                    
-                        if y + dy < TO_SIGNED(0, 16)  then
-                            c_y_next <= (others => '0');
-                                    
-                        elsif y + dy >= signed(img_height) - signed(img_offset_down) then
+                        if (y + dy) < TO_SIGNED(0, 16)  then
+                            c_y_next <= (others => '0');                        
+                        elsif (y + dy) >= signed(img_height) - signed(img_offset_down) then
                             c_y_next <= unsigned(signed(img_height) - signed(img_offset_down) + dy);                                   
                         else
                             c_y_next <= unsigned(y + dy);
@@ -261,13 +261,12 @@ begin
                     end if;
                     
                     if TO_INTEGER(signed(img_offset_down)) = 0 and TO_INTEGER(signed(img_offset_up)) = 10  then
-                        if dy < 0 and y < signed(img_offset_up) then
-                            c_y_next <= unsigned(signed(img_offset_up) + dy);
-                            
-                        elsif y + dy >= signed(img_height) then
+                        if (y + dy) < signed(img_offset_up) then
+                            c_y_next <= unsigned(signed(img_offset_up) + dy);                           
+                        elsif (y + dy) >= signed(img_height) then
                             c_y_next <= unsigned(img_height) -1 ;  
                         else
-                                c_y_next <= unsigned(y + dy);
+                            c_y_next <= unsigned(y + dy);
                         end if;
                     end if;
                         
@@ -331,7 +330,8 @@ pix1 <= '0'&bram1_b_rdata(R_PIXEL *(DATA_WIDTH-1) -1 downto (DATA_WIDTH-1)) when
          else '0'&bram1_a_rdata((DATA_WIDTH-1) -1 downto 0);
 pix2 <= '0'&bram1_b_rdata((DATA_WIDTH-1) -1 downto 0); 
 
-y_coord <= std_logic_vector(y) ;  
+y_coord <= std_logic_vector(y- signed(img_offset_up)) when W_PIXEL = 1 else
+           std_logic_vector(y);  
 
 x1_coord <= std_logic_vector(x + 1) when W_PIXEL = 1
             else std_logic_vector(x/2);
