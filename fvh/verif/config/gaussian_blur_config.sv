@@ -112,9 +112,11 @@ class gaussian_blur_config extends uvm_object;
     endgroup
     
      constraint rand_constr_img {rand_img >= 0 ; rand_img < NUMBER_OF_IMAGES;}; 
-     constraint rand_constr_oct {rand_oct >= 0 ; rand_oct < NUMBER_OF_OCTAVES;}; 
+     constraint rand_constr_oct1 {rand_oct >= 0 ; rand_oct < NUMBER_OF_OCTAVES;}; 
+     constraint rand_constr_oct2 {rand_oct inside {0, 2, 3};}
      constraint rand_constr_ipo1 {rand_ipo >= 0 ; rand_ipo < NUMBER_OF_IMGS_PER_OCTAVE;}; 
-     constraint rand_constr_ipo2 {(rand_ipo == 0)-> (rand_oct == 0);};
+     constraint rand_constr_ipo2 {rand_ipo dist {0:/ 15, [1:5]:/ 35 };}
+     constraint rand_constr_ipo3 {(rand_ipo == 0)-> (rand_oct == 0);};
      constraint rand_constr_ipart {rand_part >= 0 ; rand_part < NUMBER_OF_IMAGE_PARTS;}; 
         
      
