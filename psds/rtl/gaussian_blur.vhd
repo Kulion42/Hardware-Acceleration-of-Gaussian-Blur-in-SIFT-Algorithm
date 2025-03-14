@@ -78,6 +78,9 @@ Generic(
     --WIDTH OF DATA
     DATA_WIDTH : natural := 16; -- FIXED
     
+    --CONVOLUTION DIRECTION
+    HORIZONTAL: boolean := true;
+    
     --PARAMETRS OF CONVOLUTION
     R_PIXEL: natural := 1;
     W_PIXEL: natural := 2;  
@@ -184,6 +187,7 @@ kernel_rom_gen: kernel_rom
 y_conv_gen: convolute_loops
     Generic map(
         DATA_WIDTH => DATA_WIDTH,
+        HORIZONTAL => false,
         R_PIXEL => 2,
         W_PIXEL => 1,
         KERNEL_ROM_SIZE => KERNEL_ROM_SIZE,
@@ -231,6 +235,7 @@ y_conv_gen: convolute_loops
 x_conv_gen: convolute_loops
     Generic map(
         DATA_WIDTH => DATA_WIDTH,
+        HORIZONTAL => true,
         R_PIXEL => 1,
         W_PIXEL => 2,
         KERNEL_ROM_SIZE => KERNEL_ROM_SIZE,
