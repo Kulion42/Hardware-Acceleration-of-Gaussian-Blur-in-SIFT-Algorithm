@@ -30,9 +30,20 @@
 #include "xtime_l.h"
 #include "xil_cache.h"
 
-#include "test_image.h"
-#include "test_image_result.h"
-//#include "test_image_small.h"
+#include "test_image0.h"
+#include "test_image1.h"
+#include "test_image2.h"
+#include "test_image3.h"
+#include "test_image4.h"
+#include "test_image5.h"
+
+#include "test_image0_res.h"
+#include "test_image1_res.h"
+#include "test_image2_res.h"
+#include "test_image3_res.h"
+#include "test_image4_res.h"
+#include "test_image5_res.h"
+
 
 #define IMG_WIDTH_OFFSET 0
 #define IMG_HEIGHT_OFFSET 4
@@ -51,7 +62,6 @@ int main()
     init_platform();
     Xil_DCacheDisable();
     Xil_ICacheDisable();
-
 
     float d1, d2, d3, d4, d5, d6;
 
@@ -90,11 +100,11 @@ int main()
 	// Time after reset and at the beggining of sending parameters
 	XTime_GetTime(p_p1_time);
 	// Sending parameters to Gaussian_blur-core
-	Xil_Out16(XPAR_GAUSSIAN_BLUR_IP_0_S00_AXI_BASEADDR + IMG_WIDTH_OFFSET, IMG_WIDTH_C);
-	Xil_Out16(XPAR_GAUSSIAN_BLUR_IP_0_S00_AXI_BASEADDR + IMG_HEIGHT_OFFSET, IMG_HEIGHT_C);
-	Xil_Out16(XPAR_GAUSSIAN_BLUR_IP_0_S00_AXI_BASEADDR + IMG_OFFSET_UP_OFFSET, IMG_OFFSET_UP_C);
-	Xil_Out16(XPAR_GAUSSIAN_BLUR_IP_0_S00_AXI_BASEADDR + IMG_OFFSET_DOWN_OFFSET, IMG_OFFSET_DOWN_C);
-	Xil_Out16(XPAR_GAUSSIAN_BLUR_IP_0_S00_AXI_BASEADDR + IMG_PER_OCTAVE_OFFSET, IMG_OCTAVE_C);
+	Xil_Out16(XPAR_GAUSSIAN_BLUR_IP_0_S00_AXI_BASEADDR + IMG_WIDTH_OFFSET, IMG0_WIDTH_C);
+	Xil_Out16(XPAR_GAUSSIAN_BLUR_IP_0_S00_AXI_BASEADDR + IMG_HEIGHT_OFFSET, IMG0_HEIGHT_C);
+	Xil_Out16(XPAR_GAUSSIAN_BLUR_IP_0_S00_AXI_BASEADDR + IMG_OFFSET_UP_OFFSET, IMG0_OFFSET_UP_C);
+	Xil_Out16(XPAR_GAUSSIAN_BLUR_IP_0_S00_AXI_BASEADDR + IMG_OFFSET_DOWN_OFFSET, IMG0_OFFSET_DOWN_C);
+	Xil_Out16(XPAR_GAUSSIAN_BLUR_IP_0_S00_AXI_BASEADDR + IMG_PER_OCTAVE_OFFSET, IMG0_OCTAVE_C);
 
 	//Time after parameters were sent and beggining of reading parameters
 	XTime_GetTime(p_p2_time);
@@ -119,25 +129,17 @@ int main()
 	XTime_GetTime(p_p4_time);
 
 	//------------------------Write image to BRAM---------------------------------
-	for (uint16_t i = 0; i < IMG_WIDTH_C*IMG_HEIGHT_C; i+=2)
+	for (uint16_t i = 0; i < IMG0_WIDTH_C*IMG0_HEIGHT_C; i+=2)
 	{
-		uint32_t packed = (image_data[i+1] << 16) | image_data[i];
-		Xil_Out32(XPAR_AXI_BRAM_CTRL_0_S_AXI_BASEADDR +  2*i, packed);						//i*2 because of 2 byte per pixel and 2 pyxels. i increments by 2
-		//printf("image_data[%" PRIu16 "] and image_data[%" PRIu16 "] sent.\n", i, i+1);
+		uint32_t packed = (image0_data[i] << 16) | image0_data[i+1];
+		Xil_Out32(XPAR_AXI_BRAM_CTRL_0_S_AXI_BASEADDR +  2*i, packed);						//i*2 because of 2 byte per pixel and 2 pixels. i increments by 2
+		//printf("image_data[%" PRIu16 "] = %" PRIu16 " and image_data[%" PRIu16 "] = %" PRIu16 " sent.\n", i, image_data[i], i+1, image_data[i+1]);
 	}
 
 	//End of sending image to main BRAM
 	XTime_GetTime(p_p5_time);
 
 	printf("Image sent to main BRAM!\n");
-
-	for (uint16_t i = 0; i < IMG_WIDTH_C*IMG_HEIGHT_C; i+=2)
-	{
-		if((uint32_t)Xil_In32(XPAR_AXI_BRAM_CTRL_0_S_AXI_BASEADDR + 2*i) != ((image_data[i+1] << 16) | image_data[i]))
-			printf("Different value at: %d!\n", i);
-	}
-
-	printf("Check of different values at BRAM over!\n");
 
 	printf("Starting IP!\n");
 	//Time of starting the IP Core
@@ -157,32 +159,38 @@ int main()
 	//Start time for reading the image from BRAM
 	XTime_GetTime(p_p8_time);
 
+	int incorrect = 0;
+	int correct = 0;
+	int zeros = 0;
+
+
 	//------------------------Read to end_buffer from BRAM---------------------------------
-	for(uint16_t j = 0; j < (IMG_WIDTH_C)*(IMG_HEIGHT_C - IMG_OFFSET_UP_C - IMG_OFFSET_DOWN_C); j+=2)
+	for(uint16_t j = 0; j < (IMG0_WIDTH_C)*(IMG0_HEIGHT_C - IMG0_OFFSET_UP_C - IMG0_OFFSET_DOWN_C)-1; j+=2)
 	{
 		uint32_t packed = (uint32_t)Xil_In32(XPAR_AXI_BRAM_CTRL_0_S_AXI_BASEADDR + 2*j);
-		end_buffer[j] = (uint16_t)(packed & 0xFFFF);
-		end_buffer[j+1] = (uint16_t)((packed >> 16) & 0xFFFF);
-		//printf("end_buffer[%" PRIu16 "] = %d and end_buffer[%" PRIu16 "] = %d.\n", j, end_buffer[j], j+1, end_buffer[j+1]);
-		//printf("j = %" PRIu16 ", address = 0x%08X\n", j, XPAR_AXI_BRAM_CTRL_0_S_AXI_BASEADDR + 2 * j);
+		end_buffer0[j+1] = (uint16_t)(packed & 0xFFFF);
+		end_buffer0[j] = (uint16_t)((packed >> 16) & 0xFFFF);
+//		printf("end_buffer[%" PRIu16 "] = %d and end_buffer[%" PRIu16 "] = %d.\n", j, end_buffer[j], j+1, end_buffer[j+1]);
+//		printf("j = %" PRIu16 ", address = 0x%08X\n", j, XPAR_AXI_BRAM_CTRL_0_S_AXI_BASEADDR + 2 * j);
 	}
 
 	//End time for reading the image from BRAM
 	XTime_GetTime(p_p9_time);
 	printf("Image read!\n");
 
-	int incorrect = 0;
-	int correct = 0;
-	int zeros = 0;
 
-	for(uint16_t j = 0; j < (IMG_WIDTH_C)*(IMG_HEIGHT_C - IMG_OFFSET_UP_C - IMG_OFFSET_DOWN_C); j++)
+	for(uint16_t j = 0; j < (IMG0_WIDTH_C)*(IMG0_HEIGHT_C - IMG0_OFFSET_UP_C - IMG0_OFFSET_DOWN_C); j++)
 	{
-		if(end_buffer[j] != result_data[j])
-			incorrect++;
-		else
-			correct++;
 
-		if(end_buffer[j] == 0)
+		if((end_buffer0[j] < result_data0[j] - 1) || (end_buffer0[j] > result_data0[j] + 1))
+		{
+			incorrect++;
+		}
+		else
+		{
+			correct++;
+		}
+		if(end_buffer0[j] == 0)
 			zeros++;
 	}
 
@@ -213,6 +221,278 @@ int main()
 	printf("Duration of the sending image to the main BRAM is %.2f[us].\n", d4);
 	printf("Duration of IP core processing the image is %.2f[us].\n", d5);
 	printf("Duration of reading processed image from main BRAM is %.2f[us].\n", d6);
+
+	printf("\n--------------- TEST OF MAIN IMAGE FINISHED ---------------\n");
+
+/*------------------------------------------------------------------------------------------------------*/
+
+	printf("\n--------------- TEST OF 1. IMAGE ---------------\n");
+	// Reset
+	Xil_Out16(XPAR_GAUSSIAN_BLUR_IP_0_S00_AXI_BASEADDR + START_REG_OFFSET, 0);
+	Xil_Out16(XPAR_GAUSSIAN_BLUR_IP_0_S00_AXI_BASEADDR + RESET_REG_OFFSET, 1);
+	while(!Xil_In32(XPAR_GAUSSIAN_BLUR_IP_0_S00_AXI_BASEADDR + READY_REG_OFFSET));
+	Xil_Out16(XPAR_GAUSSIAN_BLUR_IP_0_S00_AXI_BASEADDR + RESET_REG_OFFSET, 0);
+
+	// Sending parameters to Gaussian_blur-core
+	Xil_Out16(XPAR_GAUSSIAN_BLUR_IP_0_S00_AXI_BASEADDR + IMG_WIDTH_OFFSET, IMG1_WIDTH_C);
+	Xil_Out16(XPAR_GAUSSIAN_BLUR_IP_0_S00_AXI_BASEADDR + IMG_HEIGHT_OFFSET, IMG1_HEIGHT_C);
+	Xil_Out16(XPAR_GAUSSIAN_BLUR_IP_0_S00_AXI_BASEADDR + IMG_OFFSET_UP_OFFSET, IMG1_OFFSET_UP_C);
+	Xil_Out16(XPAR_GAUSSIAN_BLUR_IP_0_S00_AXI_BASEADDR + IMG_OFFSET_DOWN_OFFSET, IMG1_OFFSET_DOWN_C);
+	Xil_Out16(XPAR_GAUSSIAN_BLUR_IP_0_S00_AXI_BASEADDR + IMG_PER_OCTAVE_OFFSET, IMG1_OCTAVE_C);
+
+	//------------------------Start Guassian Blur IP---------------------------------
+	Xil_Out16(XPAR_GAUSSIAN_BLUR_IP_0_S00_AXI_BASEADDR + START_REG_OFFSET, 1);
+	while(Xil_In32(XPAR_GAUSSIAN_BLUR_IP_0_S00_AXI_BASEADDR + READY_REG_OFFSET));
+	Xil_Out16(XPAR_GAUSSIAN_BLUR_IP_0_S00_AXI_BASEADDR + START_REG_OFFSET, 0);
+	// Waiting for the core to finish processing
+	while(!Xil_In32(XPAR_GAUSSIAN_BLUR_IP_0_S00_AXI_BASEADDR + READY_REG_OFFSET));
+
+	incorrect = 0;
+	correct = 0;
+	zeros = 0;
+
+
+	//------------------------Read to end_buffer from BRAM---------------------------------
+	for(uint16_t j = 0; j < (IMG1_WIDTH_C)*(IMG1_HEIGHT_C - IMG1_OFFSET_UP_C - IMG1_OFFSET_DOWN_C)-1; j+=2)
+	{
+		uint32_t packed = (uint32_t)Xil_In32(XPAR_AXI_BRAM_CTRL_0_S_AXI_BASEADDR + 2*j);
+		end_buffer1[j+1] = (uint16_t)(packed & 0xFFFF);
+		end_buffer1[j] = (uint16_t)((packed >> 16) & 0xFFFF);
+	}
+
+	for(uint16_t j = 0; j < (IMG1_WIDTH_C)*(IMG1_HEIGHT_C - IMG1_OFFSET_UP_C - IMG1_OFFSET_DOWN_C); j++)
+	{
+
+		if((end_buffer1[j] < result_data1[j] - 1) || (end_buffer1[j] > result_data1[j] + 1))
+		{
+			incorrect++;
+		}
+		else
+		{
+			correct++;
+		}
+		if(end_buffer1[j] == 0)
+			zeros++;
+	}
+	printf("There are %d correct values and %d incorrect values!\n", correct, incorrect);
+	printf("There are %d zero values!\n", zeros);
+
+/*------------------------------------------------------------------------------------------------------*/
+
+	printf("\n--------------- TEST OF 2. IMAGE ---------------\n");
+
+	// Reset
+	Xil_Out16(XPAR_GAUSSIAN_BLUR_IP_0_S00_AXI_BASEADDR + START_REG_OFFSET, 0);
+	Xil_Out16(XPAR_GAUSSIAN_BLUR_IP_0_S00_AXI_BASEADDR + RESET_REG_OFFSET, 1);
+	while(!Xil_In32(XPAR_GAUSSIAN_BLUR_IP_0_S00_AXI_BASEADDR + READY_REG_OFFSET));
+	Xil_Out16(XPAR_GAUSSIAN_BLUR_IP_0_S00_AXI_BASEADDR + RESET_REG_OFFSET, 0);
+
+	// Sending parameters to Gaussian_blur-core
+	Xil_Out16(XPAR_GAUSSIAN_BLUR_IP_0_S00_AXI_BASEADDR + IMG_WIDTH_OFFSET, IMG2_WIDTH_C);
+	Xil_Out16(XPAR_GAUSSIAN_BLUR_IP_0_S00_AXI_BASEADDR + IMG_HEIGHT_OFFSET, IMG2_HEIGHT_C);
+	Xil_Out16(XPAR_GAUSSIAN_BLUR_IP_0_S00_AXI_BASEADDR + IMG_OFFSET_UP_OFFSET, IMG2_OFFSET_UP_C);
+	Xil_Out16(XPAR_GAUSSIAN_BLUR_IP_0_S00_AXI_BASEADDR + IMG_OFFSET_DOWN_OFFSET, IMG2_OFFSET_DOWN_C);
+	Xil_Out16(XPAR_GAUSSIAN_BLUR_IP_0_S00_AXI_BASEADDR + IMG_PER_OCTAVE_OFFSET, IMG2_OCTAVE_C);
+
+	//------------------------Start Guassian Blur IP---------------------------------
+	Xil_Out16(XPAR_GAUSSIAN_BLUR_IP_0_S00_AXI_BASEADDR + START_REG_OFFSET, 1);
+	while(Xil_In32(XPAR_GAUSSIAN_BLUR_IP_0_S00_AXI_BASEADDR + READY_REG_OFFSET));
+	Xil_Out16(XPAR_GAUSSIAN_BLUR_IP_0_S00_AXI_BASEADDR + START_REG_OFFSET, 0);
+	// Waiting for the core to finish processing
+	while(!Xil_In32(XPAR_GAUSSIAN_BLUR_IP_0_S00_AXI_BASEADDR + READY_REG_OFFSET));
+
+	incorrect = 0;
+	correct = 0;
+	zeros = 0;
+
+
+	//------------------------Read to end_buffer from BRAM---------------------------------
+	for(uint16_t j = 0; j < (IMG2_WIDTH_C)*(IMG2_HEIGHT_C - IMG2_OFFSET_UP_C - IMG2_OFFSET_DOWN_C)-1; j+=2)
+	{
+		uint32_t packed = (uint32_t)Xil_In32(XPAR_AXI_BRAM_CTRL_0_S_AXI_BASEADDR + 2*j);
+		end_buffer2[j+1] = (uint16_t)(packed & 0xFFFF);
+		end_buffer2[j] = (uint16_t)((packed >> 16) & 0xFFFF);
+	}
+
+	for(uint16_t j = 0; j < (IMG2_WIDTH_C)*(IMG2_HEIGHT_C - IMG2_OFFSET_UP_C - IMG2_OFFSET_DOWN_C); j++)
+	{
+
+		if((end_buffer2[j] < result_data2[j] - 1) || (end_buffer2[j] > result_data2[j] + 1))
+		{
+			incorrect++;
+		}
+		else
+		{
+			correct++;
+		}
+		if(end_buffer2[j] == 0)
+			zeros++;
+	}
+	printf("There are %d correct values and %d incorrect values!\n", correct, incorrect);
+	printf("There are %d zero values!\n", zeros);
+
+/*------------------------------------------------------------------------------------------------------*/
+
+	printf("\n--------------- TEST OF 3. IMAGE ---------------\n");
+
+	// Reset
+	Xil_Out16(XPAR_GAUSSIAN_BLUR_IP_0_S00_AXI_BASEADDR + START_REG_OFFSET, 0);
+	Xil_Out16(XPAR_GAUSSIAN_BLUR_IP_0_S00_AXI_BASEADDR + RESET_REG_OFFSET, 1);
+	while(!Xil_In32(XPAR_GAUSSIAN_BLUR_IP_0_S00_AXI_BASEADDR + READY_REG_OFFSET));
+	Xil_Out16(XPAR_GAUSSIAN_BLUR_IP_0_S00_AXI_BASEADDR + RESET_REG_OFFSET, 0);
+
+	// Sending parameters to Gaussian_blur-core
+	Xil_Out16(XPAR_GAUSSIAN_BLUR_IP_0_S00_AXI_BASEADDR + IMG_WIDTH_OFFSET, IMG3_WIDTH_C);
+	Xil_Out16(XPAR_GAUSSIAN_BLUR_IP_0_S00_AXI_BASEADDR + IMG_HEIGHT_OFFSET, IMG3_HEIGHT_C);
+	Xil_Out16(XPAR_GAUSSIAN_BLUR_IP_0_S00_AXI_BASEADDR + IMG_OFFSET_UP_OFFSET, IMG3_OFFSET_UP_C);
+	Xil_Out16(XPAR_GAUSSIAN_BLUR_IP_0_S00_AXI_BASEADDR + IMG_OFFSET_DOWN_OFFSET, IMG3_OFFSET_DOWN_C);
+	Xil_Out16(XPAR_GAUSSIAN_BLUR_IP_0_S00_AXI_BASEADDR + IMG_PER_OCTAVE_OFFSET, IMG3_OCTAVE_C);
+
+	//------------------------Start Guassian Blur IP---------------------------------
+	Xil_Out16(XPAR_GAUSSIAN_BLUR_IP_0_S00_AXI_BASEADDR + START_REG_OFFSET, 1);
+	while(Xil_In32(XPAR_GAUSSIAN_BLUR_IP_0_S00_AXI_BASEADDR + READY_REG_OFFSET));
+	Xil_Out16(XPAR_GAUSSIAN_BLUR_IP_0_S00_AXI_BASEADDR + START_REG_OFFSET, 0);
+	// Waiting for the core to finish processing
+	while(!Xil_In32(XPAR_GAUSSIAN_BLUR_IP_0_S00_AXI_BASEADDR + READY_REG_OFFSET));
+
+	incorrect = 0;
+	correct = 0;
+	zeros = 0;
+
+
+	//------------------------Read to end_buffer from BRAM---------------------------------
+	for(uint16_t j = 0; j < (IMG3_WIDTH_C)*(IMG3_HEIGHT_C - IMG3_OFFSET_UP_C - IMG3_OFFSET_DOWN_C)-1; j+=2)
+	{
+		uint32_t packed = (uint32_t)Xil_In32(XPAR_AXI_BRAM_CTRL_0_S_AXI_BASEADDR + 2*j);
+		end_buffer3[j+1] = (uint16_t)(packed & 0xFFFF);
+		end_buffer3[j] = (uint16_t)((packed >> 16) & 0xFFFF);
+	}
+
+	for(uint16_t j = 0; j < (IMG3_WIDTH_C)*(IMG3_HEIGHT_C - IMG3_OFFSET_UP_C - IMG3_OFFSET_DOWN_C); j++)
+	{
+
+		if((end_buffer3[j] < result_data3[j] - 1) || (end_buffer3[j] > result_data3[j] + 1))
+		{
+			incorrect++;
+		}
+		else
+		{
+			correct++;
+		}
+		if(end_buffer3[j] == 0)
+			zeros++;
+	}
+	printf("There are %d correct values and %d incorrect values!\n", correct, incorrect);
+	printf("There are %d zero values!\n", zeros);
+
+/*------------------------------------------------------------------------------------------------------*/
+
+	printf("\n--------------- TEST OF 4. IMAGE ---------------\n");
+
+	// Reset
+	Xil_Out16(XPAR_GAUSSIAN_BLUR_IP_0_S00_AXI_BASEADDR + START_REG_OFFSET, 0);
+	Xil_Out16(XPAR_GAUSSIAN_BLUR_IP_0_S00_AXI_BASEADDR + RESET_REG_OFFSET, 1);
+	while(!Xil_In32(XPAR_GAUSSIAN_BLUR_IP_0_S00_AXI_BASEADDR + READY_REG_OFFSET));
+	Xil_Out16(XPAR_GAUSSIAN_BLUR_IP_0_S00_AXI_BASEADDR + RESET_REG_OFFSET, 0);
+
+	// Sending parameters to Gaussian_blur-core
+	Xil_Out16(XPAR_GAUSSIAN_BLUR_IP_0_S00_AXI_BASEADDR + IMG_WIDTH_OFFSET, IMG4_WIDTH_C);
+	Xil_Out16(XPAR_GAUSSIAN_BLUR_IP_0_S00_AXI_BASEADDR + IMG_HEIGHT_OFFSET, IMG4_HEIGHT_C);
+	Xil_Out16(XPAR_GAUSSIAN_BLUR_IP_0_S00_AXI_BASEADDR + IMG_OFFSET_UP_OFFSET, IMG4_OFFSET_UP_C);
+	Xil_Out16(XPAR_GAUSSIAN_BLUR_IP_0_S00_AXI_BASEADDR + IMG_OFFSET_DOWN_OFFSET, IMG4_OFFSET_DOWN_C);
+	Xil_Out16(XPAR_GAUSSIAN_BLUR_IP_0_S00_AXI_BASEADDR + IMG_PER_OCTAVE_OFFSET, IMG4_OCTAVE_C);
+
+	//------------------------Start Guassian Blur IP---------------------------------
+	Xil_Out16(XPAR_GAUSSIAN_BLUR_IP_0_S00_AXI_BASEADDR + START_REG_OFFSET, 1);
+	while(Xil_In32(XPAR_GAUSSIAN_BLUR_IP_0_S00_AXI_BASEADDR + READY_REG_OFFSET));
+	Xil_Out16(XPAR_GAUSSIAN_BLUR_IP_0_S00_AXI_BASEADDR + START_REG_OFFSET, 0);
+	// Waiting for the core to finish processing
+	while(!Xil_In32(XPAR_GAUSSIAN_BLUR_IP_0_S00_AXI_BASEADDR + READY_REG_OFFSET));
+
+	incorrect = 0;
+	correct = 0;
+	zeros = 0;
+
+
+	//------------------------Read to end_buffer from BRAM---------------------------------
+	for(uint16_t j = 0; j < (IMG4_WIDTH_C)*(IMG4_HEIGHT_C - IMG4_OFFSET_UP_C - IMG4_OFFSET_DOWN_C)-1; j+=2)
+	{
+		uint32_t packed = (uint32_t)Xil_In32(XPAR_AXI_BRAM_CTRL_0_S_AXI_BASEADDR + 2*j);
+		end_buffer4[j+1] = (uint16_t)(packed & 0xFFFF);
+		end_buffer4[j] = (uint16_t)((packed >> 16) & 0xFFFF);
+	}
+
+	for(uint16_t j = 0; j < (IMG4_WIDTH_C)*(IMG4_HEIGHT_C - IMG4_OFFSET_UP_C - IMG4_OFFSET_DOWN_C); j++)
+	{
+
+		if((end_buffer4[j] < result_data4[j] - 1) || (end_buffer4[j] > result_data4[j] + 1))
+		{
+			incorrect++;
+		}
+		else
+		{
+			correct++;
+		}
+		if(end_buffer4[j] == 0)
+			zeros++;
+	}
+	printf("There are %d correct values and %d incorrect values!\n", correct, incorrect);
+	printf("There are %d zero values!\n", zeros);
+
+/*------------------------------------------------------------------------------------------------------*/
+
+	printf("\n--------------- TEST OF 5. IMAGE ---------------\n");
+
+	// Reset
+	Xil_Out16(XPAR_GAUSSIAN_BLUR_IP_0_S00_AXI_BASEADDR + START_REG_OFFSET, 0);
+	Xil_Out16(XPAR_GAUSSIAN_BLUR_IP_0_S00_AXI_BASEADDR + RESET_REG_OFFSET, 1);
+	while(!Xil_In32(XPAR_GAUSSIAN_BLUR_IP_0_S00_AXI_BASEADDR + READY_REG_OFFSET));
+	Xil_Out16(XPAR_GAUSSIAN_BLUR_IP_0_S00_AXI_BASEADDR + RESET_REG_OFFSET, 0);
+
+	// Sending parameters to Gaussian_blur-core
+	Xil_Out16(XPAR_GAUSSIAN_BLUR_IP_0_S00_AXI_BASEADDR + IMG_WIDTH_OFFSET, IMG5_WIDTH_C);
+	Xil_Out16(XPAR_GAUSSIAN_BLUR_IP_0_S00_AXI_BASEADDR + IMG_HEIGHT_OFFSET, IMG5_HEIGHT_C);
+	Xil_Out16(XPAR_GAUSSIAN_BLUR_IP_0_S00_AXI_BASEADDR + IMG_OFFSET_UP_OFFSET, IMG5_OFFSET_UP_C);
+	Xil_Out16(XPAR_GAUSSIAN_BLUR_IP_0_S00_AXI_BASEADDR + IMG_OFFSET_DOWN_OFFSET, IMG5_OFFSET_DOWN_C);
+	Xil_Out16(XPAR_GAUSSIAN_BLUR_IP_0_S00_AXI_BASEADDR + IMG_PER_OCTAVE_OFFSET, IMG5_OCTAVE_C);
+
+	//------------------------Start Guassian Blur IP---------------------------------
+	Xil_Out16(XPAR_GAUSSIAN_BLUR_IP_0_S00_AXI_BASEADDR + START_REG_OFFSET, 1);
+	while(Xil_In32(XPAR_GAUSSIAN_BLUR_IP_0_S00_AXI_BASEADDR + READY_REG_OFFSET));
+	Xil_Out16(XPAR_GAUSSIAN_BLUR_IP_0_S00_AXI_BASEADDR + START_REG_OFFSET, 0);
+	// Waiting for the core to finish processing
+	while(!Xil_In32(XPAR_GAUSSIAN_BLUR_IP_0_S00_AXI_BASEADDR + READY_REG_OFFSET));
+
+	incorrect = 0;
+	correct = 0;
+	zeros = 0;
+
+
+	//------------------------Read to end_buffer from BRAM---------------------------------
+	for(uint16_t j = 0; j < (IMG5_WIDTH_C)*(IMG5_HEIGHT_C - IMG5_OFFSET_UP_C - IMG5_OFFSET_DOWN_C)-1; j+=2)
+	{
+		uint32_t packed = (uint32_t)Xil_In32(XPAR_AXI_BRAM_CTRL_0_S_AXI_BASEADDR + 2*j);
+		end_buffer5[j+1] = (uint16_t)(packed & 0xFFFF);
+		end_buffer5[j] = (uint16_t)((packed >> 16) & 0xFFFF);
+	}
+
+	for(uint16_t j = 0; j < (IMG5_WIDTH_C)*(IMG5_HEIGHT_C - IMG5_OFFSET_UP_C - IMG5_OFFSET_DOWN_C); j++)
+	{
+
+		if((end_buffer5[j] < result_data5[j] - 1) || (end_buffer5[j] > result_data5[j] + 1))
+		{
+			incorrect++;
+		}
+		else
+		{
+			correct++;
+		}
+		if(end_buffer5[j] == 0)
+			zeros++;
+	}
+	printf("There are %d correct values and %d incorrect values!\n", correct, incorrect);
+	printf("There are %d zero values!\n", zeros);
+
 
 	printf("\n--------------- EXIT ---------------\n");
 	printf("------------------------------------\n\n\n\n\n");
