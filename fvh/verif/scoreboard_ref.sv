@@ -62,7 +62,6 @@ class gaussian_blur_scoreboard_ref extends uvm_scoreboard;
     
     function void gaussian_blur_ref(int img_in_data_arr [$], int img_width, int img_height, int img_offset_up, int img_offset_down, int num_img_per_octave, ref int output_data_arr[$]);
         int tmp_arr[60000];
-        int filtered_arr[60000];
         int sigma_vals[6] = {9, 9, 11, 13, 15, 19};
         int size = sigma_vals[num_img_per_octave];
         int center = size/2;
