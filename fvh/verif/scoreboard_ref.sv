@@ -35,7 +35,7 @@ class gaussian_blur_scoreboard_ref extends uvm_scoreboard;
     int blur_out_data_arr[$];
     int pixel_data_of = 1;
     int ref_d = 1;
-    int ref_model;
+
     uvm_analysis_imp#(agent_ref_pkg::gaussian_blur_seq_item, gaussian_blur_scoreboard_ref) item_collected_import;
     
      `uvm_component_utils_begin(gaussian_blur_scoreboard_ref)
@@ -60,10 +60,9 @@ class gaussian_blur_scoreboard_ref extends uvm_scoreboard;
         super.connect_phase(phase);
     endfunction : connect_phase               
     
-    function int gaussian_blur_ref(int img_in_data_arr [$], int img_width, int img_height, int img_offset_up, int img_offset_down, int num_img_per_octave, ref int output_data_arr[$]);
+    function void gaussian_blur_ref(int img_in_data_arr [$], int img_width, int img_height, int img_offset_up, int img_offset_down, int num_img_per_octave, ref int output_data_arr[$]);
         int tmp_arr[60000];
         int filtered_arr[60000];
-        //int filtered_arr[];
         int sigma_vals[6] = {9, 9, 11, 13, 15, 19};
         int size = sigma_vals[num_img_per_octave];
         int center = size/2;
@@ -71,12 +70,12 @@ class gaussian_blur_scoreboard_ref extends uvm_scoreboard;
         int c_y;
         int kernel_vals[6][];
         
-        kernel_vals[0] = {30, 292, 1452, 3799, 5234, 3799, 1452, 292, 30, 0};
-        kernel_vals[1] = {26, 267, 1409, 3823, 5331, 3823, 1409, 267, 26, 0};
-        kernel_vals[2] = {22, 148, 642, 1830, 3432, 4231, 3432, 1830, 642, 148, 22, 0};
-        kernel_vals[3] = {28, 123, 406, 1024, 1982, 2945, 3360, 2945, 1982, 1024, 406, 123, 28, 0};
-        kernel_vals[4] = {45, 133, 334, 706, 1263, 1915, 2457, 2670, 2457, 1915, 1263, 706, 334, 133, 45, 0};
-        kernel_vals[5] = {30, 74, 162, 321, 572, 917, 1322, 1719, 2011, 2119, 2011, 1719, 1322, 917, 572, 321, 162, 74, 30, 0};
+        kernel_vals[0] = {30, 292, 1452, 3799, 5234, 3799, 1452, 292, 30};
+        kernel_vals[1] = {26, 267, 1409, 3823, 5331, 3823, 1409, 267, 26};
+        kernel_vals[2] = {22, 148, 642, 1830, 3432, 4231, 3432, 1830, 642, 148, 22};
+        kernel_vals[3] = {28, 123, 406, 1024, 1982, 2945, 3360, 2945, 1982, 1024, 406, 123, 28};
+        kernel_vals[4] = {45, 133, 334, 706, 1263, 1915, 2457, 2670, 2457, 1915, 1263, 706, 334, 133, 45};
+        kernel_vals[5] = {30, 74, 162, 321, 572, 917, 1322, 1719, 2011, 2119, 2011, 1719, 1322, 917, 572, 321, 162, 74, 30};
         
         for (int y = img_offset_up; y < img_height - img_offset_down; y++) begin
             for (int x = 0; x < img_width; x+=2) begin
@@ -119,30 +118,19 @@ class gaussian_blur_scoreboard_ref extends uvm_scoreboard;
                     sum1 += int'((tmp_arr[y * img_width + c_x] * kernel_vals[num_img_per_octave][k]) / (1 << 14));
                     sum2 += int'((tmp_arr[y * img_width + c_x + 1] * kernel_vals[num_img_per_octave][k]) / (1 << 14));
                 end
-                filtered_arr[y * img_width + x] = sum1;
-                filtered_arr[y * img_width + x + 1] = sum2;
+                output_data_arr.push_back(sum1);
+                output_data_arr.push_back(sum2);
             end
         end
         
-        for(int i = 0; i < (img_height - img_offset_up - img_offset_down) *  img_width; i++) begin
-            output_data_arr.push_back(filtered_arr[i]);
-        end
-        
-        return 1;
-        
-    endfunction : gaussian_blur_ref
-    
-    task body(gaussian_blur_config_ref_pkg::gaussian_blur_config_ref cfg);
-        
-        
-    endtask : body;
+    endfunction : gaussian_blur_ref       
     
     function void write(agent_ref_pkg::gaussian_blur_seq_item curr_it);
         if (ref_d) begin
-            ref_model = gaussian_blur_ref(cfg.img_in_data_arr, cfg.rand_width, cfg.rand_height, cfg.rand_offset_up, cfg.rand_offset_down, cfg.rand_img_per_octave, blur_out_data_arr);
+            gaussian_blur_ref(cfg.img_in_data_arr, cfg.rand_width, cfg.rand_height, cfg.rand_offset_up, cfg.rand_offset_down, cfg.rand_img_per_octave, blur_out_data_arr);
             ref_d = 0;  
         end    
-        if(checks_enable && ref_model && !ref_d) begin
+        if(checks_enable && !ref_d) begin
             `uvm_info(get_type_name(),$sformatf("\n[Scoreboard] Scoreboard function write called..."),UVM_MEDIUM);
             
             if (curr_it.main_bram_a_rdata_o >> 16 == 0) begin
