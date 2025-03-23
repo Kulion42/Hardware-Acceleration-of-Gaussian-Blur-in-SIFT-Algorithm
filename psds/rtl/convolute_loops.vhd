@@ -109,7 +109,7 @@ component dsp_unit_mul_shift
           );
 end component;
 
-signal x, y, k, dy, dx : signed(DATA_WIDTH -1 downto 0);
+signal x_reg, y_reg, k_reg, dy, dx : signed(DATA_WIDTH -1 downto 0);
 signal x_next, y_next, k_next: signed(DATA_WIDTH - 1 downto 0);
 signal c_y, c_x: unsigned(DATA_WIDTH -1 downto 0);
 signal pix1, pix2, kernel_val: std_logic_vector(DATA_WIDTH -1 downto 0);
@@ -133,13 +133,13 @@ begin
     if (reset = '1') then
         state_reg <= idle;
         
-        x <= (others => '0');
+        x_reg <= (others => '0');
         if HORIZONTAL = false then
-            y <= signed(img_offset_up);
+            y_reg <= signed(img_offset_up);
         else
-            y <= (others => '0');
+            y_reg <= (others => '0');
         end if;    
-        k <= (others => '0');
+        k_reg <= (others => '0');
         
         sum1_reg <= (others => '0');
         sum2_reg <= (others => '0');
@@ -148,9 +148,9 @@ begin
     elsif (rising_edge(clk) and reset = '0') then
         state_reg <= state_next;
     
-        x <= x_next;
-        y <= y_next;
-        k <= k_next; 
+        x_reg <= x_next;
+        y_reg <= y_next;
+        k_reg <= k_next; 
         
         sum1_reg <= sum1_next;
         sum2_reg <= sum2_next;
@@ -160,13 +160,13 @@ begin
 
 end process;
 
-combinational_logic_process: process(start, state_reg, state_next, sigma_size, x, x_next, y, y_next, k, k_next, kernel_rom_data, img_width, img_height, img_offset_up, img_offset_down, 
-sum1_reg, sum2_reg, c_x, c_y, dx, dy, mul_reg_1, mul_reg_2, sigma_center, bram1_b_rdata, valid_reg) 
+combinational_logic_process: process(start, state_reg, state_next, sigma_size, x_reg, y_reg, k_reg, img_width, img_height, img_offset_up, img_offset_down, 
+sum1_reg, sum2_reg, mul_reg_1, mul_reg_2, valid_reg) 
 begin
     
-    x_next <= x;
-    y_next <= y;
-    k_next <= k;    
+    x_next <= x_reg;
+    y_next <= y_reg;
+    k_next <= k_reg;    
     
     sum1_next <= sum1_reg;
     sum2_next <= sum2_reg; 
@@ -185,20 +185,20 @@ begin
             end if;
             
         when loops =>           
-            if (HORIZONTAL = true and y>= signed(img_height) - signed(img_offset_down) - signed(img_offset_up)) or (HORIZONTAL = false and y>= signed(img_height) - signed(img_offset_down)) then             
+            if (HORIZONTAL = true and y_reg>= signed(img_height) - signed(img_offset_down) - signed(img_offset_up)) or (HORIZONTAL = false and y_reg>= signed(img_height) - signed(img_offset_down)) then             
                 state_next <= conv_end;          
-            elsif x>= signed(img_width) then    
-                y_next <= y + 1; 
+            elsif x_reg>= signed(img_width) then    
+                y_next <= y_reg + 1; 
                 x_next <= (others => '0');
                 valid_next <= '0';
                 state_next <= loops; 
                  
-            elsif k > signed(sigma_size)    then
+            elsif k_reg > signed(sigma_size)    then
                 k_next <= (others => '0');          
-                x_next <= x + 2;     
+                x_next <= x_reg + 2;     
                 valid_next <= '0';              
                 state_next <= stal2;                   
-            else                                            
+            else 
                 state_next <= stal1;
             end if;
         when stal1 => 
@@ -212,8 +212,8 @@ begin
                 state_next <= loops;             
         when sum_calc => 
                 sum1_next <= sum1_reg + unsigned(mul_reg_1);   
-                sum2_next <= sum2_reg + unsigned(mul_reg_2);                                    
-                k_next <= k + 1;
+                sum2_next <= sum2_reg + unsigned(mul_reg_2);
+                k_next <= k_reg + 1;
                 state_next <= loops; 
         when conv_end =>
                 ready <= '1';
@@ -224,105 +224,83 @@ begin
     end case;
 
 end process;
-
-dx <= sigma_center + k;
-dy <= sigma_center + k; 
-
-kernel_rom_addr <= std_logic_vector(TO_UNSIGNED(TO_INTEGER(k), log2c(KERNEL_ROM_SIZE)));                
+               
     
-read_address_coord_generation : process(x, y, dx, dy, img_width, img_height, img_offset_up, img_offset_down)
+read_address_coord_generation: process(x_reg, y_reg, k_reg, dx, dy, img_width, img_height, img_offset_up, img_offset_down)
 begin
+    dx <= sigma_center + k_reg;
+    dy <= sigma_center + k_reg; 
+    kernel_rom_addr <= std_logic_vector(TO_UNSIGNED(TO_INTEGER(k_reg), log2c(KERNEL_ROM_SIZE))); 
 
     if  HORIZONTAL = true then  
-        if (x + dx) < TO_SIGNED(0, 16)  then
+        if (x_reg + dx) < TO_SIGNED(0, 16)  then
             c_x <= (others => '0');
-        elsif (x + dx) >= signed(img_width) then 
+        elsif (x_reg + dx) >= signed(img_width) then 
             c_x <= unsigned(img_width) -1;
         else
-            c_x <= unsigned(x + dx);
+            c_x <= unsigned(x_reg + dx);
         end if;
                                        
-        c_y <= unsigned(y);
+        c_y <= unsigned(y_reg);
 
     else
         if TO_INTEGER(signed(img_offset_down)) = 0 and TO_INTEGER(signed(img_offset_up)) = 0  then                    
-            if  (y + dy) < TO_SIGNED(0, 16)  then
+            if  (y_reg + dy) < TO_SIGNED(0, 16)  then
                 c_y <= (others => '0');                                   
-            elsif (y + dy) >= signed(img_height) then
+            elsif (y_reg + dy) >= signed(img_height) then
                 c_y <= unsigned(img_height) -1 ;                                   
             else
-                c_y <= unsigned(y + dy);
+                c_y <= unsigned(y_reg + dy);
             end if;
         end if;
                     
         if TO_INTEGER(signed(img_offset_down)) = 10 and TO_INTEGER(signed(img_offset_up)) = 10  then
-            if  (y + dy) < signed(img_offset_up) then
+            if  (y_reg + dy) < signed(img_offset_up) then
                 c_y <= unsigned(signed(img_offset_up) + dy);                           
-            elsif (y + dy) >= signed(img_height) - signed(img_offset_down) then
+            elsif (y_reg + dy) >= signed(img_height) - signed(img_offset_down) then
                 c_y <= unsigned(signed(img_height) - signed(img_offset_down) + dy);
             else
-                c_y <= unsigned(y + dy);
+                c_y <= unsigned(y_reg + dy);
             end if;
         end if;
                     
         if TO_INTEGER(signed(img_offset_down)) = 10 and TO_INTEGER(signed(img_offset_up)) = 0  then                    
-            if (y + dy) < TO_SIGNED(0, 16)  then
+            if (y_reg + dy) < TO_SIGNED(0, 16)  then
                 c_y <= (others => '0');                        
-            elsif (y + dy) >= signed(img_height) - signed(img_offset_down) then
+            elsif (y_reg + dy) >= signed(img_height) - signed(img_offset_down) then
                 c_y <= unsigned(signed(img_height) - signed(img_offset_down) + dy);                                   
             else
-                c_y <= unsigned(y + dy);
+                c_y <= unsigned(y_reg + dy);
             end if;
         end if;
                     
         if TO_INTEGER(signed(img_offset_down)) = 0 and TO_INTEGER(signed(img_offset_up)) = 10  then
-            if (y + dy) < signed(img_offset_up) then
+            if (y_reg + dy) < signed(img_offset_up) then
                 c_y <= unsigned(signed(img_offset_up) + dy);                           
-            elsif (y + dy) >= signed(img_height) then
+            elsif (y_reg + dy) >= signed(img_height) then
                 c_y <= unsigned(img_height) -1 ;  
             else
-                c_y <= unsigned(y + dy);
+                c_y <= unsigned(y_reg + dy);
             end if;
         end if;                      
-        c_x <= unsigned(x); 
+        c_x <= unsigned(x_reg); 
                             
     end if; 
 
-end process;
+end process; 
 
-kernel_rom_en <= '1';
-
-bram1_b_en <= '1';
-            
-bram1_b_we <= "0000";        
-            
-bram2_b_en <= '1';
-            
-bram2_b_we <= "1111";
-
-
-bram1_a_en <= '1' ;
-            
-bram1_a_we <= "0000";        
-            
-bram2_a_en <= '1' ;
-            
-bram2_a_we <= "1111" ;
-
---
-x2_coord <= std_logic_vector(x) ;
-c_y_vec <= std_logic_vector(c_y);
-c_x1_vec <= std_logic_vector(c_x);
-pix2 <= '0'&bram1_b_rdata((DATA_WIDTH-1) -1 downto 0); 
-
-address_generation: process(x, y, c_x, c_y, sum1_reg, sum2_reg, bram1_b_rdata, bram1_b_rdata, img_width, img_offset_up)
+address_generation: process(x_reg, y_reg, c_x, c_y, sum1_reg, sum2_reg, bram1_b_rdata, bram1_b_rdata, img_width, img_offset_up)
 begin
+    x2_coord <= std_logic_vector(x_reg);
+    c_y_vec <= std_logic_vector(c_y);
+    c_x1_vec <= std_logic_vector(c_x);
+    pix2 <= '0'&bram1_b_rdata((DATA_WIDTH-1) -1 downto 0);
 
     if HORIZONTAL = true then
         bram2_b_wdata <= std_logic_vector(sum1_reg(DATA_WIDTH -2 downto 0)&sum2_reg(DATA_WIDTH -2 downto 0));
         bram2_a_wdata <= (others => '0');
-        y_coord <= std_logic_vector(y);
-        x1_coord <= std_logic_vector(x/2);
+        y_coord <= std_logic_vector(y_reg);
+        x1_coord <= std_logic_vector(x_reg/2);
         c_x2_vec <= std_logic_vector(c_x + 1);
         pix1 <= '0'&bram1_a_rdata((DATA_WIDTH-1) -1 downto 0);
         img_w1 <= std_logic_vector(shift_right(unsigned(img_width), 1));
@@ -330,8 +308,8 @@ begin
     else
         bram2_b_wdata <= std_logic_vector(sum2_reg(DATA_WIDTH -2 downto 0));
         bram2_a_wdata <= std_logic_vector(sum1_reg(DATA_WIDTH -2 downto 0));
-        y_coord <= std_logic_vector(y- signed(img_offset_up));
-        x1_coord <= std_logic_vector(x + 1);
+        y_coord <= std_logic_vector(y_reg- signed(img_offset_up));
+        x1_coord <= std_logic_vector(x_reg + 1);
         c_x2_vec <= std_logic_vector(c_x/2);
         pix1 <= '0'&bram1_b_rdata(R_PIXEL *(DATA_WIDTH-1) -1 downto (DATA_WIDTH-1));
         img_w1 <= img_width;
@@ -417,5 +395,27 @@ port map( clk => clk,
           out_res => bram1_a_addr
           ); 
            
-end generate;                                                                                                                                   
+end generate;    
+
+--CONSTANTS------------------------------------
+kernel_rom_en <= '1';
+
+bram1_b_en <= '1';
+            
+bram1_b_we <= "0000";        
+            
+bram2_b_en <= '1';
+            
+bram2_b_we <= "1111";
+
+
+bram1_a_en <= '1' ;
+            
+bram1_a_we <= "0000";        
+            
+bram2_a_en <= '1' ;
+            
+bram2_a_we <= "1111" ;
+------------------------------------------------
+
 end Mixed;

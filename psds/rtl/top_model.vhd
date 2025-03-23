@@ -35,7 +35,7 @@ Generic(
     DATA_WIDTH : natural := 16;
     
     --SIZE OF BRAMS AND ROM
-    KERNEL_ROM_SIZE : natural := 77; --FIXED 
+    KERNEL_ROM_SIZE : natural := 78; --FIXED 
     BRAM_SIZE : natural := 60000 --FIXED
 );
 Port ( 
