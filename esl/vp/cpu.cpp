@@ -92,9 +92,11 @@ void Cpu::soft()
             kps.push_back(kp);
         }
     }
-    
+    std::string res = "result_";
+    std::string output = res + input_arguments[1];
+
     Image result = draw_keypoints(grayscale_img, kps);
-    result.save("result.jpg");
+    result.save(output.c_str());
     
     std::cout << "Found " << kps.size() << " keypoints. Output image is saved as result.jpg\n";
     
