@@ -99,13 +99,6 @@ void Ip_Core::b_transport(pl_t &pl, sc_time &offset)
 void Ip_Core::gaussian_blur(sc_core::sc_time& offset)
 {
  //  pl_t pl;
-   FILE *fp; 
-    std::string blur_x= "../../psds/tb/convolutions/convolute_x_";
-    std::string blur_y = "../../psds/tb/convolutions/convolute_y_";
-
-    
-    char numstr[21];
-    std::string res;
     
     if (start == 1 && ready == 1 && reset == 0){
        // cout << "Hard started" << endl;
@@ -131,37 +124,12 @@ void Ip_Core::gaussian_blur(sc_core::sc_time& offset)
     
     else if(img_per_octave == 1)
     addr_off=size;
-       
-   // cout << center << endl;
-  //  Image kernel(size, 1, 1);
-  /*  sprintf(numstr, "%d", (int)img_per_octave);
-    res = kernel_val + numstr + "_one" +".txt";
-    fp = fopen(res.c_str(), "w+");
-        for (sc_int<16> k = -size/2; k <= size/2; k++) {
-          data_t val1, val1_p, val2 = 0.0;
-          val1 = read_rom(VP_ADDR_SIGMA_ROM_L + addr_off + k);
-     //   cout << "Test1" << endl;
-    //    kernel.set_pixel(center+k, 0, 0, val);
     
-        write_mem(VP_ADDR_KERNEL_BRAM_L + 2 *(center+k), val1_p, val2);
-        uint16_t p1 = to_Uint16_t(val1_p);
-        uint16_t p2 = to_Uint16_t(val1);
-        //data_t tmp = read_mem(VP_ADDR_KERNEL_BRAM_L + 2 *(center+k));
-        fprintf(fp, "%X\n", (unsigned int)p2);
-        
-        offset_hard += sc_time(DELAY, SC_NS);
-    }
-    fclose(fp);
-    */
-    sprintf(numstr, "%d", (int)img_per_octave);
-    res = blur_y + numstr + ".txt";
-    fp = fopen(res.c_str(), "w+");
     // convolve vertical
-    for (sc_int<16> x = 0; x < img_width; x+=4) {
+    for (sc_int<16> x = 0; x < img_width; x+=2) {
         for (sc_int<16> y = img_offset_up; y < img_height - img_offset_down; y++) {
        //cout << img.height - offset_down << y << endl;
            sum_t sum1 = 0; sum_t sum2 = 0;
-           sum_t sum3 = 0; sum_t sum4 = 0;
             for ( sc_int<16> k = 0; k < size; k++) {
                  sc_int<16> dy = -center + k;
                  
@@ -176,50 +144,29 @@ void Ip_Core::gaussian_blur(sc_core::sc_time& offset)
                  else
                     c_y = y + dy;
                     
-                 data_t pix1, pix2, pix3, pix4,  val1;
+                 data_t pix1, pix2, val1;
                  val1 = read_rom(VP_ADDR_SIGMA_ROM_L + addr_off + k);
                  //cout << std::hex << VP_ADDR_MAIN_BRAM_L + (y+dy)*img_width + x << endl;
                  read_mem(VP_ADDR_MAIN_BRAM_L + 2 *(c_y*img_width + x), pix1, pix2);
-                 read_mem(VP_ADDR_MAIN_BRAM_L + 2 *(c_y*img_width + x + 2), pix3, pix4);
-                 uint16_t p1, p2, p3, p4;
-                 p1 = to_Uint16_t(pix1);
-                 p2 = to_Uint16_t(pix2);
-                 p3 = to_Uint16_t(pix3);
-                 p4 = to_Uint16_t(pix4);
                  
-                 std::string p1_b = std::bitset<16>((unsigned int)p1).to_string(); //to binary
-                 std::string p2_b = std::bitset<16>((unsigned int)p2).to_string(); //to binary
-                 fprintf(fp, "%s%s\n" , p1_b.c_str(), p2_b.c_str());
-                 std::string p3_b = std::bitset<16>((unsigned int)p3).to_string(); //to binary
-                 std::string p4_b = std::bitset<16>((unsigned int)p4).to_string(); //to binary
-                 fprintf(fp, "%s%s\n" , p3_b.c_str(), p4_b.c_str());
-
                  sum1 += pix1 * val1;
                  sum2 += pix2 * val1;
-                 sum3 += pix3 * val1;
-                 sum4 += pix4 * val1;
                  
                  //cout << sum << endl;
                  offset_hard += sc_time(DELAY, SC_NS);
             }
           //  tmp.set_pixel(x, y-offset_up, 0, sum);
           write_mem(VP_ADDR_TMP_BRAM_L + 2 *((y-img_offset_up)*img_width + x), sum1, sum2);
-          write_mem(VP_ADDR_TMP_BRAM_L + 2 *((y-img_offset_up)*img_width + x + 2), sum3, sum4);
           offset_hard += sc_time(DELAY, SC_NS);
         }
         offset_hard += sc_time(DELAY, SC_NS);
     }
-    fclose(fp);
     offset_hard += sc_time(DELAY, SC_NS);
         
-    sprintf(numstr, "%d", (int)img_per_octave);
-    res = blur_x + numstr + ".txt";
-    fp = fopen(res.c_str(), "w+");
     // convolve horizontal
-       for (sc_int<16> x = 0; x < img_width; x+=4) {
+       for (sc_int<16> x = 0; x < img_width; x+=2) {
            for (sc_int<16> y = 0; y < img_height - img_offset_up - img_offset_down; y++) {           
                sum_t sum1 = 0; sum_t sum2 = 0;
-               sum_t sum3 = 0; sum_t sum4 = 0;
                  for (sc_int<16> k = 0; k < size; k++) {
                  sc_int<16> dx = -center + k;
                  if (x+dx < 0 )
@@ -229,36 +176,13 @@ void Ip_Core::gaussian_blur(sc_core::sc_time& offset)
                  else
                     c_x1 = x + dx;
                     
-                  if (x+2+dx < 0 )
-                    c_x2 = 0;
-                 else if (x+2+dx >= img_width)
-                    c_x2 = img_width - 1;
-                 else
-                    c_x2 = x + 2 + dx;
-                    
-                 data_t pix1, pix2, pix3, pix4,  val1;
+                 data_t pix1, pix2,  val1;
                  val1 = read_rom(VP_ADDR_SIGMA_ROM_L + addr_off + k);
                  
-                 read_mem(VP_ADDR_TMP_BRAM_L + 2 * (y*img_width + c_x1), pix1, pix2);
-                 read_mem(VP_ADDR_TMP_BRAM_L + 2 * (y*img_width + c_x2), pix3, pix4);
-                 
-                 uint16_t p1, p2, p3, p4;
-                 p1 = to_Uint16_t(pix1);
-                 p2 = to_Uint16_t(pix2);
-                 p3 = to_Uint16_t(pix3);
-                 p4 = to_Uint16_t(pix4);
-                 
-                 std::string p1_b = std::bitset<16>((unsigned int)p1).to_string(); //to binary
-                 std::string p2_b = std::bitset<16>((unsigned int)p2).to_string(); //to binary
-                 fprintf(fp, "%s%s\n" , p1_b.c_str(), p2_b.c_str());
-                 std::string p3_b = std::bitset<16>((unsigned int)p3).to_string(); //to binary
-                 std::string p4_b = std::bitset<16>((unsigned int)p4).to_string(); //to binary
-                 fprintf(fp, "%s%s\n" , p3_b.c_str(), p4_b.c_str());
+                 read_mem(VP_ADDR_TMP_BRAM_L + 2 * (y*img_width + c_x1), pix1, pix2);                 
                  
                  sum1 += pix1 * val1;
                  sum2 += pix2 * val1;
-                 sum3 += pix3 * val1;
-                 sum4 += pix4 * val1;
                 // fprintf(fp, "%2.14lf\n", (double)tmp);
                //  cout << sum << endl;
                  offset_hard += sc_time(DELAY, SC_NS);
@@ -267,12 +191,10 @@ void Ip_Core::gaussian_blur(sc_core::sc_time& offset)
             //fprintf(fp, "%2.14lf\n\n", (double)sum);
            // filtered.set_pixel(x, y, 0, sum);
            write_mem(VP_ADDR_MAIN_BRAM_L + 2 * (y*img_width + x), sum1, sum2);
-           write_mem(VP_ADDR_MAIN_BRAM_L + 2 * (y*img_width + x + 2), sum3, sum4);
            offset_hard += sc_time(DELAY, SC_NS);
         }
         offset_hard += sc_time(DELAY, SC_NS);
     }
-    fclose(fp);
    offset_hard += sc_time(DELAY, SC_NS);
    
    addr_off+=size;
@@ -283,36 +205,6 @@ void Ip_Core::gaussian_blur(sc_core::sc_time& offset)
       ready = 1;
    }
    
-    else if (reset == 1){
-    
-        ready = 0;
-        for (sc_dt::sc_uint<64> k = VP_ADDR_MAIN_BRAM_L; k < VP_ADDR_MAIN_BRAM_H; k+=16)
-        {
-            write_mem(k, 0, 0);
-            if (k + 4 < VP_ADDR_MAIN_BRAM_H)
-            write_mem(k+4, 0, 0);
-            if (k + 8 < VP_ADDR_MAIN_BRAM_H)
-            write_mem(k+8, 0, 0);
-            if (k + 12 < VP_ADDR_MAIN_BRAM_H)
-            write_mem(k+12, 0, 0);
-        }
-        for (sc_dt::sc_uint<64> k = VP_ADDR_TMP_BRAM_L; k < VP_ADDR_TMP_BRAM_H; k+=16)
-        {
-            write_mem(k, 0, 0);
-            if (k + 4 < VP_ADDR_MAIN_BRAM_H)
-            write_mem(k+4, 0, 0);
-            if (k + 8 < VP_ADDR_MAIN_BRAM_H)
-            write_mem(k+8, 0, 0);
-            if (k + 12 < VP_ADDR_MAIN_BRAM_H)
-            write_mem(k+12, 0, 0);
-        }
-        for (sc_dt::sc_uint<64> k = VP_ADDR_KERNEL_BRAM_L; k < VP_ADDR_KERNEL_BRAM_H; k+=4)
-        {
-            write_mem(k, 0, 0);
-        }
-        
-        ready = 1;
-   }
    
    //after this in CPU is added with software time
    offset_system = offset_hard;
@@ -343,12 +235,6 @@ void Ip_Core::write_mem(sc_dt::sc_uint<64> addr, data_t pix1, data_t pix2)
 		tmp_bram_socket->b_transport(pl, offset_hard);
 		pl.set_address(addr);
 	}
-	else if (addr >= VP_ADDR_KERNEL_BRAM_L && addr <= VP_ADDR_KERNEL_BRAM_H)
-	{
-		pl.set_address(taddr);
-		kernel_bram_socket->b_transport(pl, offset_hard);
-		pl.set_address(addr);
-	}
 	else
 	{
 	    SC_REPORT_ERROR("IP_Core_Write", "Wrong address.");
@@ -377,12 +263,6 @@ void Ip_Core::read_mem(sc_dt::sc_uint<64> addr, data_t& pix1, data_t& pix2)
 		tmp_bram_socket->b_transport(pl, offset_hard);
 		pl.set_address(addr);
 	}
-	else if (addr >= VP_ADDR_KERNEL_BRAM_L && addr <= VP_ADDR_KERNEL_BRAM_H)
-	{
-		pl.set_address(taddr);
-		kernel_bram_socket->b_transport(pl, offset_hard);
-		pl.set_address(addr);
-	}
 	else
 	{
 	    cout << std::hex << addr << endl;
@@ -401,7 +281,7 @@ data_t Ip_Core::read_rom(sc_dt::sc_uint<64> addr)
 	pl.set_data_ptr(buf);
 	pl.set_command( tlm::TLM_READ_COMMAND );
 	pl.set_response_status ( tlm::TLM_INCOMPLETE_RESPONSE );
-	sigma_rom_socket->b_transport(pl, offset_hard);
+	kernel_rom_socket->b_transport(pl, offset_hard);
 	return Uchar_to_Data_t(buf);
 	
 }

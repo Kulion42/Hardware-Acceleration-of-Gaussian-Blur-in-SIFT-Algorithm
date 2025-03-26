@@ -69,12 +69,7 @@ void Cpu::soft()
         
     }; 
     for (int i = 0; i < num_of_parts; i++){
-        enable = 1;
-        write_hard(ADDR_RESET, 1);
-        while(!read_hard(ADDR_READY));
-        write_hard(ADDR_RESET, 0);
-        std::vector<Image> tmp = generate_gaussian_pyramid_vector(resized_part[i], i, enable); 
-        while(enable);
+        std::vector<Image> tmp = generate_gaussian_pyramid_vector(resized_part[i], i); 
         for (int j = 0; j < num_octaves * imgs_per_octave; j++){
             gaussian_pyramid_vector[i][j] = tmp[j];  
         } 
@@ -111,19 +106,12 @@ void Cpu::soft()
     
 }
 
-std::vector<Image> Cpu::generate_gaussian_pyramid_vector(const Image& img, int img_num, int& enable, float sigma_min, int num_of_parts,
+std::vector<Image> Cpu::generate_gaussian_pyramid_vector(const Image& img, int img_num, float sigma_min, int num_of_parts,
                                              int num_octaves, int scales_per_octave)
 {
     assert(enable == 1);
     assert(img.channels == 1);
     
-    FILE *fp;
-    std::string bram_str = "../../psds/tb/bram_init/bram_state_";
-    std::string resize = "generate_img_";
-    char numstr[21];
-    std::string res;
-    
-   // sigma_prev_total_t base_sigma, sigma_diff;
     float base_sigma = sigma_min / MIN_PIX_DIST;
   
     float sigma_diff = std::sqrt(base_sigma*base_sigma - 1.0f);
@@ -157,55 +145,32 @@ std::vector<Image> Cpu::generate_gaussian_pyramid_vector(const Image& img, int i
 	cout << "IP core registers initialized" << endl;
 	cout << endl;
 	//------------------------------------------------
-	//cout << "Bram initialzation 0" << endl;
+	//cout << "First bram initialzation" << endl;
 
 
-    for ( int x = 0; x < img.width; x+=4) {    
+    for ( int x = 0; x < img.width; x+=2) {    
         for (int y = 0; y < img.height; y++) {
           data_t pix1, pix2, pix3, pix4; 
           pix1= img.get_pixel(x, y, 0);
           if(x +1 < img.width)
           pix2 = img.get_pixel(x+1, y, 0);
-          if(x +2 < img.width)
-          pix3= img.get_pixel(x+2, y, 0);
-          if(x +3 < img.width)
-          pix4 = img.get_pixel(x+3, y, 0);
           //cout << pix1 << " "<<pix2 << endl;
           write_mem(VP_ADDR_MAIN_BRAM_L  + 2 *(y*img.width + x), pix1, pix2);
-          write_mem(VP_ADDR_MAIN_BRAM_L  + 2 *(y*img.width + x + 2), pix3, pix4);
         }
-    }
-
-    
-    sprintf(numstr, "%d", 0);
-    res = bram_str + numstr + "_init" + ".txt";
-    fp = fopen(res.c_str(), "w+");
-    for ( int x = 0; x < img.width; x+=2) {    
-        for (int y = 0; y < img.height; y++) {
-          data_t pix1, pix2;
-          uint16_t p1,p2;
-          read_mem(VP_ADDR_MAIN_BRAM_L  + 2 *(y*img.width + x), pix1, pix2);
-          p1 = to_Uint16_t(pix1);
-          p2 = to_Uint16_t(pix2);
-          std::string p1_b = std::bitset<16>((unsigned int)p1).to_string(); //to binary
-          std::string p2_b = std::bitset<16>((unsigned int)p2).to_string(); //to binary
-          fprintf(fp, "%s%s\n" , p1_b.c_str(), p2_b.c_str());
-          
-        }
-    }
-    fclose(fp);
-    
+    }    
 	//cout << "Bram initialized" << endl;
 	
 	//------------------------------------------------
 	cout << endl;
+    write_hard(ADDR_RESET, 1);
+    while(!read_hard(ADDR_READY));
+    write_hard(ADDR_RESET, 0);
 	write_hard(ADDR_START, 1);
 	cout << "IP core activated " << endl;
 	cout << endl;
 
     write_hard(ADDR_START, 0);
 	while(!read_hard(ADDR_READY));
-	//while(1);
     Image base_img(img.width, img.height-offset_up-offset_down, 1) ; //= gaussian_blur(img, sigma_diff, offset_up, offset_down);
 
     offset_up = 0;
@@ -215,21 +180,14 @@ std::vector<Image> Cpu::generate_gaussian_pyramid_vector(const Image& img, int i
     
     //------------------------------------------------
 	// cout << "Saving bram state" << endl;
-       // fp = fopen("read_bram.txt", "w");
 
-        for ( int x = 0; x < base_img.width; x+=4) {    
+        for ( int x = 0; x < base_img.width; x+=2) {    
             for (int y = 0; y < base_img.height; y++) {
                   data_t pix1, pix2, pix3, pix4;
-                  read_mem(VP_ADDR_MAIN_BRAM_L  + 2 * (y*base_img.width + x), pix1, pix2);
-                  read_mem(VP_ADDR_MAIN_BRAM_L  + 2 * (y*base_img.width + x + 2), pix3, pix4);
-                  
+                  read_mem(VP_ADDR_MAIN_BRAM_L  + 2 * (y*base_img.width + x), pix1, pix2);                  
                     base_img.set_pixel(x, y, 0, pix1);
                   if(x + 1 < base_img.width)
                     base_img.set_pixel(x+1, y, 0, pix2);
-                  if(x + 2 < base_img.width)
-                    base_img.set_pixel(x+2, y, 0, pix3);
-                  if(x + 3 < base_img.width)
-                    base_img.set_pixel(x+3, y, 0, pix4);
             }
          }
          
@@ -238,7 +196,6 @@ std::vector<Image> Cpu::generate_gaussian_pyramid_vector(const Image& img, int i
      
  
 	//------------------------------------------------ 
-    //while(1);
     std::vector<Image> pyramid_images(num_octaves*imgs_per_octave); 
         
     for (int i = 0; i < num_octaves; i++) { 
@@ -250,55 +207,16 @@ std::vector<Image> Cpu::generate_gaussian_pyramid_vector(const Image& img, int i
           const Image& prev_img = pyramid_images[i*imgs_per_octave + (j-1)];
           Image tmp (prev_img.width, prev_img.height, prev_img.channels);
           
-    //------------------------------------------------
-        
-	   // cout << "Bram initialzation " << endl;
-	
-       for ( int x = 0; x < prev_img.width; x+=4) { 
-         for (int y = 0; y < prev_img.height; y++) {
-                data_t pix1, pix2, pix3, pix4; 
-                pix1= prev_img.get_pixel(x, y, 0);
-                if (x +1 < prev_img.width)
-                pix2= prev_img.get_pixel(x+1, y, 0);
-                if (x +2 < prev_img.width)
-                pix3= prev_img.get_pixel(x+2, y, 0);
-                if (x +3 < prev_img.width)
-                pix4= prev_img.get_pixel(x+3, y, 0);
-                
-          //cout << pix1 << " "<<pix2 << endl;
-          write_mem(VP_ADDR_MAIN_BRAM_L  + 2 *(y*prev_img.width + x), pix1, pix2);
-          write_mem(VP_ADDR_MAIN_BRAM_L  + 2 *(y*prev_img.width + x + 2), pix3, pix4);
-         } 
-         
-         }
-         	//cout << "Bram initialized" << endl;
-         	
-         	sprintf(numstr, "%d", i*imgs_per_octave + j);
-         	res = bram_str + numstr + "_init" + ".txt";
-         	fp = fopen(res.c_str(), "w+");
-        for ( int x = 0; x < prev_img.width; x+=2) {    
-            for (int y = 0; y < prev_img.height; y++) {
-                  data_t pix1, pix2;
-                  uint16_t p1,p2;
-                  read_mem(VP_ADDR_MAIN_BRAM_L  + 2 *(y*img.width + x), pix1, pix2);
-                  p1 = to_Uint16_t(pix1);
-                  p2 = to_Uint16_t(pix2);
-                  std::string p1_b = std::bitset<16>((unsigned int)p1).to_string(); //to binary
-                  std::string p2_b = std::bitset<16>((unsigned int)p2).to_string(); //to binary
-                  fprintf(fp, "%s%s\n" , p1_b.c_str(), p2_b.c_str());
-          
-             }
-    }
-    fclose(fp);
-    
-	//------------------------------------------------
-	        cout << endl;
-	        
+    //-----------------------------------------------
+            write_hard(ADDR_RESET, 1);
+            while(!read_hard(ADDR_READY));
+            write_hard(ADDR_RESET, 0);
             write_hard(ADDR_IMG_WIDTH, prev_img.width); 
 	        write_hard(ADDR_IMG_HEIGHT, prev_img.height);
 	        write_hard(ADDR_IMG_OFFSET_UP, offset_up); 
 	        write_hard(ADDR_IMG_OFFSET_DOWN, offset_down);     
             write_hard(ADDR_NUM_IMG_OCT, j); 
+            
             write_hard(ADDR_START, 1);
 	        cout << "IP core activated " <<  i*(imgs_per_octave-1) + j << endl;
 	        cout << endl;
@@ -308,48 +226,39 @@ std::vector<Image> Cpu::generate_gaussian_pyramid_vector(const Image& img, int i
 	        
 	//------------------------------------------------
 	       // cout << "Saving bram state " << endl;
-	        sprintf(numstr, "%d", i*imgs_per_octave + j);
-	        res = bram_str + numstr + "_save" + ".txt";
-	        
-	        fp = fopen(res.c_str(), "w+");
-            for ( int x = 0; x < prev_img.width; x+=4) {
+            for ( int x = 0; x < prev_img.width; x+=2) {
                 for (int y = 0; y < prev_img.height; y++) {
                   data_t pix1, pix2, pix3, pix4;
-                  read_mem(VP_ADDR_MAIN_BRAM_L  + 2 * (y*prev_img.width + x), pix1, pix2);
-                  read_mem(VP_ADDR_MAIN_BRAM_L  + 2 * (y*prev_img.width + x + 2), pix3, pix4);
-                  
+                  read_mem(VP_ADDR_MAIN_BRAM_L  + 2 * (y*prev_img.width + x), pix1, pix2);                  
                   tmp.set_pixel(x, y, 0, pix1);
                   if (x +1 < prev_img.width)
                   tmp.set_pixel(x+1, y, 0, pix2);
-                  if (x +2 < prev_img.width)
-                  tmp.set_pixel(x+2, y, 0, pix3);
-                  if (x +3 < prev_img.width)
-                  tmp.set_pixel(x+3, y, 0, pix4);
                 }
             }
              // cout << "Bram state saved" << endl;
 	//------------------------------------------------ 
-	   fclose(fp);
-	      for (sc_dt::sc_uint<64> j = VP_ADDR_MAIN_BRAM_L; j < VP_ADDR_MAIN_BRAM_H; j+=4)
-        {
-            write_mem(j, 0.0, 0.0);
-        }
         
        pyramid_images[i*imgs_per_octave + j] = tmp ; //(gaussian_blur(prev_img, sigma_vals[j], offset_up, offset_down)) ;
-      /*    sprintf(numstr, "%d", i*imgs_per_octave + j);
-          res = resize + numstr + ".jpg";
-          tmp.save(res) ; */
       }
       
           const Image& next_base_img = pyramid_images[i*imgs_per_octave + (imgs_per_octave - 3)];
           base_img = next_base_img.resize(next_base_img.width/2, next_base_img.height/2, Interpolation::NEAREST);
           
-        write_hard(ADDR_RESET, 1);
-        while(!read_hard(ADDR_READY));
-        write_hard(ADDR_RESET, 0);
+          //  cout << "Next bram initialization" << endl;
+
+          for (int y = 0; y < base_img.height; y++) {
+            for ( int x = 0; x < base_img.width; x+=2) {    
+                  data_t pix1, pix2; 
+                  pix1= base_img.get_pixel(x, y, 0);
+                  if(x +1 < base_img.width)
+                  pix2 = base_img.get_pixel(x+1, y, 0);
+                  
+                  write_mem(VP_ADDR_MAIN_BRAM_L  + 2 *(y*base_img.width + x), pix1, pix2);
+            }
+        }
+        //-------------------------------------------------  
     }
     //while(1);
-    enable = 0;
     return pyramid_images;
 }
 

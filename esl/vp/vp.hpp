@@ -9,8 +9,7 @@
 #include "ip_core.hpp"
 #include "bram_main.hpp"
 #include "bram_tmp.hpp"
-#include "bram_kernel.hpp"
-#include "sigma_rom.hpp"
+#include "kernel_rom.hpp"
 
 class Vp :  public sc_core::sc_module
 {
@@ -25,8 +24,7 @@ class Vp :  public sc_core::sc_module
 		Ip_Core ip_core;
 		Main_Bram main_bram;
 		Tmp_Bram tmp_bram;
-		Kernel_Bram kernel_bram;
-		Sigma_Rom sigma_rom;
+		Kernel_Rom kernel_rom;
 };
 
 #endif 

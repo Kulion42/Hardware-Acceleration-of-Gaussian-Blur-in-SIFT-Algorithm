@@ -1,5 +1,5 @@
-#ifndef HARD_H
-#define HARD_H
+#ifndef IP_CORE_H
+#define IP_CORE_H
 
 #include <vector>
 #include <array>
@@ -26,8 +26,7 @@ public:
 	tlm_utils::simple_target_socket<Ip_Core> interconnect_socket;
 	tlm_utils::simple_initiator_socket<Ip_Core> main_bram_socket;
 	tlm_utils::simple_initiator_socket<Ip_Core> tmp_bram_socket;
-	tlm_utils::simple_initiator_socket<Ip_Core> kernel_bram_socket;		
-	tlm_utils::simple_initiator_socket<Ip_Core> sigma_rom_socket;	
+	tlm_utils::simple_initiator_socket<Ip_Core> kernel_rom_socket;	
 	
 protected:
     sc_core::sc_time offset_hard;
@@ -56,6 +55,4 @@ protected:
     
 }  ; 
     
-
-
 #endif

@@ -9,8 +9,7 @@ Vp:: Vp (sc_core::sc_module_name name, char** strings, int argc):
 	interconnect("Interconnect"),
 	main_bram("Main_BRAM"),
 	tmp_bram("Tmp_BRAM"),
-	kernel_bram("Kernel_BRAM"),
-	sigma_rom("Sigma_ROM")
+	kernel_rom("Kernel_ROM")
 {
 	cpu.interconnect_socket.bind(interconnect.cpu_socket);
 	
@@ -19,8 +18,7 @@ Vp:: Vp (sc_core::sc_module_name name, char** strings, int argc):
 	
 	ip_core.main_bram_socket.bind(main_bram.ip_core_socket);
 	ip_core.tmp_bram_socket.bind(tmp_bram.ip_core_socket);
-	ip_core.kernel_bram_socket.bind(kernel_bram.ip_core_socket);
-    ip_core.sigma_rom_socket.bind(sigma_rom.ip_core_socket);
+    ip_core.kernel_rom_socket.bind(kernel_rom.ip_core_socket);
     
 	SC_REPORT_INFO("Virtual Platform", "Constructed.");
 }
