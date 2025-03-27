@@ -1,7 +1,7 @@
 cd ..
 set root_dir [pwd]
 cd scripts
-set resultDir ../uvm_project_ref
+set resultDir ../uvm_project_rand
 
 if {$argc > 1} {
     puts "Error: Too many arguments. Usage: $argv0 [<test_count>]"
@@ -22,7 +22,7 @@ if {$test_count > 300} {
 
 file mkdir $resultDir
 
-create_project gaussian_blur_verif_ref $resultDir -part xc7z010clg400-1 -force
+create_project gaussian_blur_verif_rand $resultDir -part xc7z010clg400-1 -force
 set_property board_part digilentinc.com:zybo-z7-10:part0:1.2 [current_project]
 
 
@@ -44,17 +44,17 @@ add_files -norecurse ../../psds/rtl/utils_pkg.vhd
 update_compile_order -fileset sources_1
 
 set_property SOURCE_SET sources_1 [get_filesets sim_1]
-add_files -fileset sim_1 -norecurse ../verif/agent_ref/agent_ref_pkg.sv
+add_files -fileset sim_1 -norecurse ../verif/agent_rand/agent_rand_pkg.sv
 set_property SOURCE_SET sources_1 [get_filesets sim_1]
-add_files -fileset sim_1 -norecurse ../verif/config/gaussian_blur_config_ref_pkg.sv
+add_files -fileset sim_1 -norecurse ../verif/config/gaussian_blur_config_rand_pkg.sv
 set_property SOURCE_SET sources_1 [get_filesets sim_1]
-add_files -fileset sim_1 -norecurse ../verif/sequences/seq_ref_pkg.sv
+add_files -fileset sim_1 -norecurse ../verif/sequences/seq_rand_pkg.sv
 set_property SOURCE_SET sources_1 [get_filesets sim_1]
-add_files -fileset sim_1 -norecurse ../verif/test_ref_pkg.sv
+add_files -fileset sim_1 -norecurse ../verif/test_rand_pkg.sv
 set_property SOURCE_SET sources_1 [get_filesets sim_1]
 add_files -fileset sim_1 -norecurse ../verif/gaussian_blur_if.sv
 set_property SOURCE_SET sources_1 [get_filesets sim_1]
-add_files -fileset sim_1 -norecurse ../verif/gaussian_blur_top_ref.sv
+add_files -fileset sim_1 -norecurse ../verif/gaussian_blur_top_rand.sv
 
 update_compile_order -fileset sources_1
 update_compile_order -fileset sim_1
@@ -73,7 +73,7 @@ set_property -name {xsim.elaborate.xelab.more_options} -value {-L uvm} -objects 
 #Pokretanje regresije
 for {set i 0} {$i < $test_count} {incr i} {
     set db_name "covdb_$i" ;
-    set xsim_command "set_property -name \{xsim.simulate.xsim.more_options\} -value \{-testplusarg UVM_TESTNAME=ref_test -testplusarg UVM_VERBOSITY=UVM_LOW -sv_seed random -runall -cov_db_name $db_name\} -objects \[get_filesets sim_1\]"
+    set xsim_command "set_property -name \{xsim.simulate.xsim.more_options\} -value \{-testplusarg UVM_TESTNAME=rand_test -testplusarg UVM_VERBOSITY=UVM_LOW -sv_seed random -runall -cov_db_name $db_name\} -objects \[get_filesets sim_1\]"
     eval $xsim_command
     launch_simulation
     run all
@@ -82,6 +82,6 @@ for {set i 0} {$i < $test_count} {incr i} {
 		puts "Test $i is over !!!!"
     }
 }
-exec xcrg -report_format html -dir uvm_project/gaussian_blur_verif_ref.sim/sim_1/behav/xsim -report_dir coverage
+exec xcrg -report_format html -dir uvm_project/gaussian_blur_verif_rand.sim/sim_1/behav/xsim -report_dir coverage
 puts "Regression is over !!!!"
 
