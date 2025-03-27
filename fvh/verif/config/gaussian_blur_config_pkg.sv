@@ -25,9 +25,6 @@
 
     package gaussian_blur_config_pkg;
 
-        
-        //import uvm_pkg::*;     
-        //`include "uvm_macros.svh" 
         `include "gaussian_blur_config.sv" 
 
     endpackage : gaussian_blur_config_pkg

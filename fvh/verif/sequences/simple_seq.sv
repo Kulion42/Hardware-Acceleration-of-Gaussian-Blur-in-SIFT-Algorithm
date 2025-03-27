@@ -151,9 +151,7 @@ class gaussian_blur_simple_seq extends seq_pkg::gaussian_blur_base_seq;
          for (i = 0 ; i < p_sequencer.cfg.img_width*(p_sequencer.cfg.img_height - p_sequencer.cfg.img_offset_up - p_sequencer.cfg.img_offset_down)/2 + 2; i++)
             begin
                 `uvm_do_with(req_item,{   req_item.bram_axi_ctrl == 0;    req_item.main_bram_a_en_i == 1'b1;    req_item.main_bram_a_we_i == 4'b0000;    req_item.main_bram_a_addr_i == i*4;});
-            end
-            $display("Queues size -> main_bram_wdata_arr=%d, main_bram_gv_arr=%d", p_sequencer.cfg.main_bram_wdata_arr.size(), p_sequencer.cfg.main_bram_gv_arr.size());
-            
+            end            
         // ----------------------------------------------------------------------------------------------------------------------------------------------        
         $display("\nFinished\n");
         
