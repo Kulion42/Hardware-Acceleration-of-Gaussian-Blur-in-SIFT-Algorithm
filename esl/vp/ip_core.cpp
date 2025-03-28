@@ -145,7 +145,7 @@ void Ip_Core::gaussian_blur(sc_core::sc_time& offset)
                     c_y = y + dy;
                     
                  data_t pix1, pix2, val1;
-                 val1 = read_rom(VP_ADDR_SIGMA_ROM_L + addr_off + k);
+                 val1 = read_rom(VP_ADDR_KERNEL_ROM_L + addr_off + k);
                  //cout << std::hex << VP_ADDR_MAIN_BRAM_L + (y+dy)*img_width + x << endl;
                  read_mem(VP_ADDR_MAIN_BRAM_L + 2 *(c_y*img_width + x), pix1, pix2);
                  
@@ -177,7 +177,7 @@ void Ip_Core::gaussian_blur(sc_core::sc_time& offset)
                     c_x1 = x + dx;
                     
                  data_t pix1, pix2,  val1;
-                 val1 = read_rom(VP_ADDR_SIGMA_ROM_L + addr_off + k);
+                 val1 = read_rom(VP_ADDR_KERNEL_ROM_L + addr_off + k);
                  
                  read_mem(VP_ADDR_TMP_BRAM_L + 2 * (y*img_width + c_x1), pix1, pix2);                 
                  

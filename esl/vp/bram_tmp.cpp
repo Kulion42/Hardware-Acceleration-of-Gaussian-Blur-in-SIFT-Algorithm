@@ -4,7 +4,7 @@
 Tmp_Bram::Tmp_Bram(sc_core::sc_module_name name) : sc_module(name)
 {
 	ip_core_socket.register_b_transport(this, &Tmp_Bram::b_transport);
-	mem.reserve(BRAM_SIZE/2 - KERNEL_SIZE);
+	mem.reserve(BRAM_SIZE/2);
 
 	SC_REPORT_INFO("TMP_BRAM", "Constructed.");
 }

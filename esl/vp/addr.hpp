@@ -20,7 +20,6 @@ typedef tlm::tlm_base_protocol_types::tlm_phase_type ph_t;
 //bram size is 240KB
 #define BRAM_SIZE 0x3A980
 #define KERNEL_SIZE 0x14 * 2
-#define SIGMA_SIZE 0x06
 
 // macro for offset (DELAY = T = 1/f = 1/111MHz = 9ns)
 #define DELAY 9
@@ -33,13 +32,10 @@ typedef tlm::tlm_base_protocol_types::tlm_phase_type ph_t;
 #define VP_ADDR_MAIN_BRAM_H 0x00000000 + BRAM_SIZE/2
 
 #define VP_ADDR_TMP_BRAM_L 0x10000000
-#define VP_ADDR_TMP_BRAM_H 0x10000000 + BRAM_SIZE/2 - KERNEL_SIZE
+#define VP_ADDR_TMP_BRAM_H 0x10000000 + BRAM_SIZE/2 
 
-#define VP_ADDR_KERNEL_BRAM_L 0x11000000
-#define VP_ADDR_KERNEL_BRAM_H 0x11000000 + KERNEL_SIZE
-
-#define VP_ADDR_SIGMA_ROM_L 0x20000000
-#define VP_ADDR_SIGMA_ROM_H 0x20000000 + SIGMA_SIZE
+#define VP_ADDR_KERNEL_ROM_L 0x11000000
+#define VP_ADDR_KERNEL_ROM_H 0x11000000 + KERNEL_SIZE
 
 #define VP_ADDR_IP_CORE_L 0x40000000
 #define VP_ADDR_IP_CORE_H 0x40000010 

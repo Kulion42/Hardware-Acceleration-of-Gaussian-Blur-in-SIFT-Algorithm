@@ -10,4 +10,4 @@ $(PROJECT) : $(SRC)
 run:
 	$(foreach img,$(IMAGE_FILES),./$(PROJECT) $(img);)
 clean:
-	rm main *.jpg ../log_file.txt
+	rm main *.jpeg ../log_file.txt
