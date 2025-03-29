@@ -1,6 +1,6 @@
 #include <iostream> 
 #include <string>
-
+#include <cstring>
 #include "image.hpp"
 #include "sift.hpp"
 
@@ -26,16 +26,22 @@ int main(int argc, char *argv[])
 
     std::vector<sift::Keypoint> kps = sift::find_keypoints_and_descriptors(img);
     Image result = sift::draw_keypoints(img, kps);
-    result.save("result.jpg");
     
-    res = fopen("../log_file.txt", "a+");
+    res = fopen("log_file.txt", "a+");
     
     if (res == NULL){
     	std::cout << "Greska" << std::endl;
     	return -1;
     }
-    std::cout << "Found " << kps.size() << " keypoints. Output image is saved as result.jpg\n";
-    fprintf(res, "Using %s executable on image %s found %ld keypoints.\n", exe, name, kps.size());
+    char res_full[30];
+     strcpy(res_full, argv[1]);
+    char res_cut[20];
+    for (int i = 0; i < 20; i++)
+        res_cut[i]=res_full[i + 10];
+    std::string output = res_cut;
+    result.save(output.c_str());
+    std::cout << "Found " << kps.size() << " keypoints. Output image is saved as "<< output.c_str()<< std::endl;
+    fprintf(res, "Using %s executable on image %s found %ld keypoints.\n", exe, output.c_str(), kps.size());
     fclose(res);
     return 0;
 }
