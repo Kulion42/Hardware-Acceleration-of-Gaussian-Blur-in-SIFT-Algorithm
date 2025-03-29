@@ -18,11 +18,13 @@ const int MAX_REFINEMENT_ITERS = 5;
 const float SIGMA_MIN = 0.8;
 const float MIN_PIX_DIST = 0.5;
 const float SIGMA_IN = 0.5;
-const int N_OCT = 5; //Broj oktava
+const int N_OCT = 4; //Broj oktava
 const int N_SPO = 3;
-const int N_IP = 8;
+const int N_IP = 4;
 const float C_DOG = 0.015;
 const float C_EDGE = 10;
+// image partition offset 
+const int OFFSET_UP_DOWN = 5;
 
 // computation of the SIFT descriptor
 const int N_BINS = 36;

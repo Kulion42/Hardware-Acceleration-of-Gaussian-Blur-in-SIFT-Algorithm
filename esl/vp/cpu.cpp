@@ -50,7 +50,7 @@ void Cpu::soft()
 		grayscale_img = rgb_to_grayscale(img);
 	}
 	
-	
+	FILE *fp;
 	const Image& input = img.channels == 1 ? img : rgb_to_grayscale(img);
     const Image& resized_input = input.resize(input.width*2, input.height*2, Interpolation::BILINEAR);
     int num_octaves = N_OCT;
@@ -101,8 +101,12 @@ void Cpu::soft()
     std::string output = res_cut;
 
     Image result = draw_keypoints(grayscale_img, kps);
+
     result.save(output.c_str());
-    
+    fp = fopen("log_file.txt", "a+");
+    fprintf(fp, "Found %lu keypoints. Ouptup image save as %s\n", kps.size(), output.c_str());
+    fclose(fp);
+
     std::cout << "Found " << kps.size() << " keypoints. Output image is saved as "<< output << "\n";
     
     offset_system += offset_soft;
@@ -127,15 +131,15 @@ std::vector<Image> Cpu::generate_gaussian_pyramid_vector(const Image& img, int i
     
     if (img_num == 0){
         offset_up = 0;
-        offset_down = 10;
+        offset_down = OFFSET_UP_DOWN;
     }
     else if (img_num == num_of_parts -1){
-        offset_up = 10;
+        offset_up = OFFSET_UP_DOWN;
         offset_down = 0;
     }
     else{
-        offset_up = 10;
-        offset_down = 10;
+        offset_up = OFFSET_UP_DOWN;
+        offset_down = OFFSET_UP_DOWN;
     }
     
     //cout << "IP core register initialization" << endl;
@@ -694,49 +698,49 @@ std::vector<Image> Cpu::image_partitions(const Image& img, int num_of_parts)
     char numstr[21];
     std::string res;
         
-        Image first_part(img.width, std::ceil(img.height/num_of_parts) + 10, 1);
+        Image first_part(img.width, std::ceil(img.height/num_of_parts) + OFFSET_UP_DOWN , 1);
             for (int x = 0; x < img.width; x++) {
-                for (int y = 0; y < std::ceil(img.height/num_of_parts) + 10; y++) {
+                for (int y = 0; y < std::ceil(img.height/num_of_parts) + OFFSET_UP_DOWN; y++) {
                         data_t val = img.get_pixel(x, y, 0);
                         first_part.set_pixel(x, y, 0,  val);                                    
                 }
             }    
             img_part[0] = (first_part); 
-            /*
+            
             sprintf(numstr, "%d", 1);
             res = resize + numstr + ".jpg";
             first_part.save(res) ;
-              */ 
+               
             for (int i = 1; i < num_of_parts -1; i++) {
-                Image partitions(img.width, std::ceil(img.height/num_of_parts) + 20, 1);
+                Image partitions(img.width, std::ceil(img.height/num_of_parts) + 2 * OFFSET_UP_DOWN , 1);
                 for (int x = 0; x < img.width; x++) {
-                    for (int y = i*std::ceil(img.height/num_of_parts) -10; y < (i+1)*std::ceil(img.height/num_of_parts) + 10; y++) {
+                    for (int y = i*std::ceil(img.height/num_of_parts) -OFFSET_UP_DOWN; y < (i+1)*std::ceil(img.height/num_of_parts) + OFFSET_UP_DOWN; y++) {
                         //cout << y << " "<< y - i*std::ceil(img.height/num_of_parts) +10 << endl;
                             data_t val = img.get_pixel(x, y, 0);
-                            partitions.set_pixel(x, y - i*std::ceil(img.height/num_of_parts) +10, 0,  val);                                    
+                            partitions.set_pixel(x, y - i*std::ceil(img.height/num_of_parts) +OFFSET_UP_DOWN, 0,  val);                                    
                     }
                 }    
                 img_part[i] = (partitions);
-                /*
+                
                 sprintf(numstr, "%d", i+1);
                 res = resize + numstr + ".jpg";
-                partitions.save(res) ; */
+                partitions.save(res) ; 
             }
 
-        Image last_part(img.width, std::ceil(img.height/num_of_parts) +10, 1);
+        Image last_part(img.width, std::ceil(img.height/num_of_parts) +OFFSET_UP_DOWN, 1);
         for (int x = 0; x < img.width; x++) {
         
-                 for (int y = (num_of_parts -1)*std::ceil(img.height/num_of_parts) - 10; y < img.height; y++) {
+                 for (int y = (num_of_parts -1)*std::ceil(img.height/num_of_parts) - OFFSET_UP_DOWN; y < img.height; y++) {
                         data_t val = img.get_pixel(x, y, 0);
                       //  cout << y << " "<< y - (num_of_parts -1)*std::ceil(img.height/num_of_parts) + 10 << endl;
-                        last_part.set_pixel(x, y - (num_of_parts -1)*std::ceil(img.height/num_of_parts) + 10, 0, val);                                    
+                        last_part.set_pixel(x, y - (num_of_parts -1)*std::ceil(img.height/num_of_parts) + OFFSET_UP_DOWN, 0, val);                                    
                 }
         }   
         //cout << "Dotle2" << endl; 
            img_part[num_of_parts - 1]= (last_part);  
-           /* sprintf(numstr, "%d", num_of_parts);
+            sprintf(numstr, "%d", num_of_parts);
             res = resize + numstr + ".jpg";
-            last_part.save(res) ; */    
+            last_part.save(res) ;     
     return img_part;
 }
 
