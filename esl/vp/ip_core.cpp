@@ -108,7 +108,7 @@ void Ip_Core::gaussian_blur(sc_core::sc_time& offset)
 
     else if (start == 0 && ready == 0 && reset == 0){
     //Start with work
-    cout << "Startig gaussian_blur"<<endl;
+    //cout << "Startig gaussian_blur"<<endl;
     sc_int<16> c_y, c_x1, c_x2;
     sigma_t sigma = sigma_vals[img_per_octave];
     //cout << sigma << endl;
@@ -199,9 +199,8 @@ void Ip_Core::gaussian_blur(sc_core::sc_time& offset)
    
    addr_off+=size;
    //cout << "Time used in hardware--> " << offset_hard << endl;
-      cout << "Adress offset is " << addr_off << endl;
-   cout << "Gaussian blur finished" << endl;
-   cout << endl;
+   //cout << "Gaussian blur finished" << endl;
+   //cout << endl;
       ready = 1;
    }
    

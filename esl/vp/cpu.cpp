@@ -35,12 +35,12 @@ void Cpu::soft()
 	//smesta grayscale sliku
 	Image grayscale_img(img.width, img.height, img.channels);
     
-    if(img.height > 256 || img.width > 256)
+    /*if(img.height > 256 || img.width > 256)
     {
       std::cerr << "Image can't be bigger than 256x256 pixels.\n";
       exit(21);
     } 
-    
+    */
     if(img.channels == 1)
     {
 		grayscale_img = img;
@@ -68,6 +68,7 @@ void Cpu::soft()
         std::vector<Image>(num_octaves * imgs_per_octave )
         
     }; 
+    cout << endl;
     for (int i = 0; i < num_of_parts; i++){
         std::vector<Image> tmp = generate_gaussian_pyramid_vector(resized_part[i], i); 
         for (int j = 0; j < num_octaves * imgs_per_octave; j++){
@@ -137,7 +138,7 @@ std::vector<Image> Cpu::generate_gaussian_pyramid_vector(const Image& img, int i
         offset_down = 10;
     }
     
-    cout << "IP core register initialization" << endl;
+    //cout << "IP core register initialization" << endl;
     write_hard(ADDR_RESET, 1);
     while(!read_hard(ADDR_READY));
     write_hard(ADDR_RESET, 0);
@@ -148,8 +149,8 @@ std::vector<Image> Cpu::generate_gaussian_pyramid_vector(const Image& img, int i
 	write_hard(ADDR_NUM_IMG_OCT, 0); 
 	write_hard(ADDR_IMG_OFFSET_UP, offset_up); 
 	write_hard(ADDR_IMG_OFFSET_DOWN, offset_down);
-	cout << "IP core registers initialized" << endl;
-	cout << endl;
+	//cout << "IP core registers initialized" << endl;
+	//cout << endl;
 	//------------------------------------------------
 	//cout << "First bram initialzation" << endl;
 
@@ -167,13 +168,13 @@ std::vector<Image> Cpu::generate_gaussian_pyramid_vector(const Image& img, int i
 	//cout << "Bram initialized" << endl;
 	
 	//------------------------------------------------
-	cout << endl;
+	//cout << endl;
     write_hard(ADDR_RESET, 1);
     while(!read_hard(ADDR_READY));
     write_hard(ADDR_RESET, 0);
 	write_hard(ADDR_START, 1);
-	cout << "IP core activated " << endl;
-	cout << endl;
+	//cout << "IP core activated " << endl;
+	//cout << endl;
 
     write_hard(ADDR_START, 0);
 	while(!read_hard(ADDR_READY));
@@ -198,7 +199,7 @@ std::vector<Image> Cpu::generate_gaussian_pyramid_vector(const Image& img, int i
          }
          
    //  cout << "Bram state saved" << endl;
-     cout << endl;
+     //cout << endl;
      
  
 	//------------------------------------------------ 
@@ -224,8 +225,8 @@ std::vector<Image> Cpu::generate_gaussian_pyramid_vector(const Image& img, int i
             write_hard(ADDR_NUM_IMG_OCT, j); 
             
             write_hard(ADDR_START, 1);
-	        cout << "IP core activated " <<  i*(imgs_per_octave-1) + j << endl;
-	        cout << endl;
+	        //cout << "IP core activated " <<  i*(imgs_per_octave-1) + j << endl;
+	        //cout << endl;
             write_hard(ADDR_START, 0);
 		        
 	        while(!read_hard(ADDR_READY));
@@ -265,6 +266,7 @@ std::vector<Image> Cpu::generate_gaussian_pyramid_vector(const Image& img, int i
         //-------------------------------------------------  
     }
     //while(1);
+    cout << "Image part "<< img_num << " finished!"<< endl;
     return pyramid_images;
 }
 
