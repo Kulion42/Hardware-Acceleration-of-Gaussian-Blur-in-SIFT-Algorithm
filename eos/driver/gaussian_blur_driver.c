@@ -21,10 +21,6 @@
 #include <linux/of_platform.h>
 #include <linux/version.h>
 
-
-
-
-
 #include <linux/wait.h>
 #include <linux/semaphore.h>
 
@@ -317,8 +313,9 @@ ssize_t gaussian_blur_read(struct file *pfile, char __user *buf, size_t length, 
 				main_bram_val = ioread32(main_bram->base_addr + ADDR_FACTOR * main_bram_i/2);
 				len = scnprintf(buff, BUFF_SIZE, "%u ", main_bram_val);
 				
-				printk(KERN_INFO "gaussian_blur_read: main_bram[%" PRIu32 "] = %" PRIu16 "\n", main_bram_i, (main_bram_val & 0xFFFF));
-				printk(KERN_INFO "gaussian_blur_read: main_bram[%" PRIu32 "] = %" PRIu16 "\n", main_bram_i + 1, ((main_bram_val >> 16) & 0xFFFF));
+				
+				printk(KERN_INFO "gaussian_blur_read: main_bram[%u] = %u\n", main_bram_i + 1, (main_bram_val & 0xFFFF));
+				printk(KERN_INFO "gaussian_blur_read: main_bram[%u] = %u\n", main_bram_i , ((main_bram_val >> 16) & 0xFFFF));
 				
 				main_bram_i+=2;
 
@@ -351,8 +348,8 @@ ssize_t gaussian_blur_read(struct file *pfile, char __user *buf, size_t length, 
 			ready = gaussian_blur_val[7];
 			wake_up_interruptible(&readyQ);
 
-			len = scnprintf(buff, BUFF_SIZE, "%" PRIu16 " %" PRIu16 " %" PRIu16 " %" PRIu16 " %" PRIu16 " %" PRIu16 " %" PRIu16 " %" PRIu16 " ", gaussian_blur_val[0], gaussian_blur_val[1], gaussian_blur_val[2], gaussian_blur_val[3], gaussian_blur_val[4], gaussian_blur_val[5], gaussian_blur_val[6], gaussian_blur_val[7]);
-			printk(KERN_INFO "gaussian_blur_read: ready_reg = %" PRIu16 "\n", gaussian_blur_val[7]);
+			len = scnprintf(buff, BUFF_SIZE, "%u %u %u %u %u %u %u %u ", gaussian_blur_val[0], gaussian_blur_val[1], gaussian_blur_val[2], gaussian_blur_val[3], gaussian_blur_val[4], gaussian_blur_val[5], gaussian_blur_val[6], gaussian_blur_val[7]);
+			printk(KERN_INFO "gaussian_blur_read: ready_reg = %u\n", gaussian_blur_val[7]);
 
 			if (copy_to_user(buf, buff, len))
 			{	
@@ -389,8 +386,8 @@ ssize_t gaussian_blur_write(struct file *pfile, const char __user *buf, size_t l
 		return -EFAULT;
 	buff[length]='\0';
 
-  //izvlacim vrednost 2 spojena piksela i poziciju u bram-u
-  //hu je za short unsigned
+	//izvlacim vrednost 2 spojena piksela i poziciju u bram-u
+	//hu je za short unsigned
 	sscanf(buff, "%u, %hu\n", &val, &pos);
 	
 	switch (minor)
@@ -407,8 +404,8 @@ ssize_t gaussian_blur_write(struct file *pfile, const char __user *buf, size_t l
 			
 			//dobijam 32 bitnu vrednost val i nju upisujem na 4*pos (pos je i/2 u aplikaciji)
 			iowrite32(val, main_bram->base_addr + ADDR_FACTOR * pos);
-			printk(KERN_INFO "gaussian_blur_write: main_bram[%d] = %d\n", pos, (val & 0xFFFF));
-			printk(KERN_INFO "gaussian_blur_write: main_bram[%d] = %d\n", pos+1, ((val >> 16) & 0xFFFF));
+			printk(KERN_INFO "gaussian_blur_write: main_bram[%d] = %d\n", pos+1, (val & 0xFFFF));
+			printk(KERN_INFO "gaussian_blur_write: main_bram[%d] = %d\n", pos, ((val >> 16) & 0xFFFF));
 			//**********************************************
 			
 			break;
