@@ -24,7 +24,7 @@ const int N_IP = 4;
 const float C_DOG = 0.015;
 const float C_EDGE = 10;
 // image partition offset 
-const int OFFSET_UP_DOWN = 5;
+const int OFFSET_UP_DOWN = 6;
 
 // computation of the SIFT descriptor
 const int N_BINS = 36;

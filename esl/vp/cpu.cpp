@@ -707,9 +707,9 @@ std::vector<Image> Cpu::image_partitions(const Image& img, int num_of_parts)
             }    
             img_part[0] = (first_part); 
             
-            sprintf(numstr, "%d", 1);
+           /*sprintf(numstr, "%d", 1);
             res = resize + numstr + ".jpg";
-            first_part.save(res) ;
+            first_part.save(res) ;*/
                
             for (int i = 1; i < num_of_parts -1; i++) {
                 Image partitions(img.width, std::ceil(img.height/num_of_parts) + 2 * OFFSET_UP_DOWN , 1);
@@ -722,9 +722,9 @@ std::vector<Image> Cpu::image_partitions(const Image& img, int num_of_parts)
                 }    
                 img_part[i] = (partitions);
                 
-                sprintf(numstr, "%d", i+1);
+                /*sprintf(numstr, "%d", i+1);
                 res = resize + numstr + ".jpg";
-                partitions.save(res) ; 
+                partitions.save(res) ; */ 
             }
 
         Image last_part(img.width, std::ceil(img.height/num_of_parts) +OFFSET_UP_DOWN, 1);
@@ -737,10 +737,10 @@ std::vector<Image> Cpu::image_partitions(const Image& img, int num_of_parts)
                 }
         }   
         //cout << "Dotle2" << endl; 
-           img_part[num_of_parts - 1]= (last_part);  
+           /*img_part[num_of_parts - 1]= (last_part);  
             sprintf(numstr, "%d", num_of_parts);
             res = resize + numstr + ".jpg";
-            last_part.save(res) ;     
+            last_part.save(res) ; */    
     return img_part;
 }
 

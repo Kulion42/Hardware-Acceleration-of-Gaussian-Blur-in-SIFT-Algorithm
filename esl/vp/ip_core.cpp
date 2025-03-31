@@ -135,11 +135,11 @@ void Ip_Core::gaussian_blur(sc_core::sc_time& offset)
                  
                  if (y+dy < 0 && img_offset_up == 0)
                     c_y = 0;
-                 else if (y+dy < img_offset_up == 10)
+                 else if (y+dy < img_offset_up != 0)
                     c_y = img_offset_up + dy;                 
                  else if (y+dy >= img_height && img_offset_down == 0)
                     c_y = img_height - 1;
-                 else if (y+dy >= img_height-img_offset_down && img_offset_down == 10)
+                 else if (y+dy >= img_height-img_offset_down && img_offset_down != 0)
                     c_y =  img_height-img_offset_down + dy;
                  else
                     c_y = y + dy;

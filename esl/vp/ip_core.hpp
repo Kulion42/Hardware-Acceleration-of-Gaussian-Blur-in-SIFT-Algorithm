@@ -13,6 +13,7 @@
 #include "addr.hpp"
 #include "functions.hpp"
 #include "sc_types.hpp"
+#include "constants_and_structs.hpp"
 
 using namespace std;
 using namespace sc_dt;
