@@ -68,7 +68,7 @@ set_property -name {xsim.elaborate.xelab.more_options} -value {-v 1} -objects [g
 
 set_property -name {xsim.compile.xvlog.more_options} -value {-L uvm} -objects [get_filesets sim_1]
 set_property -name {xsim.elaborate.xelab.more_options} -value {-L uvm} -objects [get_filesets sim_1]
-#set_property -name {xsim.simulate.xsim.more_options} -value {-testplusarg UVM_TESTNAME=simple_test -testplusarg UVM_VERBOSITY=UVM_LOW -sv_seed random} -objects [get_filesets sim_1]
+#set_property -name {xsim.simulate.xsim.more_options} -value {-testplusarg UVM_TESTNAME=rand_test -testplusarg UVM_VERBOSITY=UVM_LOW -sv_seed random} -objects [get_filesets sim_1]
 
 #Pokretanje regresije
 for {set i 0} {$i < $test_count} {incr i} {
@@ -77,11 +77,13 @@ for {set i 0} {$i < $test_count} {incr i} {
     eval $xsim_command
     launch_simulation
     run all
+    #start_gui
     if {$i+1 < $test_count} {
         close_sim
 		puts "Test $i is over !!!!"
     }
 }
-exec xcrg -report_format html -dir uvm_project/gaussian_blur_verif_rand.sim/sim_1/behav/xsim -report_dir coverage
+exec xcrg -report_format html -dir uvm_project_rand/gaussian_blur_verif_rand.sim/sim_1/behav/xsim -report_dir coverage
 puts "Regression is over !!!!"
+
 

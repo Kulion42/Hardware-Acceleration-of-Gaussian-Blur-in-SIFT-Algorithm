@@ -76,7 +76,9 @@ for {set i 0} {$i < $test_count} {incr i} {
     set xsim_command "set_property -name \{xsim.simulate.xsim.more_options\} -value \{-testplusarg UVM_TESTNAME=simple_test -testplusarg UVM_VERBOSITY=UVM_LOW -sv_seed random -runall -cov_db_name $db_name\} -objects \[get_filesets sim_1\]"
     eval $xsim_command
     launch_simulation
+    #add_wave {{/gaussian_blur_top/DUT/top_model_instance/gauss_blur/y_conv_gen/bram1_b_addr}} {{/gaussian_blur_top/DUT/top_model_instance/gauss_blur/y_conv_gen/c_x2_vec}} {{/gaussian_blur_top/DUT/top_model_instance/gauss_blur/y_conv_gen/c_y_vec}} {{/gaussian_blur_top/DUT/top_model_instance/gauss_blur/y_conv_gen/img_w2}} 
     run all
+    #start_gui
     if {$i+1 < $test_count} {
         close_sim
 		puts "Test $i is over !!!!"
@@ -84,4 +86,5 @@ for {set i 0} {$i < $test_count} {incr i} {
 }
 exec xcrg -report_format html -dir uvm_project/gaussian_blur_verif.sim/sim_1/behav/xsim -report_dir coverage
 puts "Regression is over !!!!"
+
 
