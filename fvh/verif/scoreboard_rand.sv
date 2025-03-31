@@ -83,11 +83,11 @@ class gaussian_blur_scoreboard_rand extends uvm_scoreboard;
                     
                     if (y+dy < 0 && img_offset_up == 0)
                         c_y = 0;
-                    else if (y+dy < img_offset_up  && img_offset_up == 10)
+                    else if (y+dy < img_offset_up  && img_offset_up != 0)
                         c_y = img_offset_up + dy;                 
                     else if (y+dy >= img_height && img_offset_down == 0)
                         c_y = img_height - 1;
-                    else if (y+dy >= img_height-img_offset_down && img_offset_down == 10)
+                    else if (y+dy >= img_height-img_offset_down && img_offset_down != 0)
                         c_y = img_height-img_offset_down + dy;
                     else
                         c_y = y + dy;
@@ -165,12 +165,12 @@ class gaussian_blur_scoreboard_rand extends uvm_scoreboard;
     function void report_phase(uvm_phase phase);
         `uvm_info(get_type_name(), $sformatf("Gaussian blur scoreboard examined: %0d transactions(%0d pixels), %0d succesfull pixel matches, %0d pixel mismatches", num_of_tr,2 *num_of_tr, 2 *num_of_tr - num_of_missed, num_of_missed), UVM_LOW);
          
-         fd = $fopen("../../../../../regression_log_ref.txt", "a+");
+         fd = $fopen("../../../../../regression_log_rand.txt", "a+");
            if (fd) 
                  `uvm_info(get_name(), $sformatf("Successfully opened log file"),UVM_HIGH)
            else
                  `uvm_info(get_name(), $sformatf("Error log file"),UVM_HIGH)
-         $fdisplay(fd, "File img_file_iwidth_%0d_iheight_%0d_ipo_%0d.txt examined: %0d pixels, %0d succesfull pixel matches, %0d pixel mismatches",cfg.rand_width, cfg.rand_height, cfg.rand_img_per_octave, 2 *num_of_tr, 2 *num_of_tr - num_of_missed, num_of_missed);
+         $fdisplay(fd, "File img_iwidth_%0d_iheight_%0d_ipo_%0d.txt offset_up = %0d, offset_down = %0d examined: %0d pixels, %0d succesfull pixel matches, %0d pixel mismatches",cfg.rand_width, cfg.rand_height, cfg.rand_img_per_octave, cfg.rand_offset_up , cfg.rand_offset_down, 2 *num_of_tr, 2 *num_of_tr - num_of_missed, num_of_missed);
         $fclose(fd); 
         blur_out_data_arr.delete();    
     endfunction : report_phase

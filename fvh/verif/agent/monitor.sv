@@ -70,7 +70,7 @@ class gaussian_blur_monitor extends uvm_monitor;
         wait(vif.s00_axi_rdata == 0)
         wait(vif.s00_axi_rdata == 1)
         
-        fd = $fopen(cfg.main_bram_read_file[((cfg.rand_img*NUMBER_OF_IMAGE_PARTS + cfg.rand_part) *NUMBER_OF_OCTAVES + cfg.rand_oct) * NUMBER_OF_IMGS_PER_OCTAVE + cfg.rand_ipo], "w+");
+        fd = $fopen(cfg.main_bram_read_file[((cfg.rand_img*NUMBER_OF_IMAGE_PARTS + cfg.rand_part) *NUMBER_OF_OCTAVES + cfg.rand_oct)], "w+");
         if (fd) 
             `uvm_info(get_name(), $sformatf("Successfully opened main_bram_read_file"),UVM_HIGH)
         else

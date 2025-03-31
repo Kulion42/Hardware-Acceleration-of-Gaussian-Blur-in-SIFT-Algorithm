@@ -32,7 +32,7 @@
     parameter RESET_REG_OFFSET = 5'b10100;
     parameter READY_REG_OFFSET = 5'b11100;
 
-    parameter MIN_PIX = 1000;
+    parameter MIN_PIX = 100;
     parameter MAX_PIX = 16384;    
 class gaussian_blur_rand_seq extends seq_rand_pkg::gaussian_blur_base_seq_rand;
 

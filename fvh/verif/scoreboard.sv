@@ -33,6 +33,7 @@ class gaussian_blur_scoreboard extends uvm_scoreboard;
     int fd;
     int blur_out_data_arr[$];
     int pixel_data_of = 1;
+    string num;
     uvm_analysis_imp#(agent_pkg::gaussian_blur_seq_item, gaussian_blur_scoreboard) item_collected_import;
     
      `uvm_component_utils_begin(gaussian_blur_scoreboard)
@@ -80,11 +81,11 @@ class gaussian_blur_scoreboard extends uvm_scoreboard;
                     
                     if (y+dy < 0 && img_offset_up == 0)
                         c_y = 0;
-                    else if (y+dy < img_offset_up  && img_offset_up == 10)
+                    else if (y+dy < img_offset_up  && img_offset_up != 0)
                         c_y = img_offset_up + dy;                 
                     else if (y+dy >= img_height && img_offset_down == 0)
                         c_y = img_height - 1;
-                    else if (y+dy >= img_height-img_offset_down && img_offset_down == 10)
+                    else if (y+dy >= img_height-img_offset_down && img_offset_down != 0)
                         c_y = img_height-img_offset_down + dy;
                     else
                         c_y = y + dy;
@@ -164,13 +165,14 @@ class gaussian_blur_scoreboard extends uvm_scoreboard;
         `uvm_info(get_type_name(), $sformatf("Gaussian blur scoreboard examined: %0d transactions(%0d pixels), %0d succesfull pixel matches, %0d pixel mismatches", num_of_tr,2 *num_of_tr, 2 *num_of_tr - num_of_missed, num_of_missed), UVM_LOW);
          cfg.main_bram_wdata_arr.delete();
          //cfg.main_bram_gv_arr.delete();
+         num = cfg.rand_ipo == 0 ? cfg.ipo_str[0] : cfg.ipo_str[1];
          
          fd = $fopen("../../../../../regression_log.txt", "a+");
            if (fd) 
                  `uvm_info(get_name(), $sformatf("Successfully opened log file"),UVM_HIGH)
            else
                  `uvm_info(get_name(), $sformatf("Error log file"),UVM_HIGH)
-         $fdisplay(fd, "File img_file_img_%0d_ipart_%0d_%0d.txt examined: %0d pixels, %0d succesfull pixel matches, %0d pixel mismatches",cfg.rand_img, cfg.rand_part, cfg.rand_oct * NUMBER_OF_IMGS_PER_OCTAVE + cfg.rand_ipo, 2 *num_of_tr, 2 *num_of_tr - num_of_missed, num_of_missed);
+         $fdisplay(fd, "File img_%s_ipart_%0d_oct_%0d_ipo%s.txt examined: %0d pixels, %0d succesfull pixel matches, %0d pixel mismatches",cfg.image_names[cfg.rand_img], cfg.rand_part, cfg.rand_oct, num, 2 *num_of_tr, 2 *num_of_tr - num_of_missed, num_of_missed);
         $fclose(fd); 
             
     endfunction : report_phase
