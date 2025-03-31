@@ -254,7 +254,7 @@ begin
             end if;
         end if;
                     
-        if TO_INTEGER(signed(img_offset_down)) = 10 and TO_INTEGER(signed(img_offset_up)) = 10  then
+        if TO_INTEGER(signed(img_offset_down)) /= 0 and TO_INTEGER(signed(img_offset_up)) /= 0  then
             if  (y_reg + dy) < signed(img_offset_up) then
                 c_y <= unsigned(signed(img_offset_up) + dy);                           
             elsif (y_reg + dy) >= signed(img_height) - signed(img_offset_down) then
@@ -264,7 +264,7 @@ begin
             end if;
         end if;
                     
-        if TO_INTEGER(signed(img_offset_down)) = 10 and TO_INTEGER(signed(img_offset_up)) = 0  then                    
+        if TO_INTEGER(signed(img_offset_down)) /= 0 and TO_INTEGER(signed(img_offset_up)) = 0  then                    
             if (y_reg + dy) < TO_SIGNED(0, 16)  then
                 c_y <= (others => '0');                        
             elsif (y_reg + dy) >= signed(img_height) - signed(img_offset_down) then
@@ -274,7 +274,7 @@ begin
             end if;
         end if;
                     
-        if TO_INTEGER(signed(img_offset_down)) = 0 and TO_INTEGER(signed(img_offset_up)) = 10  then
+        if TO_INTEGER(signed(img_offset_down)) = 0 and TO_INTEGER(signed(img_offset_up)) /= 0  then
             if (y_reg + dy) < signed(img_offset_up) then
                 c_y <= unsigned(signed(img_offset_up) + dy);                           
             elsif (y_reg + dy) >= signed(img_height) then

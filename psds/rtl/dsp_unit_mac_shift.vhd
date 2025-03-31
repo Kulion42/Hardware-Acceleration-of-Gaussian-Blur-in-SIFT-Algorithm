@@ -28,7 +28,7 @@ begin
                 mult_reg <= (others => '0');
                 tmp_reg <= (others => '0');
                 alu_reg <= (others => '0');
-             else
+            else
                 tmp_reg <= in_3;
                 mult_reg <= std_logic_vector(unsigned(in_1) * unsigned(in_2));
                 alu_reg <= std_logic_vector(unsigned(mult_reg) + unsigned(tmp_reg));
