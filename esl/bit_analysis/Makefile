@@ -1,12 +1,12 @@
 CC = g++
 PROJECT = find_keypoints_sc
-
+IMAGE_FILES := ../images/"parrot.jpg" ../images/"bird.jpg" ../images/"eagle.jpg" ../images/"shark.jpg" ../images/"squirrel.jpg" ../images/"mountain1.jpg" ../images/"mountain2.jpg" ../images/"mushroom.jpg" ../images/"palma.jpg" ../images/"sandals.jpg" ../images/"seashore.jpg"
 SRC = find_keypoints_sc.cpp  image.cpp soft.cpp hard.cpp
 
 $(PROJECT) : $(SRC)
 	$(CC) -g -lsystemc $(SRC) -o $(PROJECT)
 
 run:
-	./$(PROJECT) ../images/"parrot.jpeg" 
+	$(foreach img,$(IMAGE_FILES),./$(PROJECT) $(img);)
 clean:
-	rm find_keypoints_sc *.jpg *.txt
+	rm find_keypoints_sc *.jpg log_file.txt
