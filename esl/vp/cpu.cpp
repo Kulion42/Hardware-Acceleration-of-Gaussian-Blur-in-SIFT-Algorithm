@@ -120,9 +120,8 @@ void Cpu::soft()
 std::vector<Image> Cpu::generate_gaussian_pyramid_vector(const Image& img, int img_num, float sigma_min, int num_of_parts,
                                              int num_octaves, int scales_per_octave)
 {
-    assert(enable == 1);
     assert(img.channels == 1);
-    
+
     float base_sigma = sigma_min / MIN_PIX_DIST;
   
     float sigma_diff = std::sqrt(base_sigma*base_sigma - 1.0f);
@@ -698,11 +697,11 @@ std::vector<Image> Cpu::image_partitions(const Image& img, int num_of_parts)
     char numstr[21];
     std::string res;
         
-        Image first_part(img.width, std::ceil(img.height/num_of_parts) + OFFSET_UP_DOWN , 1);
+        Image first_part(img.width, (img.height/num_of_parts) + OFFSET_UP_DOWN , 1);
             for (int x = 0; x < img.width; x++) {
-                for (int y = 0; y < std::ceil(img.height/num_of_parts) + OFFSET_UP_DOWN; y++) {
-                        data_t val = img.get_pixel(x, y, 0);
-                        first_part.set_pixel(x, y, 0,  val);                                    
+                for (int y = 0; y < (img.height/num_of_parts) + OFFSET_UP_DOWN; y++) {
+                    data_t val = img.get_pixel(x, y, 0);
+                    first_part.set_pixel(x, y, 0,  val);                                    
                 }
             }    
             img_part[0] = (first_part); 
@@ -712,12 +711,11 @@ std::vector<Image> Cpu::image_partitions(const Image& img, int num_of_parts)
             first_part.save(res) ;*/
                
             for (int i = 1; i < num_of_parts -1; i++) {
-                Image partitions(img.width, std::ceil(img.height/num_of_parts) + 2 * OFFSET_UP_DOWN , 1);
+                Image partitions(img.width, (img.height/num_of_parts) + 2 * OFFSET_UP_DOWN , 1);
                 for (int x = 0; x < img.width; x++) {
-                    for (int y = i*std::ceil(img.height/num_of_parts) -OFFSET_UP_DOWN; y < (i+1)*std::ceil(img.height/num_of_parts) + OFFSET_UP_DOWN; y++) {
-                        //cout << y << " "<< y - i*std::ceil(img.height/num_of_parts) +10 << endl;
-                            data_t val = img.get_pixel(x, y, 0);
-                            partitions.set_pixel(x, y - i*std::ceil(img.height/num_of_parts) +OFFSET_UP_DOWN, 0,  val);                                    
+                    for (int y = i*(img.height/num_of_parts) -OFFSET_UP_DOWN; y < (i+1)*(img.height/num_of_parts) + OFFSET_UP_DOWN; y++) {
+                        data_t val = img.get_pixel(x, y, 0);
+                        partitions.set_pixel(x, y - i*(img.height/num_of_parts) +OFFSET_UP_DOWN, 0,  val);                                    
                     }
                 }    
                 img_part[i] = (partitions);
@@ -727,17 +725,16 @@ std::vector<Image> Cpu::image_partitions(const Image& img, int num_of_parts)
                 partitions.save(res) ; */ 
             }
 
-        Image last_part(img.width, std::ceil(img.height/num_of_parts) +OFFSET_UP_DOWN, 1);
+        Image last_part(img.width, (img.height/num_of_parts) +OFFSET_UP_DOWN, 1);
         for (int x = 0; x < img.width; x++) {
         
-                 for (int y = (num_of_parts -1)*std::ceil(img.height/num_of_parts) - OFFSET_UP_DOWN; y < img.height; y++) {
+                 for (int y = (num_of_parts -1)*(img.height/num_of_parts) - OFFSET_UP_DOWN; y < img.height; y++) {
                         data_t val = img.get_pixel(x, y, 0);
-                      //  cout << y << " "<< y - (num_of_parts -1)*std::ceil(img.height/num_of_parts) + 10 << endl;
-                        last_part.set_pixel(x, y - (num_of_parts -1)*std::ceil(img.height/num_of_parts) + OFFSET_UP_DOWN, 0, val);                                    
+                        last_part.set_pixel(x, y - (num_of_parts -1)*(img.height/num_of_parts) + OFFSET_UP_DOWN, 0, val);                                    
                 }
         }   
-        //cout << "Dotle2" << endl; 
-           /*img_part[num_of_parts - 1]= (last_part);  
+        img_part[num_of_parts - 1]= (last_part);
+           /*  
             sprintf(numstr, "%d", num_of_parts);
             res = resize + numstr + ".jpg";
             last_part.save(res) ; */    
@@ -748,9 +745,6 @@ std::vector<Image> Cpu::image_partitions(const Image& img, int num_of_parts)
 std::vector<Image> Cpu::combine_partitions(std::vector< std::vector <Image> > img_vec, int num_of_parts, int num_octaves, 
                                                      int scales_per_octave)
 {   
-    std::string resize = "combined_part_";
-    char numstr[21];
-    std::string res;
     
     int imgs_per_octave = scales_per_octave + 3;
      std::vector<Image> comb_part(num_octaves * imgs_per_octave);
@@ -764,16 +758,15 @@ std::vector<Image> Cpu::combine_partitions(std::vector< std::vector <Image> > im
             
             for (int i = 0; i < num_of_parts ; i++){ 
 
-                 for (int x = 0; x < img_vec[i][j].width; x++){
+                for (int x = 0; x < img_vec[i][j].width; x++){
                   
                     for (int y= 0; y < img_vec[i][j].height; y++){  
 
-                            data_t val = img_vec[i][j].get_pixel(x, y, 0);
-
-                            combined.set_pixel(x, i*img_vec[1][j].height + y , 0, val);  
-                        }
+                        data_t val = img_vec[i][j].get_pixel(x, y, 0);
+                        combined.set_pixel(x, i*img_vec[1][j].height + y , 0, val);  
+                    }
                        
-                 } 
+                } 
             }
           comb_part[j]= (combined);
          /* sprintf(numstr, "%d", j);
