@@ -39,7 +39,7 @@ MODULE_ALIAS("custom: Gaussian blur IP");
 #define IMG_WIDTH_REG_OFFSET 0
 #define IMG_HEIGHT_REG_OFFSET 4
 #define IMG_OFFSET_UP_REG_OFFSET 8
-#define IMG_OFFSET_UP_DOWN_REG_OFFSET 12
+#define IMG_OFFSET_DOWN_REG_OFFSET 12
 #define IMG_OCTAVE_NUM_REG_OFFSET 16
 #define RESET_REG_OFFSET 20
 #define START_REG_OFFSET 24
@@ -51,7 +51,7 @@ MODULE_ALIAS("custom: Gaussian blur IP");
 static int gaussian_blur_probe(struct platform_device *pdev);
 static int gaussian_blur_open(struct inode *i, struct file *f);
 static int gaussian_blur_close(struct inode *i, struct file *f);
-static ssize_t gaussian_blur_read(struct file *f, char __user *buf, size_t len, loff_t *off);
+static ssize_t gaussian_blur_read(struct file *f, char __user *buf, size_t len, loff_t *offset);
 static ssize_t gaussian_blur_write(struct file *f, const char __user *buf, size_t length, loff_t *off);
 static int __init gaussian_blur_init(void);
 static void __exit gaussian_blur_exit(void);
@@ -131,7 +131,7 @@ static int gaussian_blur_probe(struct platform_device *pdev)
 	r_mem = platform_get_resource(pdev, IORESOURCE_MEM, 0);
 	if (!r_mem) 
 	{
-		printk(KERN_ALERT "gaussian_blur_probe,: invalid address\n");
+		printk(KERN_ALERT "gaussian_blur_probe: invalid address\n");
 		return -ENODEV;
 	}
 
@@ -165,7 +165,7 @@ static int gaussian_blur_probe(struct platform_device *pdev)
 			}
 			
 			probe_counter++;
-			printk(KERN_INFO "gaussian_blur_probe: main_bram driver registered.\n");
+			printk(KERN_INFO "gaussian_blur_probe: main_bram driver registered\n");
 			return 0;
 			
 			error2:
@@ -203,7 +203,7 @@ static int gaussian_blur_probe(struct platform_device *pdev)
 				goto error4;
 			}
 			
-			printk(KERN_INFO "gaussian_blur_probe: gaussian_blur_core driver registered.\n");
+			printk(KERN_INFO "gaussian_blur_probe: gaussian_blur_core driver registered\n");
 			return 0;
 			
 			error4:
@@ -215,7 +215,7 @@ static int gaussian_blur_probe(struct platform_device *pdev)
 			break;
 			
 		default:
-			printk(KERN_INFO "gaussian_blur_probe: Counter has illegal value. \n");
+			printk(KERN_INFO "gaussian_blur_probe: Counter has illegal value\n");
 			return -1;
 	}
 	return 0;
@@ -245,7 +245,7 @@ static int gaussian_blur_remove(struct platform_device *pdev)
 			break;
 			
 		default:
-			printk(KERN_INFO "gaussian_blur_remove: Counter has illegal value. \n");
+			printk(KERN_INFO "gaussian_blur_remove: Counter has illegal value\n");
 			return -1;
 	}
 	return 0;
@@ -268,7 +268,7 @@ static int gaussian_blur_close(struct inode *i, struct file *f)
 //*****//
 u32 main_bram_i = 0;
 int endRead = 0;
-u16 width, height;
+u16 width, height, offset_up, offset_down;
 int ready = 1;
 //*****//
 
@@ -276,7 +276,7 @@ int ready = 1;
 //buf je pokazivac na korisnicku memoriju gde treba da se prosledi procitani podatak
 //length je maksimalan broj bajtova koje korisnik zeli da procita
 //off je fajl ofset ali se on ne koristi
-ssize_t gaussian_blur_read(struct file *pfile, char __user *buf, size_t length, loff_t *off)
+ssize_t gaussian_blur_read(struct file *pfile, char __user *buf, size_t length, loff_t *offset)
 {
 	char buff[BUFF_SIZE];
 	long int len = 0;
@@ -286,14 +286,6 @@ ssize_t gaussian_blur_read(struct file *pfile, char __user *buf, size_t length, 
   
 	if(down_interruptible(&sem))
         	return -ERESTARTSYS;
-
-	if (endRead == 1)
-	{		
-		endRead = 0;
-		up(&sem);
-		printk(KERN_INFO "Izlaz iz citanja %d!\n", minor);
-		return 0;
-	}
 	
 	switch (minor)
 	{
@@ -307,39 +299,41 @@ ssize_t gaussian_blur_read(struct file *pfile, char __user *buf, size_t length, 
 						return -ERESTARTSYS;
 			}
 
-			if(main_bram_i < width*height/2) //na svaku lokaciju idu po 2 piksela
-			{	
-			  //citaju se 2 piksela od jednom od strane drajvera i prosledjuju u aplikaciju, tamo se dele
-				main_bram_val = ioread32(main_bram->base_addr + ADDR_FACTOR * main_bram_i/2);
-				len = scnprintf(buff, BUFF_SIZE, "%u ", main_bram_val);
-				
-				
-				printk(KERN_INFO "gaussian_blur_read: main_bram[%u] = %u\n", main_bram_i + 1, (main_bram_val & 0xFFFF));
-				printk(KERN_INFO "gaussian_blur_read: main_bram[%u] = %u\n", main_bram_i , ((main_bram_val >> 16) & 0xFFFF));
-				
-				main_bram_i+=2;
+			if (main_bram_i >= width * (height - offset_up - offset_down)) 
+            {
+                main_bram_i = 0; // reset for next open() call
+                up(&sem);
+                printk(KERN_INFO "gaussian_blur_read: Reached EOF for minor 0\n");
+                return 0;
+            }
 
-				if (copy_to_user(buf, buff, len))
-				{
-					printk(KERN_ERR "gaussian_blur_read: Copy to user does not work.\n");
-					return -EFAULT;
-				}
-				//*************************************************************************
-					
-			}
-			else
-			{
-				endRead = 1;
-				main_bram_i = 0;
-			}
-			break;
+            main_bram_val = ioread32(main_bram->base_addr + ADDR_FACTOR * (main_bram_i/2));
+            len = scnprintf(buff, BUFF_SIZE, "%u ", main_bram_val);
 
+            if (copy_to_user(buf, buff, len))
+            {
+                up(&sem);
+                printk(KERN_ERR "gaussian_blur_read: Copy to user failed (main_bram).\n");
+                return -EFAULT;
+            }
+
+            main_bram_i += 2;
+
+            up(&sem);
+            return len;
 		
 		case 1: // gaussian_blur_core
+
+			if (*offset > 0)
+            {
+                up(&sem);
+                return 0; //  Very important: if already read once, return EOF
+            }
+
 			gaussian_blur_val[0] = ioread32(gaussian_blur_core->base_addr + IMG_WIDTH_REG_OFFSET);
 			gaussian_blur_val[1] = ioread32(gaussian_blur_core->base_addr + IMG_HEIGHT_REG_OFFSET); 
 			gaussian_blur_val[2] = ioread32(gaussian_blur_core->base_addr + IMG_OFFSET_UP_REG_OFFSET); 
-			gaussian_blur_val[3] = ioread32(gaussian_blur_core->base_addr + IMG_OFFSET_UP_DOWN_REG_OFFSET); 
+			gaussian_blur_val[3] = ioread32(gaussian_blur_core->base_addr + IMG_OFFSET_DOWN_REG_OFFSET); 
 			gaussian_blur_val[4] = ioread32(gaussian_blur_core->base_addr + IMG_OCTAVE_NUM_REG_OFFSET); 
 			gaussian_blur_val[5] = ioread32(gaussian_blur_core->base_addr + RESET_REG_OFFSET); 
 			gaussian_blur_val[6] = ioread32(gaussian_blur_core->base_addr + START_REG_OFFSET); 
@@ -348,24 +342,28 @@ ssize_t gaussian_blur_read(struct file *pfile, char __user *buf, size_t length, 
 			ready = gaussian_blur_val[7];
 			wake_up_interruptible(&readyQ);
 
-			len = scnprintf(buff, BUFF_SIZE, "%u %u %u %u %u %u %u %u ", gaussian_blur_val[0], gaussian_blur_val[1], gaussian_blur_val[2], gaussian_blur_val[3], gaussian_blur_val[4], gaussian_blur_val[5], gaussian_blur_val[6], gaussian_blur_val[7]);
-			printk(KERN_INFO "gaussian_blur_read: ready_reg = %u\n", gaussian_blur_val[7]);
+			len = scnprintf(buff, BUFF_SIZE, "%u %u %u %u %u %u %u %u ",
+                gaussian_blur_val[0], gaussian_blur_val[1], gaussian_blur_val[2], gaussian_blur_val[3],
+                gaussian_blur_val[4], gaussian_blur_val[5], gaussian_blur_val[6], gaussian_blur_val[7]);
 
-			if (copy_to_user(buf, buff, len))
-			{	
-				printk(KERN_ERR "gaussian_blur_read: Copy to user does not work.\n");
-				return -EFAULT;
-			}
-			
-			endRead = 1;
-			break;
+            if (copy_to_user(buf, buff, len))
+            {
+                up(&sem);
+                printk(KERN_ERR "gaussian_blur_read: Copy to user failed (gaussian_blur_core).\n");
+                return -EFAULT;
+            }
+
+            *offset += len; // Mark that driver did a read
+            up(&sem);
+            return len;
 
 		default:
-			printk(KERN_ERR "gaussian_blur_read: Invalid minor. \n");
-			endRead = 1;
-	}
 
-	up(&sem);	
+			up(&sem);
+            printk(KERN_ERR "gaussian_blur_read: Invalid minor number.\n");
+            return -EINVAL;
+	}
+	
 	return len;
 }
 
@@ -402,10 +400,10 @@ ssize_t gaussian_blur_write(struct file *pfile, const char __user *buf, size_t l
 					return -ERESTARTSYS;
 			}
 			
-			//dobijam 32 bitnu vrednost val i nju upisujem na 4*pos (pos je i/2 u aplikaciji)
+			//dobijam 32 bitnu vrednost val i nju upisujem na main_bram->base_addr + 4*pos
 			iowrite32(val, main_bram->base_addr + ADDR_FACTOR * pos);
-			printk(KERN_INFO "gaussian_blur_write: main_bram[%d] = %d\n", pos+1, (val & 0xFFFF));
-			printk(KERN_INFO "gaussian_blur_write: main_bram[%d] = %d\n", pos, ((val >> 16) & 0xFFFF));
+			//printk(KERN_INFO "gaussian_blur_write: main_bram[%d] = %d\n", pos+1, (val & 0xFFFF));
+			//printk(KERN_INFO "gaussian_blur_write: main_bram[%d] = %d\n", pos, ((val >> 16) & 0xFFFF));
 			//**********************************************
 			
 			break;
@@ -451,6 +449,10 @@ ssize_t gaussian_blur_write(struct file *pfile, const char __user *buf, size_t l
 					width = val;
 				else if (pos == IMG_HEIGHT_REG_OFFSET)
 					height = val;
+				else if(pos == IMG_OFFSET_UP_REG_OFFSET)
+					offset_up = val;
+				else if(pos == IMG_OFFSET_DOWN_REG_OFFSET)
+					offset_down = val;
 				//printk(KERN_INFO gaussian_blur_write: gaussian_blur_core[%d] = %d\n", pos, val);
 			}
 			break;
@@ -480,8 +482,8 @@ static int __init gaussian_blur_init(void)
 	}
 	printk(KERN_INFO "char device region allocated\n");
 
-	//my_class = class_create(THIS_MODULE,"gaussian_blur_class"); posle linux 6.4 nije potrebno THIS_MODULE
-	my_class = class_create("gaussian_blur_class");
+	my_class = class_create(THIS_MODULE,"gaussian_blur_class"); //posle linux 6.4 nije potrebno THIS_MODULE
+	//my_class = class_create("gaussian_blur_class");
 	if (my_class == NULL)
 	{
 		printk(KERN_ERR "failed to create class\n");
