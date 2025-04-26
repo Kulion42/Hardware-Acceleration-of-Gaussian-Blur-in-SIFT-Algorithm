@@ -1,4 +1,20 @@
-void write_bram(unsigned char * val, int length);
-void read_bram(unsigned char * val, int length);
-void write_hard(unsigned char addr, int val);
-uint16_t read_hard(unsigned char addr);
+#include <cstdint>
+#include <cstdio>
+#include <string>
+#include <optional>
+
+#define IMG_WIDTH_REG_OFFSET 0
+#define IMG_HEIGHT_REG_OFFSET 4
+#define IMG_OFFSET_UP_REG_OFFSET 8
+#define IMG_OFFSET_DOWN_REG_OFFSET 12
+#define IMG_OCTAVE_NUM_REG_OFFSET 16
+#define RESET_REG_OFFSET 20
+#define START_REG_OFFSET 24
+#define READY_REG_OFFSET 28
+
+
+void write_bram(const uint16_t* val, int length);
+void read_bram(uint16_t* val, int length);
+void write_hard(uint16_t addr, uint16_t val);
+std::optional<uint16_t> read_hard(uint16_t addr);
+void clear_bram();
