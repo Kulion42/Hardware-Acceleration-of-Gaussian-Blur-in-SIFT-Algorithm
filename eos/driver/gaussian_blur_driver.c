@@ -131,6 +131,7 @@ static int gaussian_blur_probe(struct platform_device *pdev)
 	r_mem = platform_get_resource(pdev, IORESOURCE_MEM, 0);
 	if (!r_mem) 
 	{
+
 		printk(KERN_ALERT "gaussian_blur_probe: Nevažeća adresa\n");
 		return -ENODEV;
 	}
@@ -232,6 +233,7 @@ static int gaussian_blur_probe(struct platform_device *pdev)
 
 static int gaussian_blur_remove(struct platform_device *pdev)
 {
+
 	// Uklanjanje main_bram uređaja
 	if (of_device_is_compatible(pdev->dev.of_node, "main_bram_ctrl")) {
 		printk(KERN_ALERT "gaussian_blur_remove: main_bram platform drajver uklonjen\n");
@@ -398,6 +400,7 @@ ssize_t gaussian_blur_read(struct file *pfile, char __user *buf, size_t length, 
 			up(&sem);
 
             printk(KERN_ERR "gaussian_blur_read: Nevalidan minor broj.\n");
+
             return -EINVAL;
 	}
 	
@@ -575,6 +578,7 @@ static int __init gaussian_blur_init(void)
 
 	// Kreiranje klase uređaja
 	my_class = class_create(THIS_MODULE,"gaussian_blur_class");
+
 	if (my_class == NULL)
 	{
 		printk(KERN_ERR "Neuspešno kreiranje klase uređaja.\n");
