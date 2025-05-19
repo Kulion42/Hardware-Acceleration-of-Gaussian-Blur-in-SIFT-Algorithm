@@ -1,5 +1,5 @@
-#ifndef TEST_IMAGE_H
-#define TEST_IMAGE_H
+#ifndef TEST_IMAGE0_RES_H
+#define TEST_IMAGE0_RES_H
 
 #include <cstdint>
 

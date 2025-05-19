@@ -13,8 +13,8 @@
 #define READY_REG_OFFSET 28
 
 
-void write_bram(const uint16_t* val, int length);
-void read_bram(uint16_t* val, int length);
-void write_hard(uint16_t addr, uint16_t val);
-std::optional<uint16_t> read_hard(uint16_t addr);
+void write_bram(const uint16_t* val, const uint32_t& length);
+void read_bram(uint16_t* val, const uint32_t& length);
+void write_hard(const uint16_t& addr, const uint16_t& val);
+std::optional<uint16_t> read_hard(const uint16_t& addr);
 void clear_bram();
