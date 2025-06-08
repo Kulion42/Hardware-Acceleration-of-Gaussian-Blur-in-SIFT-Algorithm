@@ -2,13 +2,13 @@
 #include <iostream>
 #include <cassert>
 #include <utility>
-
 #include "image.hpp"
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
 
+using namespace std;
 Image::Image(std::string file_path)
 {
     unsigned char *img_data = stbi_load(file_path.c_str(), &width, &height, &channels, 0);
@@ -58,7 +58,6 @@ Image::~Image()
     delete[] this->data;
 }
 
-//kopija
 Image::Image(const Image& other)
     :width {other.width},
      height {other.height},
@@ -71,8 +70,6 @@ Image::Image(const Image& other)
         data[i] = other.data[i];
 }
 
-//preklopljen operator, vraca image& da bi se mogao napraviti chain a=b=c
-//proverava self-assignmnet
 Image& Image::operator=(const Image& other)
 {
     if (this != &other) {
@@ -89,8 +86,6 @@ Image& Image::operator=(const Image& other)
     return *this;
 }
 
-//Move konstruktor, koristi se da preuzme resurse od nekog
-//objekta koji ce biti unisten ili je privremeni
 Image::Image(Image&& other)
     :width {other.width},
      height {other.height},
@@ -103,8 +98,6 @@ Image::Image(Image&& other)
     other.size = 0;
 }
 
-//operator premestanja
-//slicno kao i move konstruktor, korisni su zbog softverske efikasnosti
 Image& Image::operator=(Image&& other)
 {
     //std::cout << "move assignment\n";
@@ -144,7 +137,7 @@ bool Image::save(std::string file_path)
 void Image::set_pixel(int x, int y, int c, float val)
 {
     if (x >= width || x < 0 || y >= height || y < 0 || c >= channels || c < 0) {
-        std::cerr << "set_pixel() error: Index out of bounds.\n";
+        std::cerr << "set_pixel() error: Index out of bounds." << " y= " << y << " height= " << height <<"\n";
         std::exit(1);
     }
     data[c*width*height + y*width + x] = val;
@@ -160,6 +153,7 @@ float Image::get_pixel(int x, int y, int c) const
         y = 0;
     if (y >= height)
         y = height - 1;
+       // cout << data[c*width*height + y*width + x] << endl;
     return data[c*width*height + y*width + x];
 }
 
@@ -174,11 +168,13 @@ void Image::clamp()
     }
 }
 
+
 //map coordinate from 0-current_max range to 0-new_max range
 float map_coordinate(float new_max, float current_max, float coord)
 {
     float a = new_max / current_max;
     float b = -0.5 + a*0.5;
+   
     return a*coord + b;
 }
 
@@ -221,6 +217,7 @@ float nn_interpolate(const Image& img, float x, float y, int c)
     return img.get_pixel(std::round(x), std::round(y), c);
 }
 
+
 Image rgb_to_grayscale(const Image& img)
 {
     assert(img.channels == 3);
@@ -253,55 +250,6 @@ Image grayscale_to_rgb(const Image& img)
     return rgb;
 }
 
-// separable 2D gaussian blur for 1 channel image
-Image gaussian_blur(const Image& img, float sigma)
-{
-    assert(img.channels == 1);
-
-    int size = std::ceil(6 * sigma);
-    if (size % 2 == 0)
-        size++;
-    
-    int center = size / 2;
-    Image kernel(size, 1, 1);
-    float sum = 0;
-    for (int k = -size/2; k <= size/2; k++) {
-        float val = std::exp(-(k*k) / (2*sigma*sigma));
-        kernel.set_pixel(center+k, 0, 0, val);
-        sum += val;
-    }
-    for (int k = 0; k < size; k++)
-        kernel.data[k] /= sum;
-
-    Image tmp(img.width, img.height, 1);
-    Image filtered(img.width, img.height, 1);
-
-    // convolve vertical
-    for (int x = 0; x < img.width; x++) {
-        for (int y = 0; y < img.height; y++) {
-            float sum = 0;
-            for (int k = 0; k < size; k++) {
-                int dy = -center + k;
-                sum += img.get_pixel(x, y+dy, 0) * kernel.data[k];
-            }
-            tmp.set_pixel(x, y, 0, sum);
-        }
-    }
-    // convolve horizontal
-    for (int x = 0; x < img.width; x++) {
-        for (int y = 0; y < img.height; y++) {
-            float sum = 0;
-            for (int k = 0; k < size; k++) {
-                int dx = -center + k;
-                sum += tmp.get_pixel(x+dx, y, 0) * kernel.data[k];
-            }
-            filtered.set_pixel(x, y, 0, sum);
-        }
-    }
-    return filtered;
-}
-
-
 //koristi se za prikaz keypoint-a
 void draw_point(Image& img, int x, int y, int size)
 {
@@ -320,5 +268,3 @@ void draw_point(Image& img, int x, int y, int size)
         }
     }
 }
-
-

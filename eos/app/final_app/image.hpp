@@ -1,5 +1,6 @@
 #ifndef IMAGE_H
 #define IMAGE_H
+
 #include <string>
 
 enum Interpolation {BILINEAR, NEAREST};
@@ -23,8 +24,8 @@ struct Image {
     float get_pixel(int x, int y, int c) const;
     void clamp();
     Image resize(int new_w, int new_h, Interpolation method = BILINEAR) const;
+    
 };
-
 
 float bilinear_interpolate(const Image& img, float x, float y, int c);
 float nn_interpolate(const Image& img, float x, float y, int c);
@@ -32,8 +33,9 @@ float nn_interpolate(const Image& img, float x, float y, int c);
 Image rgb_to_grayscale(const Image& img);
 Image grayscale_to_rgb(const Image& img);
 
-Image gaussian_blur(const Image& img, float sigma);
-
 void draw_point(Image& img, int x, int y, int size=3);
+
+float map_coordinate(float new_max, float current_max, float coord);
+
 
 #endif
