@@ -50,6 +50,9 @@ Port (
 end kernel_rom;
 
 architecture Mixed of kernel_rom is
+    attribute use_dsp : string;
+    attribute use_dsp of Mixed : architecture is "yes";
+
     constant LUT_DEPTH : natural := 3;
     constant LUT_WIDTH : natural := 8; 
     
@@ -69,6 +72,7 @@ component dsp_unit_add
           out_res: out std_logic_vector(WIDTH1 - 1 downto 0));
 end component;
 
+
 signal addr_a_out, addr_b_out: std_logic_vector(DATA_WIDTH/2 -1 downto 0);
 type rom_type is array (0 to KERNEL_ROM_SIZE-1) of std_logic_vector(DATA_WIDTH -1 downto 0);
 signal ROM: rom_type := (   "0000000000011110", "0000000100100100", "0000010110101100", "0000111011010111", "0001010001110010", "0000111011010111", "0000010110101100", "0000000100100100", "0000000000011110", 
@@ -81,7 +85,10 @@ signal ROM: rom_type := (   "0000000000011110", "0000000100100100", "00000101101
 signal ROM_ADDR_OFF: sigma_lut := ( "00000000", "00001001", "00010010", "00011101", "00101010", "00111001") ;                           
 begin
 
-
+-- Kernel ROM
+-- The kernel ROM is a 2D array of size KERNEL_ROM_SIZE x DATA_WIDTH
+-- The kernel ROM is used to store the kernel values for the convolution operation
+-- The kernel ROM is divided into 6 sections, each section has a different size
 clk_proc: process(clk, reset)
 begin
     if (reset = '1') then
@@ -99,33 +106,13 @@ begin
     end if;
 
 end process;
-                       
-addr1_gen: dsp_unit_add 
-    generic map(
-          WIDTH1 => DATA_WIDTH/2 ,
-          WIDTH2 => log2c(KERNEL_ROM_SIZE) 
-         )
-    port map(
-          clk => clk,
-          rst => reset,
-          in_1 => ROM_ADDR_OFF(TO_INTEGER(unsigned(img_number))),
-          in_2 => kernel_rom_a_addr,
-          out_res => addr_a_out
-           );
-           
-addr2_gen: dsp_unit_add 
-    generic map(
-          WIDTH1 => DATA_WIDTH/2 ,
-          WIDTH2 => log2c(KERNEL_ROM_SIZE) 
-         )
-    port map(
-          clk => clk,
-          rst => reset,
-          in_1 => ROM_ADDR_OFF(TO_INTEGER(unsigned(img_number))),
-          in_2 => kernel_rom_b_addr,
-          out_res => addr_b_out
-           );
+-- Address offset for the kernel ROM
+-- The kernel ROM is divided into 6 sections, each section has a different size
+-- The address offset is used to select the correct section based on the image number
+-- The address offset is added to the kernel ROM address to get the correct address for the kernel ROM
              
+addr_a_out <= std_logic_vector(unsigned(kernel_rom_a_addr) + unsigned(ROM_ADDR_OFF(TO_INTEGER(unsigned(img_number)))));
+addr_b_out <= std_logic_vector(unsigned(kernel_rom_b_addr) + unsigned(ROM_ADDR_OFF(TO_INTEGER(unsigned(img_number)))));
 sigma_size <= SIGMA_VALS(TO_INTEGER(unsigned(img_number)));
                                                        
 end Mixed;

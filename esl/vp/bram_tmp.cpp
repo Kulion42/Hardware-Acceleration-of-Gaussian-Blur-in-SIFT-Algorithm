@@ -6,12 +6,12 @@ Tmp_Bram::Tmp_Bram(sc_core::sc_module_name name) : sc_module(name)
 	ip_core_socket.register_b_transport(this, &Tmp_Bram::b_transport);
 	mem.reserve(BRAM_SIZE/2);
 
-	SC_REPORT_INFO("TMP_BRAM", "Constructed.");
+	SC_REPORT_INFO("Tmp_Bram", "Constructed.");
 }
 
 Tmp_Bram::~Tmp_Bram()
 {
-	SC_REPORT_INFO("TMP_BRAM", "Destroyed.");
+	SC_REPORT_INFO("Tmp_Bram", "Destroyed.");
 }
 
 void Tmp_Bram::b_transport(pl_t &pl, sc_core::sc_time &offset)
