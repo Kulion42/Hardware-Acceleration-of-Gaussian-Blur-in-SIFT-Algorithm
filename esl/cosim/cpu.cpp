@@ -6,12 +6,12 @@ int Cpu::argc = 0;
 
 SC_HAS_PROCESS(Cpu);
 
-Cpu::Cpu(sc_core::sc_module_name name, char** strings, int arg_count) : sc_module(name), offset_soft(sc_core::SC_ZERO_TIME)
+Cpu::Cpu(sc_core::sc_module_name name, char** strings, int arg_count) : sc_module(name), offset(sc_core::SC_ZERO_TIME), interconnect_socket("interconnect_socket")
 {
 	SC_THREAD(soft);
+	interconnect_socket(*this);
 	SC_REPORT_INFO("Cpu ", "Constructed.");
-	
-	//prosledjivanje ulaznih parametara
+
 	input_arguments = strings;
 	argc = arg_count;
 }
@@ -57,9 +57,9 @@ void Cpu::soft()
     int scales_per_octave = N_SPO;
     int imgs_per_octave = scales_per_octave + 3;
     int num_of_parts = N_IP;
-    
-    const std::vector<Image> resized_part = image_partitions(resized_input /*num_of_parts,*/);
 
+    const std::vector<Image> resized_part = image_partitions(resized_input /*num_of_parts,*/);
+    cout << "Dovde" << endl;
     std::vector< std::vector<Image> >gaussian_pyramid_vector(num_of_parts, std::vector<Image>(num_octaves * imgs_per_octave));
        
     ScaleSpacePyramid gaussian_pyramid = {
@@ -109,9 +109,9 @@ void Cpu::soft()
 
     std::cout << "Found " << kps.size() << " keypoints. Output image is saved as "<< output << "\n";
     
-    offset_system += offset_soft;
+    //offset_system += offset_soft;
     
-    std::cout << "Time used in whole system is " << offset_system << endl;
+   // std::cout << "Time used in whole system is " << offset_system << endl;
     
     //std::cout << "Time used in software--> " << offset_soft << endl; 
     
@@ -142,20 +142,18 @@ std::vector<Image> Cpu::generate_gaussian_pyramid_vector(const Image& img, int i
     }
     
     //cout << "IP core register initialization" << endl;
-    write_hard(ADDR_RESET, 1);
-    while(!read_hard(ADDR_READY));
-    write_hard(ADDR_RESET, 0);
+   	cout << "IP core register initialization" << endl;
+   	write_hard(ADDR_RESET, 1, 1);
+	while(!read_hard(ADDR_READY));
+    write_hard(ADDR_RESET, 1, 0);
     
-    write_hard(ADDR_IMG_WIDTH, img.width); 
-	write_hard(ADDR_IMG_HEIGHT, img.height);
+    write_hard(ADDR_IMG_WIDTH, 16, img.width); 
+   	write_hard(ADDR_IMG_HEIGHT, 16, img.height);
 
-	write_hard(ADDR_NUM_IMG_OCT, 0); 
-	write_hard(ADDR_IMG_OFFSET_UP, offset_up); 
-	write_hard(ADDR_IMG_OFFSET_DOWN, offset_down);
-	//cout << "IP core registers initialized" << endl;
-	//cout << endl;
-	//------------------------------------------------
-	//cout << "First bram initialzation" << endl;
+    write_hard(ADDR_NUM_IMG_OCT, 16, 0); 
+    write_hard(ADDR_IMG_OFFSET_UP, 16, offset_up); 
+    write_hard(ADDR_IMG_OFFSET_DOWN, 16, offset_down);
+    cout << "IP core registers initialized" << endl;
 
 
     for ( int x = 0; x < img.width; x+=2) {    
@@ -172,14 +170,14 @@ std::vector<Image> Cpu::generate_gaussian_pyramid_vector(const Image& img, int i
 	
 	//------------------------------------------------
 	//cout << endl;
-    write_hard(ADDR_RESET, 1);
+    write_hard(ADDR_RESET, 1, 1);
     while(!read_hard(ADDR_READY));
-    write_hard(ADDR_RESET, 0);
-	write_hard(ADDR_START, 1);
+    write_hard(ADDR_RESET, 1, 0);
+	write_hard(ADDR_START, 1, 1);
 	//cout << "IP core activated " << endl;
 	//cout << endl;
 
-    write_hard(ADDR_START, 0);
+    write_hard(ADDR_START, 1, 0);
 	while(!read_hard(ADDR_READY));
     Image base_img(img.width, img.height-offset_up-offset_down, 1) ; //= gaussian_blur(img, sigma_diff, offset_up, offset_down);
 
@@ -193,7 +191,7 @@ std::vector<Image> Cpu::generate_gaussian_pyramid_vector(const Image& img, int i
 
         for ( int x = 0; x < base_img.width; x+=2) {    
             for (int y = 0; y < base_img.height; y++) {
-                  data_t pix1, pix2, pix3, pix4;
+                  data_t pix1, pix2;
                   read_mem(VP_ADDR_MAIN_BRAM_L  + 2 * (y*base_img.width + x), pix1, pix2);                  
                     base_img.set_pixel(x, y, 0, pix1);
                   if(x + 1 < base_img.width)
@@ -218,19 +216,19 @@ std::vector<Image> Cpu::generate_gaussian_pyramid_vector(const Image& img, int i
           Image tmp (prev_img.width, prev_img.height, prev_img.channels);
           
     //-----------------------------------------------
-            write_hard(ADDR_RESET, 1);
+            write_hard(ADDR_RESET, 1, 1);
             while(!read_hard(ADDR_READY));
-            write_hard(ADDR_RESET, 0);
-            write_hard(ADDR_IMG_WIDTH, prev_img.width); 
-	        write_hard(ADDR_IMG_HEIGHT, prev_img.height);
-	        write_hard(ADDR_IMG_OFFSET_UP, offset_up); 
-	        write_hard(ADDR_IMG_OFFSET_DOWN, offset_down);     
-            write_hard(ADDR_NUM_IMG_OCT, j); 
+            write_hard(ADDR_RESET, 1, 0);
+            write_hard(ADDR_IMG_WIDTH, 16, prev_img.width); 
+	        write_hard(ADDR_IMG_HEIGHT, 16, prev_img.height);
+	        write_hard(ADDR_IMG_OFFSET_UP, 16, offset_up); 
+	        write_hard(ADDR_IMG_OFFSET_DOWN, 16, offset_down);     
+            write_hard(ADDR_NUM_IMG_OCT, 16, j); 
             
-            write_hard(ADDR_START, 1);
+            write_hard(ADDR_START, 1, 1);
 	        //cout << "IP core activated " <<  i*(imgs_per_octave-1) + j << endl;
 	        //cout << endl;
-            write_hard(ADDR_START, 0);
+            write_hard(ADDR_START, 1, 0);
 		        
 	        while(!read_hard(ADDR_READY));
 	        
@@ -666,8 +664,9 @@ bool Cpu::refine_or_discard_keypoint(Keypoint& kp, const std::vector<Image>& oct
 {
     int k = 0;
     bool kp_is_valid = false; 
+    float offset_x, offset_y, offset_s; 
     while (k++ < MAX_REFINEMENT_ITERS) {
-        auto [offset_s, offset_x, offset_y] = fit_quadratic(kp, octave, kp.scale);
+        std::tie (offset_s, offset_x, offset_y) = fit_quadratic(kp, octave, kp.scale);
 
         float max_offset = std::max({std::abs(offset_s),
                                      std::abs(offset_x),
@@ -802,7 +801,6 @@ int Cpu::read_hard(sc_dt::sc_uint<64> addr)
 	pl.set_response_status ( tlm::TLM_INCOMPLETE_RESPONSE );
 	interconnect_socket->b_transport(pl, offset);
 	//cout << "Correct read transaction to ip_core" << endl;
-		cout << "Ready -> " <<toInt2(&buf) << endl;
 	return toInt1(&buf);
 }
 

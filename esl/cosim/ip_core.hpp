@@ -47,8 +47,8 @@ protected:
     sc_core::sc_signal< sc_dt::sc_logic > main_bram_a_cpu_en ;
     sc_core::sc_signal< sc_dt::sc_lv<4> > main_bram_a_cpu_we ;
     sc_core::sc_signal< sc_dt::sc_lv<15> > main_bram_a_cpu_addr ;
-    sc_core::sc_signal< sc_dt::sc_lv<30> > main_bram_a_cpu_rdata ;
-    sc_core::sc_signal< sc_dt::sc_lv<30> > main_bram_a_cpu_wdata ;
+    sc_core::sc_signal< sc_dt::sc_lv<32> > main_bram_a_cpu_rdata ;
+    sc_core::sc_signal< sc_dt::sc_lv<32> > main_bram_a_cpu_wdata ;
         
     sc_core::sc_signal< sc_dt::sc_logic > ready ;    
       
