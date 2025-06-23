@@ -1,23 +1,3 @@
-`timescale 1ns / 1ps
-//////////////////////////////////////////////////////////////////////////////////
-// Company: 
-// Engineer: 
-// 
-// Create Date: 02/05/2025 10:34:50 AM
-// Design Name: 
-// Module Name: seq_item
-// Project Name: 
-// Target Devices: 
-// Tool Versions: 
-// Description: 
-// 
-// Dependencies: 
-// 
-// Revision:
-// Revision 0.01 - File Created
-// Additional Comments:
-// 
-//////////////////////////////////////////////////////////////////////////////////
 
 `ifndef SEQ_ITEM_SV
 `define SEQ_ITEM_SV
@@ -104,17 +84,17 @@ class gaussian_blur_seq_item extends uvm_sequence_item;
    	`uvm_object_utils_end
    	
    	//Constraint for write enabling bytes bram 
-   	constraint main_bram_we_constr {main_bram_a_we_i inside {4'b1111, 4'b0000};};
+   	constraint main_bram_we_constr {main_bram_a_we_i inside {4'b1111, 4'b0000};}
    	
    	//Constraint for write enabling bytes axi
-   	constraint axi_wstrb_constr {s00_axi_wstrb inside {4'b1111, 4'b0000};};
+   	constraint axi_wstrb_constr {s00_axi_wstrb inside {4'b1111, 4'b0000};}
    	
    	//Constraint for bram adress
-   	constraint main_bram_addr_constr {main_bram_a_addr_i < 4*BRAM_SIZE; };
+   	constraint main_bram_addr_constr {main_bram_a_addr_i < 4*BRAM_SIZE; }
    	
    	//Constraints for bram data
-   	constraint main_bram_wdata_up_constr {main_bram_a_wdata_i[2 * DATA_WIDTH -1] == 1'b0; main_bram_a_wdata_i[2 * DATA_WIDTH -2] == 1'b0;};
-   	constraint main_bram_wdata_down_constr {main_bram_a_wdata_i[DATA_WIDTH -1] == 1'b0; main_bram_a_wdata_i[DATA_WIDTH -2] == 1'b0;};
+   	constraint main_bram_wdata_up_constr {main_bram_a_wdata_i[2 * DATA_WIDTH -1] == 1'b0; main_bram_a_wdata_i[2 * DATA_WIDTH -2] == 1'b0;}
+   	constraint main_bram_wdata_down_constr {main_bram_a_wdata_i[DATA_WIDTH -1] == 1'b0; main_bram_a_wdata_i[DATA_WIDTH -2] == 1'b0;}
    	
    	function new( string name = "gaussian_blur_seq_item");
         super.new(name);

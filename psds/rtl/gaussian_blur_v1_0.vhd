@@ -118,7 +118,7 @@ architecture arch_imp of gaussian_blur_v1_0 is
 
 
 	-- component declaration
-	component gaussian_blur_v1_0_S00_AXI is
+	component gaussian_blur_v1_0_S00_AXI 
 		generic (
 		
 		--DATA WIDTH
@@ -177,10 +177,10 @@ architecture arch_imp of gaussian_blur_v1_0 is
 		S_AXI_RVALID	: out std_logic;
 		S_AXI_RREADY	: in std_logic
 		);
-	end component gaussian_blur_v1_0_S00_AXI;
+	end component;
         
      
-    component top_model is
+    component top_model 
     Generic(
     --DATA WIDTH
     DATA_WIDTH : natural := 16;
@@ -210,9 +210,9 @@ architecture arch_imp of gaussian_blur_v1_0 is
     
     ready: out std_logic
     );
-    end component top_model;
+    end component;
     
-    component memory_subsystem is
+    component memory_subsystem 
     Generic(
     --DATA WIDTH
     DATA_WIDTH : natural := 16);
@@ -263,7 +263,7 @@ architecture arch_imp of gaussian_blur_v1_0 is
     ready_i : in std_logic
    );
 
-    end component memory_subsystem;
+    end component;
     
 begin
 

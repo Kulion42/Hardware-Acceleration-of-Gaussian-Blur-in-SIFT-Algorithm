@@ -265,21 +265,21 @@ begin
 	      loc_addr := axi_awaddr(ADDR_LSB + OPT_MEM_ADDR_BITS downto ADDR_LSB);
 	      if (slv_reg_wren = '1') then
 	        case loc_addr is
-	          when b"000" =>
+	          when "000" =>
 	               img_width_we_o <= '1';
-	          when b"001" =>
+	          when "001" =>
 	               img_height_we_o <= '1';
-	          when b"010" =>
+	          when "010" =>
 	               img_offset_up_we_o <= '1';
-	          when b"011" =>
+	          when "011" =>
 	               img_offset_down_we_o <= '1';
-	          when b"100" =>
+	          when "100" =>
 	               img_per_octave_we_o <= '1';
-	          when b"101" =>
+	          when "101" =>
 	               reset_we_o <= '1';
-	          when b"110" =>
+	          when "110" =>
 	               start_we_o <= '1';
-	          when b"111" =>
+	          when "111" =>
 	               --ready_wr_o <= '1'; ne znam da li treba cpu da moze da promeni
 	          when others =>
 	        end case;
@@ -375,21 +375,21 @@ begin
 	    -- Address decoding for reading registers
 	    loc_addr := axi_araddr(ADDR_LSB + OPT_MEM_ADDR_BITS downto ADDR_LSB);
 	    case loc_addr is
-	      when b"000" =>
+	      when "000" =>
 	        reg_data_out <= conv_std_logic_vector(0, C_S_AXI_DATA_WIDTH - DATA_WIDTH)&img_width_axi_i;
-	      when b"001" =>
+	      when "001" =>
 	        reg_data_out <= conv_std_logic_vector(0, C_S_AXI_DATA_WIDTH - DATA_WIDTH)&img_height_axi_i;
-	      when b"010" =>
+	      when "010" =>
 	        reg_data_out <= conv_std_logic_vector(0, C_S_AXI_DATA_WIDTH - DATA_WIDTH)&img_offset_up_axi_i;
-	      when b"011" =>
+	      when "011" =>
 	        reg_data_out <= conv_std_logic_vector(0, C_S_AXI_DATA_WIDTH - DATA_WIDTH)&img_offset_down_axi_i;
-	      when b"100" =>
+	      when "100" =>
 	        reg_data_out <= conv_std_logic_vector(0, C_S_AXI_DATA_WIDTH - DATA_WIDTH)&img_per_octave_axi_i;
-	      when b"101" =>
+	      when "101" =>
 	        reg_data_out <= conv_std_logic_vector(0, C_S_AXI_DATA_WIDTH - 1)&reset_axi_i;
-	      when b"110" =>
+	      when "110" =>
 	        reg_data_out <= conv_std_logic_vector(0, C_S_AXI_DATA_WIDTH - 1)&start_axi_i;
-	      when b"111" =>
+	      when "111" =>
 	        reg_data_out <= conv_std_logic_vector(0, C_S_AXI_DATA_WIDTH - 1)&ready_axi_i;
 	      when others =>
 	        reg_data_out  <= (others => '0');
@@ -397,7 +397,7 @@ begin
 	end process; 
 
 	-- Output register or memory read data
-	process( S_AXI_ACLK ) is
+	process( S_AXI_ACLK )
 	begin
 	  if (rising_edge (S_AXI_ACLK)) then
 	    if ( S_AXI_ARESETN = '0' ) then

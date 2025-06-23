@@ -5,18 +5,18 @@
 -sv +incdir+../verif/sequences
 -sv +incdir+../verif/config
 
-../../psds/rtl/gaussian_blur_v1_0.vhd
-../../psds/rtl/gaussian_blur_v1_0_S00_AXI.vhd
-../../psds/rtl/top_model.vhd
-../../psds/rtl/gaussian_blur.vhd
-../../psds/rtl/memory_subsystem.vhd
-../../psds/rtl/bram.vhd
-../../psds/rtl/convolute_loops.vhd
-../../psds/rtl/kernel_rom.vhd
-../../psds/rtl/dsp_unit_mac_shift.vhd
-../../psds/rtl/dsp_unit_mul_shift.vhd
-../../psds/rtl/dsp_unit_add.vhd
 ../../psds/rtl/utils_pkg.vhd
+../../psds/rtl/dsp_unit_add.vhd
+../../psds/rtl/dsp_unit_mul_shift.vhd
+../../psds/rtl/dsp_unit_mac_shift.vhd
+../../psds/rtl/kernel_rom.vhd
+../../psds/rtl/convolute_loops.vhd
+../../psds/rtl/bram.vhd
+../../psds/rtl/memory_subsystem.vhd
+../../psds/rtl/gaussian_blur.vhd
+../../psds/rtl/top_model.vhd
+../../psds/rtl/gaussian_blur_v1_0_S00_AXI.vhd
+../../psds/rtl/gaussian_blur_v1_0.vhd
 
 -sv ../verif/config/gaussian_blur_config_rand_pkg.sv
 -sv ../verif/agent_rand/agent_rand_pkg.sv

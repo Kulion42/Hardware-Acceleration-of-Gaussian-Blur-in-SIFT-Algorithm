@@ -1,23 +1,3 @@
-`timescale 1ns / 1ps
-//////////////////////////////////////////////////////////////////////////////////
-// Company: 
-// Engineer: 
-// 
-// Create Date: 02/06/2025 02:50:59 PM
-// Design Name: 
-// Module Name: gaussian_blur_config
-// Project Name: 
-// Target Devices: 
-// Tool Versions: 
-// Description: 
-// 
-// Dependencies: 
-// 
-// Revision:
-// Revision 0.01 - File Created
-// Additional Comments:
-// 
-//////////////////////////////////////////////////////////////////////////////////
 
 parameter NUMBER_OF_IMAGES = 11;
 parameter NUMBER_OF_IMAGE_PARTS = 4;
@@ -119,13 +99,13 @@ class gaussian_blur_config extends uvm_object;
         }
     endgroup
 
-     constraint rand_constr_img {rand_img >= 0 ; rand_img < NUMBER_OF_IMAGES;}; 
-     constraint rand_constr_oct1 {rand_oct == 0 ; rand_oct < NUMBER_OF_OCTAVES;}; 
-     constraint rand_constr_oct2 {rand_oct dist {0:= 20, [1:3]:/ 30} ; }; 
-     constraint rand_constr_ipart {rand_part >= 0 ; rand_part < NUMBER_OF_IMAGE_PARTS;}; 
-     constraint rand_constr_ipo1 {rand_ipo >= 0 ; rand_ipo < NUMBER_OF_IMAGES_PER_OCTAVE;}; 
-     constraint rand_constr_ipo2 {(rand_oct == 0) -> (rand_ipo == 0);};
-     constraint rand_constr_ipo3 {(rand_oct != 0) -> (rand_ipo != 0);};
+     constraint rand_constr_img {rand_img >= 0 ; rand_img < NUMBER_OF_IMAGES;}
+     constraint rand_constr_oct1 {rand_oct == 0 ; rand_oct < NUMBER_OF_OCTAVES;} 
+     constraint rand_constr_oct2 {rand_oct dist {0:= 20, [1:3]:/ 30} ; } 
+     constraint rand_constr_ipart {rand_part >= 0 ; rand_part < NUMBER_OF_IMAGE_PARTS;}
+     constraint rand_constr_ipo1 {rand_ipo >= 0 ; rand_ipo < NUMBER_OF_IMAGES_PER_OCTAVE;} 
+     constraint rand_constr_ipo2 {(rand_oct == 0) -> (rand_ipo == 0);}
+     constraint rand_constr_ipo3 {(rand_oct != 0) -> (rand_ipo != 0);}
 
      function new(string name = "gaussian_blur_config");
         super.new(name);

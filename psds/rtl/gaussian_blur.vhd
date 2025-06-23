@@ -73,7 +73,7 @@ end gaussian_blur;
 
 architecture Mixed of gaussian_blur is
 
-component convolute_loops is
+component convolute_loops 
 Generic(
     --WIDTH OF DATA
     DATA_WIDTH : natural := 16; -- FIXED
@@ -160,6 +160,7 @@ signal size: std_logic_vector(DATA_WIDTH/2 -1 downto 0);
 signal main_we_x, tmp_we_a_y, tmp_we_b_y, tmp_we_a_x, tmp_we_b_x, main_we_y: std_logic_vector(3 downto 0);
 signal write_x_b_addr, read_y_b_addr: std_logic_vector(log2c(BRAM_SIZE/2) - 1 downto 0);
 signal write_y_a_addr, write_y_b_addr, read_x_a_addr, read_x_b_addr: std_logic_vector(log2c(BRAM_SIZE) - 1 downto 0);
+signal dummy : std_logic_vector(2*(DATA_WIDTH-1) -1 downto 0) := (others => '0');
 
 begin
 
@@ -208,7 +209,7 @@ y_conv_gen: convolute_loops
         bram1_a_en => open,
         bram1_a_we => open,
         bram1_a_addr => open,
-        bram1_a_rdata => (others => '0'),
+        bram1_a_rdata => dummy,
         
         bram1_b_en => main_bram_b_en,
         bram1_b_we => main_we_y,
