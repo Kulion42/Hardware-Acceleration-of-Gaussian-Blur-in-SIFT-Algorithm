@@ -87,6 +87,14 @@ vector<float> find_keypoint_orientations(Keypoint& kp, const ScaleSpacePyramid& 
 void compute_keypoint_descriptor(Keypoint& kp, float theta, const ScaleSpacePyramid& grad_pyramid,
                           float lambda_desc=LAMBDA_DESC);
 
+std::vector<Keypoint> find_keypoints_and_descriptors(const Image& img, int num_of_parts= N_IP,
+                            int num_octaves=N_OCT, 
+                            int scales_per_octave=N_SPO, 
+                            float contrast_thresh=C_DOG,
+                            float edge_thresh=C_EDGE,
+                            float lambda_ori=LAMBDA_ORI,
+                            float lambda_desc=LAMBDA_DESC);
+
 
 Image draw_keypoints(const Image& img, const std::vector<Keypoint>& kps);
 

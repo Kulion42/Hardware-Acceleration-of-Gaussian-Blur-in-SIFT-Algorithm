@@ -2,7 +2,7 @@
 
 #include "app_functions.hpp"
 
-std::vector<Keypoint> find_keypoints_and_descriptors(const Image& img,
+std::vector<Keypoint> find_keypoints_and_descriptors(const Image& img, int num_of_parts,
                                                      int num_octaves, int scales_per_octave, 
                                                      float contrast_thresh, float edge_thresh, 
                                                      float lambda_ori, float lambda_desc)
@@ -12,10 +12,9 @@ std::vector<Keypoint> find_keypoints_and_descriptors(const Image& img,
 
     const Image& input = img.channels == 1 ? img : rgb_to_grayscale(img);
 
-    const Image& resized_input = input.resize(input.width*2, input.height*2, Interpolation::BILINEAR);
+    int imgs_per_octave = scales_per_octave + 3;
 
-    // This can be deleted, just use constant.
-    int num_of_parts = N_IP;
+    const Image& resized_input = input.resize(input.width*2, input.height*2, Interpolation::BILINEAR);
 
     const std::vector<Image> resized_part = image_partitions(resized_input);
     std::vector<std::vector<Image>> gaussian_pyramid_vector(num_of_parts, std::vector<Image>(num_octaves * imgs_per_octave));
@@ -88,10 +87,10 @@ std::vector<Image> generate_gaussian_pyramid_vector(const Image& img, int img_nu
     write_hard(IMG_OFFSET_DOWN_REG_OFFSET, offset_down);
     write_hard(IMG_OCTAVE_NUM_REG_OFFSET, 0);
 
-    write_bram(img, IMG0_WIDTH_C*IMG0_HEIGHT_C);
+    write_bram(img, img.width*img.height);
 	
 	write_hard(START_REG_OFFSET, 1);
-    std::cout << "Waiting for IP to finish." << std::endl;	
+    //std::cout << "Waiting for IP to finish." << std::endl;	
     while (true) 
     {
     std::optional<uint16_t> ready = read_hard(READY_REG_OFFSET);
@@ -582,7 +581,7 @@ std::vector<Image> image_partitions(const Image& img, int num_of_parts)
         Image first_part(img.width, (img.height/num_of_parts) + OFFSET_UP_DOWN , 1);
             for (int x = 0; x < img.width; x++) {
                 for (int y = 0; y < (img.height/num_of_parts) + OFFSET_UP_DOWN; y++) {
-                    data_t val = img.get_pixel(x, y, 0);
+                    float val = img.get_pixel(x, y, 0);
                     first_part.set_pixel(x, y, 0,  val);                                    
                 }
             }    
@@ -596,7 +595,7 @@ std::vector<Image> image_partitions(const Image& img, int num_of_parts)
                 Image partitions(img.width, (img.height/num_of_parts) + 2 * OFFSET_UP_DOWN , 1);
                 for (int x = 0; x < img.width; x++) {
                     for (int y = i*(img.height/num_of_parts) -OFFSET_UP_DOWN; y < (i+1)*(img.height/num_of_parts) + OFFSET_UP_DOWN; y++) {
-                        data_t val = img.get_pixel(x, y, 0);
+                        float val = img.get_pixel(x, y, 0);
                         partitions.set_pixel(x, y - i*(img.height/num_of_parts) +OFFSET_UP_DOWN, 0,  val);                                    
                     }
                 }    
@@ -611,7 +610,7 @@ std::vector<Image> image_partitions(const Image& img, int num_of_parts)
         for (int x = 0; x < img.width; x++) {
         
                  for (int y = (num_of_parts -1)*(img.height/num_of_parts) - OFFSET_UP_DOWN; y < img.height; y++) {
-                        data_t val = img.get_pixel(x, y, 0);
+                        float val = img.get_pixel(x, y, 0);
                         last_part.set_pixel(x, y - (num_of_parts -1)*(img.height/num_of_parts) + OFFSET_UP_DOWN, 0, val);                                    
                 }
         }   
@@ -644,7 +643,7 @@ std::vector<Image> combine_partitions(std::vector< std::vector <Image> > img_vec
                   
                     for (int y= 0; y < img_vec[i][j].height; y++){  
 
-                        data_t val = img_vec[i][j].get_pixel(x, y, 0);
+                        float val = img_vec[i][j].get_pixel(x, y, 0);
                         combined.set_pixel(x, i*img_vec[1][j].height + y , 0, val);  
                     }
                        

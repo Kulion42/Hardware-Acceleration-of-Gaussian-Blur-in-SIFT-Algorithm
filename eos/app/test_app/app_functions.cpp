@@ -1,7 +1,7 @@
 #include <iostream>
 #include <cinttypes>
 
-#include "app_functions.h"
+#include "app_functions.hpp"
 
 void write_bram(const uint16_t* val, const uint32_t& length) {
 

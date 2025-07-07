@@ -1,6 +1,6 @@
 #include <iostream>
 
-#include "app_functions.h"
+#include "app_functions.hpp"
 #include "test_image0.h"
 #include "test_image0_res.h"
 
