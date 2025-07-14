@@ -120,7 +120,7 @@ signal mul_reg_1, mul_reg_2: std_logic_vector(DATA_WIDTH -1 downto 0);
 signal sigma_center: signed(DATA_WIDTH/2 -1 downto 0);
 signal img_w1, img_w2: std_logic_vector(DATA_WIDTH -1 downto 0);
 signal valid_reg, valid_next: std_logic;
-type state_t is (idle, loops, sum_calc, read_addr_stall, write_addr_stall, clear_data_stall, conv_end);
+type state_t is (idle, loops, sum_calc, stal1, stal2, stal3, conv_end);
 signal state_reg, state_next : state_t;
 
 begin
@@ -176,7 +176,6 @@ begin
     ready <= '0';
     
     case state_reg is    
-
         when idle =>
             if start = '1' then
                 state_next <= loops;                                                
@@ -185,7 +184,7 @@ begin
                 state_next <= idle;
             end if;
             
-        when loops =>     
+        when loops =>           
             if (HORIZONTAL = true and y_reg>= signed(img_height) - signed(img_offset_down) - signed(img_offset_up)) or (HORIZONTAL = false and y_reg>= signed(img_height) - signed(img_offset_down)) then             
                 state_next <= conv_end;          
             elsif x_reg>= signed(img_width) then    
@@ -194,42 +193,31 @@ begin
                 valid_next <= '0';
                 state_next <= loops; 
                  
-            elsif k_reg > signed(sigma_size) then
+            elsif k_reg > signed(sigma_size)    then
                 k_next <= (others => '0');          
                 x_next <= x_reg + 2;     
                 valid_next <= '0';              
-                state_next <= write_addr_stall;                   
+                state_next <= stal2;                   
             else 
-                state_next <= read_addr_stall;
+                state_next <= stal1;
             end if;
-
-        when read_addr_stall  => 
-                -- Wait for the read address to be generated
-                -- Set the valid signal to '1' to make mulplication valid
+        when stal1 => 
                 valid_next <= '1';
-                state_next <= sum_calc;   
-
-        when write_addr_stall =>   
-                --Wait for the write address to be generated
-                --Calculate the final sum 
-                state_next <= clear_data_stall;
-
-        when clear_data_stall => 
-                --Clear the data in the registers
+                state_next <= sum_calc;                
+        when stal2 =>   
+                state_next <= stal3;
+        when stal3 => 
                 sum1_next <= (others => '0');
                 sum2_next <= (others => '0');
-                state_next <= loops;   
-
+                state_next <= loops;             
         when sum_calc => 
                 sum1_next <= sum1_reg + unsigned(mul_reg_1);   
                 sum2_next <= sum2_reg + unsigned(mul_reg_2);
                 k_next <= k_reg + 1;
                 state_next <= loops; 
-
         when conv_end =>
                 ready <= '1';
-                state_next <= conv_end;
-
+                state_next <= conv_end;                           
         when others => 
             state_next <= idle;
     
@@ -266,7 +254,7 @@ begin
             end if;
         end if;
                     
-        if TO_INTEGER(signed(img_offset_down)) /= 0 and TO_INTEGER(signed(img_offset_up)) /= 0  then
+        if TO_INTEGER(signed(img_offset_down)) = 10 and TO_INTEGER(signed(img_offset_up)) = 10  then
             if  (y_reg + dy) < signed(img_offset_up) then
                 c_y <= unsigned(signed(img_offset_up) + dy);                           
             elsif (y_reg + dy) >= signed(img_height) - signed(img_offset_down) then
@@ -276,7 +264,7 @@ begin
             end if;
         end if;
                     
-        if TO_INTEGER(signed(img_offset_down)) /= 0 and TO_INTEGER(signed(img_offset_up)) = 0  then                    
+        if TO_INTEGER(signed(img_offset_down)) = 10 and TO_INTEGER(signed(img_offset_up)) = 0  then                    
             if (y_reg + dy) < TO_SIGNED(0, 16)  then
                 c_y <= (others => '0');                        
             elsif (y_reg + dy) >= signed(img_height) - signed(img_offset_down) then
@@ -286,7 +274,7 @@ begin
             end if;
         end if;
                     
-        if TO_INTEGER(signed(img_offset_down)) = 0 and TO_INTEGER(signed(img_offset_up)) /= 0  then
+        if TO_INTEGER(signed(img_offset_down)) = 0 and TO_INTEGER(signed(img_offset_up)) = 10  then
             if (y_reg + dy) < signed(img_offset_up) then
                 c_y <= unsigned(signed(img_offset_up) + dy);                           
             elsif (y_reg + dy) >= signed(img_height) then
@@ -301,7 +289,7 @@ begin
 
 end process; 
 
-address_generation: process(x_reg, y_reg, c_x, c_y, sum1_reg, sum2_reg, bram1_b_rdata, bram1_b_rdata, img_width, img_offset_up)
+address_generation: process(x_reg, y_reg, c_x, c_y, sum1_reg, sum2_reg, bram1_a_rdata, bram1_b_rdata, img_width, img_offset_up)
 begin
     x2_coord <= std_logic_vector(x_reg);
     c_y_vec <= std_logic_vector(c_y);

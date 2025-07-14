@@ -85,5 +85,5 @@ for {set i 0} {$i < $test_count} {incr i} {
 }
 exec xcrg -report_format html -dir uvm_project_rand/gaussian_blur_verif_rand.sim/sim_1/behav/xsim -report_dir coverage
 puts "Regression is over !!!!"
-
+exit 0
 
