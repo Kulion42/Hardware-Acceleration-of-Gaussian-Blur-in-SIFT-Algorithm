@@ -11,6 +11,7 @@
 #include <tlm_utils/simple_initiator_socket.h>
 
 #include "addr.hpp"
+#include "cpu.hpp"
 #include "functions.hpp"
 #include "sc_types.hpp"
 #include "constants_and_structs.hpp"
@@ -30,8 +31,7 @@ public:
 	tlm_utils::simple_initiator_socket<Ip_Core> kernel_rom_socket;	
 	
 protected:
-    sc_core::sc_time offset_hard;
-    
+
     //input parameters
     sc_int<16> img_width;
     sc_int<16> img_height;
@@ -44,6 +44,7 @@ protected:
     //output signal
     sc_uint<1> ready;
     
+    sc_core::sc_time offset;
     sc_int<16> addr_off;
     vector <sigma_t> sigma_vals;
     
@@ -52,7 +53,7 @@ protected:
 	void read_mem(sc_dt::sc_uint<64> addr, data_t& pix1, data_t& pix2);
 	void write_mem(sc_dt::sc_uint<64> addr, data_t pix1, data_t pix2);
 	data_t read_rom(sc_dt::sc_uint<64> addr);
-	
+
     
 }  ; 
     

@@ -6,7 +6,7 @@ int Cpu::argc = 0;
 
 SC_HAS_PROCESS(Cpu);
 
-Cpu::Cpu(sc_core::sc_module_name name, char** strings, int arg_count) : sc_module(name), offset_soft(sc_core::SC_ZERO_TIME)
+Cpu::Cpu(sc_core::sc_module_name name, char** strings, int arg_count) : sc_module(name), offset(sc_core::SC_ZERO_TIME)
 {
 	SC_THREAD(soft);
 	SC_REPORT_INFO("Cpu ", "Constructed.");
@@ -23,7 +23,16 @@ Cpu::~Cpu()
 
 void Cpu::soft()
 {	
-	
+	long long offset_value_new = 0;
+    long long offset_value_old = 0;
+    long long offset_value = 0;
+    FILE *fp_frame;
+    double fps = 0.0;
+    char frame_file[] = "frame_file.txt";
+    double fps_avg = 0.0;
+    long long offset_avg = 0;
+
+
 	if (argc != 2) {
         std::cerr << "Usage: ./find_keypoints input.jpg (or .png)\n";
         exit(21);
@@ -68,13 +77,47 @@ void Cpu::soft()
         std::vector<Image>(num_octaves * imgs_per_octave )
         
     }; 
-    cout << endl;
+
+    char res[30];
+     strcpy(res, input_arguments[1]);
+    char res_cut[20];
+    for (int i = 0; i < 20; i++)
+        res_cut[i]=res[i + 10];
+    std::string output = res_cut;
+
+    fp_frame = fopen(frame_file, "a+");
+    if (fp_frame == NULL) {
+        std::cerr << "Error opening regression log file.\n";
+        exit(1);
+    }
+    fprintf(fp_frame, "*****************************\n\n");
+    fprintf(fp_frame, "Image name: %s\n", output.c_str());
+    fprintf(fp_frame, "Image dimensions: %dx%d\n", input.width, input.height);
     for (int i = 0; i < num_of_parts; i++){
+       // fprintf(fp_frame, "\n");
+        //fprintf(fp_frame, "Image part: %d\n", i);
+        //fprintf(fp_frame, "Image dimensions: %dx%d\n", resized_part[i].width, resized_part[i].height);
+
         std::vector<Image> tmp = generate_gaussian_pyramid_vector(resized_part[i], i); 
+            offset_value_new = offset.to_default_time_units();
+		    offset_value = offset_value_new - offset_value_old;
+	    	offset_value_old = offset_value_new;
+	    	fps = 1000000000.0 / offset_value;
+        //fprintf(fp_frame, "Time used in Gaussian pyramid generation for this part: %lld us\n", offset_value/1000);
+        //fprintf(fp_frame, "fps = %ld\n", (long int)std::floor(fps));
+        fps_avg += fps;
+        offset_avg += offset_value;
+        //fprintf(fp_frame, "\n");
         for (int j = 0; j < num_octaves * imgs_per_octave; j++){
             gaussian_pyramid_vector[i][j] = tmp[j];  
         } 
     }
+    fprintf(fp_frame, "Average fps for all parts: %ld\n", (long int)std::floor(fps_avg/num_of_parts));
+    fprintf(fp_frame, "Average time for all parts: %lld us\n", offset_avg/(num_of_parts *1000));
+    fps_avg = 0.0;
+    offset_avg = 0;
+    //fprintf(fp_frame, "*****************************\n\n");
+    fclose(fp_frame);
     gaussian_pyramid.images = combine_partitions(gaussian_pyramid_vector /*num_of_parts,*/ ) ;  
     	
 	ScaleSpacePyramid dog_pyramid = generate_dog_pyramid(gaussian_pyramid);
@@ -93,12 +136,6 @@ void Cpu::soft()
             kps.push_back(kp);
         }
     }
-    char res[30];
-     strcpy(res, input_arguments[1]);
-    char res_cut[20];
-    for (int i = 0; i < 20; i++)
-        res_cut[i]=res[i + 10];
-    std::string output = res_cut;
 
     Image result = draw_keypoints(grayscale_img, kps);
 
@@ -109,12 +146,10 @@ void Cpu::soft()
 
     std::cout << "Found " << kps.size() << " keypoints. Output image is saved as "<< output << "\n";
     
-    offset_system += offset_soft;
+    offset_system += offset;
     
     std::cout << "Time used in whole system is " << offset_system << endl;
-    
-    //std::cout << "Time used in software--> " << offset_soft << endl; 
-    
+        
 }
 
 std::vector<Image> Cpu::generate_gaussian_pyramid_vector(const Image& img, int img_num, float sigma_min, int num_of_parts,
@@ -787,7 +822,7 @@ void Cpu::write_hard(sc_dt::sc_uint<64> addr, sc_dt::sc_int<16> val)
 	pl.set_data_ptr(buf);
 	pl.set_command( tlm::TLM_WRITE_COMMAND );
 	pl.set_response_status ( tlm::TLM_INCOMPLETE_RESPONSE );
-	interconnect_socket->b_transport(pl, offset_soft);
+	interconnect_socket->b_transport(pl, offset);
 }
 
 int Cpu::read_hard(sc_dt::sc_uint<64> addr)
@@ -799,13 +834,13 @@ int Cpu::read_hard(sc_dt::sc_uint<64> addr)
 	pl.set_data_ptr(&buf);
 	pl.set_command( tlm::TLM_READ_COMMAND );
 	pl.set_response_status ( tlm::TLM_INCOMPLETE_RESPONSE );
-	interconnect_socket->b_transport(pl, offset_soft);
+	interconnect_socket->b_transport(pl, offset);
 	return toInt(&buf);
 }
 
 void Cpu::write_mem(sc_dt::sc_uint<64> addr, data_t pix1, data_t pix2)
 {
-    offset_soft += sc_core::sc_time(10*DELAY , sc_core::SC_NS);	
+    offset += sc_core::sc_time(10*DELAY , sc_core::SC_NS);	
 	pl_t pl;
 	unsigned char buf[4];
 	Fixed_to_Uchar(buf, pix1, pix2);
@@ -814,12 +849,12 @@ void Cpu::write_mem(sc_dt::sc_uint<64> addr, data_t pix1, data_t pix2)
 	pl.set_data_ptr(buf);
 	pl.set_command( tlm::TLM_WRITE_COMMAND );
 	pl.set_response_status ( tlm::TLM_INCOMPLETE_RESPONSE );
-	interconnect_socket->b_transport(pl, offset_soft);
+	interconnect_socket->b_transport(pl, offset);
 }
 
 void Cpu::read_mem(sc_dt::sc_uint<64> addr, data_t& pix1, data_t& pix2)
 {
-    offset_soft += sc_core::sc_time(10*DELAY , sc_core::SC_NS);	
+    offset += sc_core::sc_time(10*DELAY , sc_core::SC_NS);	
 	pl_t pl;
 	unsigned char buf[4];
 	pl.set_address(addr);
@@ -827,7 +862,7 @@ void Cpu::read_mem(sc_dt::sc_uint<64> addr, data_t& pix1, data_t& pix2)
 	pl.set_data_ptr(buf);
 	pl.set_command( tlm::TLM_READ_COMMAND );
 	pl.set_response_status ( tlm::TLM_INCOMPLETE_RESPONSE );
-	interconnect_socket->b_transport(pl, offset_soft);
+	interconnect_socket->b_transport(pl, offset);
 	Uchar_to_Fixed(buf, pix1, pix2);
 }
 

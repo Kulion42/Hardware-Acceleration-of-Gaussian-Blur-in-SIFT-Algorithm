@@ -40,8 +40,9 @@ class Cpu : public sc_core::sc_module
 		static char **input_arguments;
 		static int argc;
 		
-		sc_core::sc_time offset_soft;
+		sc_core::sc_time offset;
 		int enable = 1;
+    
 		void soft();
 
 
