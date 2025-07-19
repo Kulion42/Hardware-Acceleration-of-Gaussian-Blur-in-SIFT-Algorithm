@@ -11,7 +11,6 @@
 #include <tlm_utils/simple_initiator_socket.h>
 
 #include "addr.hpp"
-#include "cpu.hpp"
 #include "functions.hpp"
 #include "sc_types.hpp"
 #include "constants_and_structs.hpp"
@@ -50,9 +49,9 @@ protected:
     
     void b_transport(pl_t&, sc_core::sc_time&);	
 	void gaussian_blur(sc_core::sc_time&);
-	void read_mem(sc_dt::sc_uint<64> addr, data_t& pix1, data_t& pix2);
-	void write_mem(sc_dt::sc_uint<64> addr, data_t pix1, data_t pix2);
-	data_t read_rom(sc_dt::sc_uint<64> addr);
+	void read_mem(sc_dt::sc_uint<64> addr, data_t *pix);
+	void write_mem(sc_dt::sc_uint<64> addr, data_t *pix1);
+	void read_rom(sc_dt::sc_uint<64> addr, kernel_t *val);
 
     
 }  ; 

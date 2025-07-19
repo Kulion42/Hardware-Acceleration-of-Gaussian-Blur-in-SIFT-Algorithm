@@ -39,32 +39,32 @@ void Ip_Core::b_transport(pl_t &pl, sc_time &offset)
       		switch(address)
         	{
 			case ADDR_IMG_WIDTH:
-			  img_width = toInt2(buffer);  
+			  img_width = toInt<int>(buffer, 2);  
               //cout << "img_width = " << img_width << endl;
 			  break;
 			case ADDR_IMG_HEIGHT:
-			  img_height = toInt2(buffer);
+			  img_height = toInt<int>(buffer, 2);
 			  //cout << "img_height = " << img_height << endl;
 			  break;
 			case ADDR_IMG_OFFSET_UP:
-			  img_offset_up = toInt2(buffer);
+			  img_offset_up = toInt<int>(buffer, 2);
 			 // cout << "img_offset_up = " << img_offset_up << endl;
 			  break;
 			case ADDR_IMG_OFFSET_DOWN:
-			  img_offset_down = toInt2(buffer);
+			  img_offset_down = toInt<int>(buffer, 2);
 			 // cout << "img_offset_down = " << img_offset_down << endl;
 			  break;
 			case ADDR_NUM_IMG_OCT:
-			  img_per_octave = toInt2(buffer);
+			  img_per_octave = toInt<int>(buffer, 2);
 			 // cout << "img_per_octave = " << img_per_octave << endl;
 			  break;
 			case ADDR_START:
-			  start = toInt2(buffer);
+			  start = toInt<int>(buffer, 1);
 			 // cout << "start_bit = " <<  start << endl;
 			  gaussian_blur(offset);
 			  break;
 			case ADDR_RESET:
-			  reset = toInt2(buffer);			  
+			  reset = toInt<int>(buffer, 1);			  
 			 // cout << "reset_bit = " << reset << endl;
 			  if (reset == 1)
 			  gaussian_blur(offset);
@@ -80,7 +80,7 @@ void Ip_Core::b_transport(pl_t &pl, sc_time &offset)
 		switch(address)
 		{
 		case ADDR_READY:
-		  toUchar2(buffer, ready);
+		  toChar<int>(buffer, ready, 1);
 		  break;
 		default:
 		  pl.set_response_status( tlm::TLM_ADDRESS_ERROR_RESPONSE );
@@ -100,7 +100,7 @@ void Ip_Core::gaussian_blur(sc_core::sc_time& offset)
  //  pl_t pl;
     
     if (start == 1 && ready == 1 && reset == 0){
-       // cout << "Hard started" << endl;
+        //cout << "Hard started" << endl;
         ready = 0;
         offset+=sc_time(DELAY, SC_NS);
    }
@@ -109,7 +109,7 @@ void Ip_Core::gaussian_blur(sc_core::sc_time& offset)
     //Start with work
     //cout << "Startig gaussian_blur"<<endl;
     sc_int<16> c_y, c_x1, c_x2;
-    sigma_t sigma = sigma_vals[img_per_octave];
+    float sigma = sigma_vals[img_per_octave];
     //cout << sigma << endl;
     sc_int<16> size = std::ceil(6 * sigma);
     
@@ -117,7 +117,7 @@ void Ip_Core::gaussian_blur(sc_core::sc_time& offset)
         size++;
    // cout << size << endl;
     sc_int<16> center = size / 2;
-    
+
     if (img_per_octave == 0)
     addr_off=0;
     
@@ -128,7 +128,7 @@ void Ip_Core::gaussian_blur(sc_core::sc_time& offset)
     for (sc_int<16> x = 0; x < img_width; x+=2) {
         for (sc_int<16> y = img_offset_up; y < img_height - img_offset_down; y++) {
        //cout << img.height - offset_down << y << endl;
-           sum_t sum1 = 0; sum_t sum2 = 0;
+           data_t sum[2] = {0, 0};
             for ( sc_int<16> k = 0; k < size; k++) {
                  sc_int<16> dy = -center + k;
                  
@@ -143,29 +143,31 @@ void Ip_Core::gaussian_blur(sc_core::sc_time& offset)
                  else
                     c_y = y + dy;
                     
-                 data_t pix1, pix2, val1;
-                 val1 = read_rom(VP_ADDR_KERNEL_ROM_L + addr_off + k);
+                 data_t pix[2];
+				 kernel_t val1;
+                 read_rom(VP_ADDR_KERNEL_ROM_L + addr_off + k, &val1);
+				 //cout << "Reading kernel value: " << val1 << " at address: " << addr_off + k << endl;
                  //cout << std::hex << VP_ADDR_MAIN_BRAM_L + (y+dy)*img_width + x << endl;
-                 read_mem(VP_ADDR_MAIN_BRAM_L + 2 *(c_y*img_width + x), pix1, pix2);
-                 
-                 sum1 += pix1 * val1;
-                 sum2 += pix2 * val1;
+                 read_mem(VP_ADDR_MAIN_BRAM_L + 2 *(c_y*img_width + x), pix);
+                 //cout << pix[0] << " " << pix[1] << endl;
+                 sum[0] += pix[0] * val1;
+				 sum[1] += pix[1] * val1;
                  
                  //cout << sum << endl;
                  offset += sc_time(DELAY, SC_NS);
             }
           //  tmp.set_pixel(x, y-offset_up, 0, sum);
-          write_mem(VP_ADDR_TMP_BRAM_L + 2 *((y-img_offset_up)*img_width + x), sum1, sum2);
+          write_mem(VP_ADDR_TMP_BRAM_L + 2 *((y-img_offset_up)*img_width + x), sum);
           offset += sc_time(DELAY, SC_NS);
         }
         offset += sc_time(DELAY, SC_NS);
     }
     offset += sc_time(DELAY, SC_NS);
-        
+       //while(1); 
     // convolve horizontal
        for (sc_int<16> x = 0; x < img_width; x+=2) {
            for (sc_int<16> y = 0; y < img_height - img_offset_up - img_offset_down; y++) {           
-               sum_t sum1 = 0; sum_t sum2 = 0;
+               data_t sum[2] = {0, 0};
                  for (sc_int<16> k = 0; k < size; k++) {
                  sc_int<16> dx = -center + k;
                  if (x+dx < 0 )
@@ -175,20 +177,18 @@ void Ip_Core::gaussian_blur(sc_core::sc_time& offset)
                  else
                     c_x1 = x + dx;
                     
-                 data_t pix1, pix2,  val1;
-                 val1 = read_rom(VP_ADDR_KERNEL_ROM_L + addr_off + k);
-                 read_mem(VP_ADDR_TMP_BRAM_L + 2 * (y*img_width + c_x1), pix1, pix2);                 
+                 data_t pix[2];  
+				 kernel_t val1;
+                 read_rom(VP_ADDR_KERNEL_ROM_L + addr_off + k, &val1);
+                 read_mem(VP_ADDR_TMP_BRAM_L + 2 * (y*img_width + c_x1), pix);                 
                  
-                 sum1 += pix1 * val1;
-                 sum2 += pix2 * val1;
-                // fprintf(fp, "%2.14lf\n", (double)tmp);
-               //  cout << sum << endl;
+                 sum[0] += pix[0] * val1;
+				 sum[1] += pix[1] * val1;
+
                  offset += sc_time(DELAY, SC_NS);
                
             }
-            //fprintf(fp, "%2.14lf\n\n", (double)sum);
-           // filtered.set_pixel(x, y, 0, sum);
-           write_mem(VP_ADDR_MAIN_BRAM_L + 2 * (y*img_width + x), sum1, sum2);
+           write_mem(VP_ADDR_MAIN_BRAM_L + 2 * (y*img_width + x), sum);
            offset += sc_time(DELAY, SC_NS);
         }
         offset += sc_time(DELAY, SC_NS);
@@ -196,6 +196,7 @@ void Ip_Core::gaussian_blur(sc_core::sc_time& offset)
    offset += sc_time(DELAY, SC_NS);
    
    addr_off+=size;
+   //cout << addr_off << endl;
    //cout << "Time used in hardware--> " << offset << endl;
    //cout << "Gaussian blur finished" << endl;
    //cout << endl;
@@ -206,12 +207,12 @@ void Ip_Core::gaussian_blur(sc_core::sc_time& offset)
 
 }
 
-void Ip_Core::write_mem(sc_dt::sc_uint<64> addr, data_t pix1, data_t pix2)
+void Ip_Core::write_mem(sc_dt::sc_uint<64> addr, data_t *pix)
 {
 	pl_t pl;
 	sc_dt::uint64 taddr = addr & 0x00FFFFFF;
 	unsigned char buf[4];
-	Fixed_to_Uchar(buf, pix1, pix2);
+	to_Uchar<data_t>(buf, pix);
 	pl.set_data_length(BUS_WIDTH); 
 	pl.set_data_ptr(buf);
 	pl.set_command( tlm::TLM_WRITE_COMMAND );
@@ -235,7 +236,7 @@ void Ip_Core::write_mem(sc_dt::sc_uint<64> addr, data_t pix1, data_t pix2)
 	}
 }
 
-void Ip_Core::read_mem(sc_dt::sc_uint<64> addr, data_t& pix1, data_t& pix2)
+void Ip_Core::read_mem(sc_dt::sc_uint<64> addr, data_t *pix)
 {
 	pl_t pl;
 	sc_dt::uint64 taddr = addr & 0x00FFFFFF;
@@ -262,22 +263,23 @@ void Ip_Core::read_mem(sc_dt::sc_uint<64> addr, data_t& pix1, data_t& pix2)
 	    cout << std::hex << addr << endl;
 	    SC_REPORT_ERROR("IP_Core_Read", "Wrong address.");
 	}
-	Uchar_to_Fixed(buf, pix1, pix2);
+	from_Uchar<data_t>(buf, pix);
 	
 }
 
-data_t Ip_Core::read_rom(sc_dt::sc_uint<64> addr)    
+void Ip_Core::read_rom(sc_dt::sc_uint<64> addr, kernel_t *val)    
 {
     pl_t pl;
     sc_dt::uint64 taddr = addr & 0x00FFFFFF;
-	unsigned char buf[4];
+	unsigned char buf[2];
 	pl.set_address(taddr);
-	pl.set_data_length(4); 
+	pl.set_data_length(2); 
 	pl.set_data_ptr(buf);
 	pl.set_command( tlm::TLM_READ_COMMAND );
 	pl.set_response_status ( tlm::TLM_INCOMPLETE_RESPONSE );
 	kernel_rom_socket->b_transport(pl, offset);
-	return Uchar_to_Data_t(buf);
+	//cout << "Reading kernel value: " << toInt<unsigned int>(buf, 2) << " at address: " << taddr << endl;	
+	*val = ((double)toInt<uint16_t>(buf, 2)) / (double)(1 << 16);
 	
 }
 

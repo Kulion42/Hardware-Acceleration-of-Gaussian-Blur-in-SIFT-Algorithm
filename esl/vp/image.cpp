@@ -20,7 +20,7 @@ Image::Image(std::string file_path)
     }
 
     size = width * height * channels;
-    data = new data_t[size]; 
+    data = new float[size]; 
     for (int x = 0; x < width; x++) {
         for (int y = 0; y < height; y++) {
             for (int c = 0; c < channels; c++) {
@@ -40,7 +40,7 @@ Image::Image(int w, int h, int c)
      height {h},
      channels {c},
      size {w*h*c},
-     data {new data_t[w*h*c]()}
+     data {new float[w*h*c]()}
 {
 }
 
@@ -63,7 +63,7 @@ Image::Image(const Image& other)
      height {other.height},
      channels {other.channels},
      size {other.size},
-     data {new data_t[other.size]}
+     data {new float[other.size]}
 {
     //std::cout << "copy constructor\n";
     for (int i = 0; i < size; i++)
@@ -79,7 +79,7 @@ Image& Image::operator=(const Image& other)
         height = other.height;
         channels = other.channels;
         size = other.size;
-        data = new data_t[other.size];
+        data = new float[other.size];
         for (int i = 0; i < other.size; i++)
             data[i] = other.data[i];
     }
@@ -134,7 +134,7 @@ bool Image::save(std::string file_path)
     return true;
 }
 
-void Image::set_pixel(int x, int y, int c, data_t val)
+void Image::set_pixel(int x, int y, int c, float val)
 {
     if (x >= width || x < 0 || y >= height || y < 0 || c >= channels || c < 0) {
         std::cerr << "set_pixel() error: Index out of bounds." << " y= " << y << " height= " << height <<"\n";
@@ -143,7 +143,7 @@ void Image::set_pixel(int x, int y, int c, data_t val)
     data[c*width*height + y*width + x] = val;
 }
 
-data_t Image::get_pixel(int x, int y, int c) const
+float Image::get_pixel(int x, int y, int c) const
 {
     if (x < 0)
         x = 0;

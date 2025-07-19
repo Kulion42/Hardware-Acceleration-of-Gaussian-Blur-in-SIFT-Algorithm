@@ -19,7 +19,7 @@ typedef tlm::tlm_base_protocol_types::tlm_phase_type ph_t;
 
 //bram size is 240KB
 #define BRAM_SIZE 0x3A980
-#define KERNEL_SIZE 0x14 * 2
+#define KERNEL_SIZE 0x4c
 
 // macro for offset (DELAY = T = 1/f = 1/111MHz = 9ns)
 #define DELAY 9

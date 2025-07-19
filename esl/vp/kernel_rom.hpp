@@ -19,7 +19,7 @@ public:
 	
 protected:
 	void b_transport(pl_t&, sc_core::sc_time&);
-	std::vector<data_t> kernel_rom;
+	std::vector<kernel_t> kernel_rom;
 };
 
 #endif
