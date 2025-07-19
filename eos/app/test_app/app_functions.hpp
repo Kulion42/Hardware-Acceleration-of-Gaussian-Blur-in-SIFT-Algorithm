@@ -12,6 +12,7 @@
 #define START_REG_OFFSET 24
 #define READY_REG_OFFSET 28
 
+#define MAX_BRAM_SIZE 50000
 
 void write_bram(const uint16_t* val, const uint32_t& length);
 void read_bram(uint16_t* val, const uint32_t& length);

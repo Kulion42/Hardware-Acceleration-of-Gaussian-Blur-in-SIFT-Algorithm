@@ -14,6 +14,8 @@
 #define START_REG_OFFSET 24
 #define READY_REG_OFFSET 28
 
+#define MAX_BRAM_SIZE 50000
+
 uint16_t floatToQ2_14(const float &value);
 float q2_14ToFloat(const uint16_t &value);
 void write_bram(const Image &image, const uint32_t& length);

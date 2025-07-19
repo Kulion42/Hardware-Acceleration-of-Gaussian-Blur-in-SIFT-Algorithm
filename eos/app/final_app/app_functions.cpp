@@ -4,7 +4,7 @@
 
 #include "app_functions.hpp"
 
-
+// Funkcija za konverziju float vrednosti u Q2_14 format koji se koristi u IP jezgru
 uint16_t floatToQ2_14(const float &value) {
     if (value < 0.0f || value >= 4.0f) {
         std::cout << "Value of pixel is out of [0, 4.0] bounds." << std::endl;
@@ -13,11 +13,18 @@ uint16_t floatToQ2_14(const float &value) {
     return static_cast<uint16_t>(std::round(value * (1 << 14)));
 }
 
+// Funkcija za konvertiju Q2_14 formata u float format
 float q2_14ToFloat(const uint16_t &value) {
     return static_cast<float>(value) / (1 << 14);
 }
 
-void write_bram(const Image &image, const uint32_t& length) {
+void write_bram(const Image &image) {
+    
+    // Ako je slika veca od dozvoljenog
+    if(image.height*image.width > MAX_BRAM_SIZE) {
+        return;
+    }
+    
     FILE* main_bram_file = std::fopen("/dev/main_bram_ctrl", "w");
     if (!main_bram_file) {
 		std::cout << "Nemoguce otvoriti /dev/main_bram_ctrl." << std::endl;
@@ -60,7 +67,13 @@ void write_bram(const Image &image, const uint32_t& length) {
     std::fclose(main_bram_file);
 }
 
-void read_bram(Image &image, const uint32_t& length) {
+void read_bram(Image &image) {
+    
+    // Ako je slika veca od dozvoljenog
+    if(image.height*image.width > MAX_BRAM_SIZE) {
+        return;
+    }
+
     FILE* main_bram_file = std::fopen("/dev/main_bram_ctrl", "r");
     if (!main_bram_file) {
 		std::cout << "Nemoguce otvoriti /dev/main_bram_ctrl." << std::endl;

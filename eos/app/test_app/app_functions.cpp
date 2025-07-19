@@ -1,9 +1,16 @@
 #include <iostream>
 #include <cinttypes>
+#include <optional>
 
 #include "app_functions.hpp"
 
+// Funkcija za upis niza uint16_t podataka u glavnu BRAM memoriju
 void write_bram(const uint16_t* val, const uint32_t& length) {
+
+    // Ako je slika veca od dozvoljenog
+    if(length > MAX_BRAM_SIZE) {
+        return;
+    }
 
     FILE* main_bram_file = std::fopen("/dev/main_bram_ctrl", "w");
     if (!main_bram_file)
@@ -23,7 +30,14 @@ void write_bram(const uint16_t* val, const uint32_t& length) {
     std::fclose(main_bram_file);
 }
 
+// Funkcija za čitanje niza uint16_t podataka iz glavne BRAM memorije
 void read_bram(uint16_t* val, const uint32_t& length) {
+    
+    // Ako je slika veca od dozvoljenog
+    if(length > MAX_BRAM_SIZE) {
+        return;
+    }
+    
     FILE* main_bram_file = std::fopen("/dev/main_bram_ctrl", "r");
     if (!main_bram_file)
 	{
@@ -43,6 +57,7 @@ void read_bram(uint16_t* val, const uint32_t& length) {
     std::fclose(main_bram_file);
 }
 
+// Funkcija za upis podataka u registar IP jezgra
 void write_hard(const uint16_t& addr, const uint16_t& val) {
     FILE* gaussian_blur_core_file = std::fopen("/dev/gaussian_blur_core", "w");
     if (!gaussian_blur_core_file) 
@@ -56,6 +71,7 @@ void write_hard(const uint16_t& addr, const uint16_t& val) {
     std::fclose(gaussian_blur_core_file);
 }
 
+// Funkcija za čitanje podataka iz registra IP jezgra
 std::optional<uint16_t> read_hard(const uint16_t& addr) {
     FILE* gaussian_blur_core_file = std::fopen("/dev/gaussian_blur_core", "r");
     if (!gaussian_blur_core_file)
@@ -85,6 +101,7 @@ std::optional<uint16_t> read_hard(const uint16_t& addr) {
 
     return val[index];
 }
+
 
 void clear_bram()
 {
