@@ -46,13 +46,12 @@ end check_top_model;
 architecture Behavioral of check_top_model is
     constant DATA_WIDTH : integer :=16;
     constant BRAM_SIZE : integer :=60000;
-    constant KERNEL_ROM_SIZE : integer :=77;
+    constant KERNEL_ROM_SIZE : integer :=78;
     constant SHIFT_W1: integer := 1;
     constant SHIFT_W2: integer := 8;
-    constant FILE_NAME: string := "../../../../../../../tb/load_bram/bram_state_2_ipart_0_0.txt";
-    --/home/luka/y24-g10/psds/tb/load_bram/bram_state_2_ipart_0_0.txt
+    constant FILE_NAME: string := "../../../../../../../tb/load_bram/bram_state_0_ipart_0_0.txt";
    
-    file init_txt : text open write_mode is "../../../../../../../tb/bram_init/bram_init_top.txt";
+    --file init_txt : text open write_mode is "../../../../../../../tb/bram_init/bram_init_top.txt";
     file save_txt : text open write_mode is "../../../../../../../tb/bram_save/bram_save_top.txt";
     --signali
     signal clk_s : std_logic ;
@@ -128,23 +127,6 @@ BRAM1: entity work.bram1(Behavioral)
                  addr_b => (others => '0'),
                  data_b_o => open,
                  data_b_i => (others => '0')  );
-BRAM2: entity work.bram2(Behavioral)
-        generic map(WIDTH => DATA_WIDTH,
-                    SIZE => BRAM_SIZE)
-        port map(clk_a => clk_s,
-                 clk_b => clk_s,
-                 
-                 en_a => bram_a_en_s,
-                 we_a => "1111",
-                 addr_a => main_a_addr_s,
-                 data_a_o => open,
-                 data_a_i => main_a_rdata_s,
-                 
-                 en_b => '0',
-                 we_b => (others => '0'),
-                 addr_b => main_a_addr_s,
-                 data_b_o => bram2_a_rdata_s,
-                 data_b_i => (others => '0')  );
         
 clk_gen: process
 begin
@@ -188,7 +170,7 @@ begin
         write(row_w, TO_INTEGER(unsigned(main_a_wdata_s(DATA_WIDTH -1 downto 0))), left , SHIFT_W2);
         write(row_w, string'("Write_Pixs_addr: "), left, SHIFT_W1);
         write(row_w, TO_INTEGER(unsigned(main_a_addr_s)), left , SHIFT_W2);
-        writeline(init_txt, row_w);
+       -- writeline(init_txt, row_w);
     end loop;
     wait until rising_edge(clk_s);
     main_a_we_s <= "0000";
