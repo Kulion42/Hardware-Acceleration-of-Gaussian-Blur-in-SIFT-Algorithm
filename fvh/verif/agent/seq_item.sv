@@ -93,8 +93,8 @@ class gaussian_blur_seq_item extends uvm_sequence_item;
    	constraint main_bram_addr_constr {main_bram_a_addr_i < 4*BRAM_SIZE; }
    	
    	//Constraints for bram data
-   	constraint main_bram_wdata_up_constr {main_bram_a_wdata_i[2 * DATA_WIDTH -1] == 1'b0; main_bram_a_wdata_i[2 * DATA_WIDTH -2] == 1'b0;}
-   	constraint main_bram_wdata_down_constr {main_bram_a_wdata_i[DATA_WIDTH -1] == 1'b0; main_bram_a_wdata_i[DATA_WIDTH -2] == 1'b0;}
+   	constraint main_bram_wdata_up_constr {main_bram_a_wdata_i[2 * DATA_WIDTH -1] == 1'b0;}
+   	constraint main_bram_wdata_down_constr {main_bram_a_wdata_i[DATA_WIDTH -1] == 1'b0;}
    	
    	function new( string name = "gaussian_blur_seq_item");
         super.new(name);

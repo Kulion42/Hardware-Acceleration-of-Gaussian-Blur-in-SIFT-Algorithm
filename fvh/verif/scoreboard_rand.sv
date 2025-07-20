@@ -46,13 +46,18 @@ class gaussian_blur_scoreboard_rand extends uvm_scoreboard;
         int c_x;
         int c_y;
         int kernel_vals[6][];
+        int SHIFT = 15; // Shift value for normalization
         
-        kernel_vals[0] = {30, 292, 1452, 3799, 5234, 3799, 1452, 292, 30};
-        kernel_vals[1] = {26, 267, 1409, 3823, 5331, 3823, 1409, 267, 26};
-        kernel_vals[2] = {22, 148, 642, 1830, 3432, 4231, 3432, 1830, 642, 148, 22};
-        kernel_vals[3] = {28, 123, 406, 1024, 1982, 2945, 3360, 2945, 1982, 1024, 406, 123, 28};
-        kernel_vals[4] = {45, 133, 334, 706, 1263, 1915, 2457, 2670, 2457, 1915, 1263, 706, 334, 133, 45};
-        kernel_vals[5] = {30, 74, 162, 321, 572, 917, 1322, 1719, 2011, 2119, 2011, 1719, 1322, 917, 572, 321, 162, 74, 30};
+        // Kernel values for Gaussian blur
+        // These values are derived from the Gaussian function and normalized
+        // Kernel values for Gaussian blur (sum normalized to 1 << SHIFT)
+        kernel_vals[0] = '{61, 584, 2904, 7597, 10468, 7597, 2904, 584, 61};
+        kernel_vals[1] = '{52, 534, 2819, 7645, 10661, 7645, 2819, 534, 52};
+        kernel_vals[2] = '{44, 296, 1284, 3661, 6864, 8463, 6864, 3661, 1284, 296, 44};
+        kernel_vals[3] = '{57, 247, 813, 2049, 3964, 5889, 6720, 5889, 3964, 2049, 813, 247, 57};
+        kernel_vals[4] = '{90, 267, 668, 1412, 2527, 3829, 4915, 5340, 4915, 3829, 2527, 1412, 668, 267, 90};
+        kernel_vals[5] = '{60, 148, 325, 643, 1144, 1833, 2646, 3437, 4022, 4238, 4022, 3437, 2646, 1833, 1144, 643, 325, 148, 60};
+        
         
         for (int y = img_offset_up; y < img_height - img_offset_down; y++) begin
             for (int x = 0; x < img_width; x+=2) begin
@@ -71,8 +76,8 @@ class gaussian_blur_scoreboard_rand extends uvm_scoreboard;
                     else
                         c_y = y + dy;
                         
-                    sum1 += int'((img_in_data_arr[c_y * img_width + x] * kernel_vals[num_img_per_octave][k]) / (1 << 14));
-                    sum2 += int'((img_in_data_arr[c_y * img_width + x + 1] * kernel_vals[num_img_per_octave][k]) / (1 << 14));
+                    sum1 += int'((img_in_data_arr[c_y * img_width + x] * kernel_vals[num_img_per_octave][k]) / (1 << SHIFT));
+                    sum2 += int'((img_in_data_arr[c_y * img_width + x + 1] * kernel_vals[num_img_per_octave][k]) / (1 << SHIFT));
                 end
                 tmp_arr[(y - img_offset_up) * img_width + x] = sum1;
                 tmp_arr[(y - img_offset_up) * img_width + x + 1] = sum2;
@@ -92,8 +97,8 @@ class gaussian_blur_scoreboard_rand extends uvm_scoreboard;
                     else
                         c_x = x + dx;
         
-                    sum1 += int'((tmp_arr[y * img_width + c_x] * kernel_vals[num_img_per_octave][k]) / (1 << 14));
-                    sum2 += int'((tmp_arr[y * img_width + c_x + 1] * kernel_vals[num_img_per_octave][k]) / (1 << 14));
+                    sum1 += int'((tmp_arr[y * img_width + c_x] * kernel_vals[num_img_per_octave][k]) / (1 << SHIFT));
+                    sum2 += int'((tmp_arr[y * img_width + c_x + 1] * kernel_vals[num_img_per_octave][k]) / (1 << SHIFT));
                 end
                 output_data_arr.push_back(sum1);
                 output_data_arr.push_back(sum2);

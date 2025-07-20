@@ -13,7 +13,7 @@
     parameter READY_REG_OFFSET = 5'b11100;
 
     parameter MIN_PIX = 100;
-    parameter MAX_PIX = 16384;    
+    parameter MAX_PIX = 32767;    
 class gaussian_blur_rand_seq extends seq_rand_pkg::gaussian_blur_base_seq_rand;
 
     int i = 0; 
@@ -31,15 +31,19 @@ class gaussian_blur_rand_seq extends seq_rand_pkg::gaussian_blur_base_seq_rand;
     covergroup img_data_cover();
         option.per_instance = 1;
         img_up_pix_value : coverpoint pix_up{
-            bins group_up_1 = {[0:4096]};
-            bins group_up_2 = {[4097:6144]};
-            bins group_up_3 = {[6145:8192]};
-            bins group_up_4 = {[8193:10240]};
-            bins group_up_5 = {[10241:12288]};
-            bins group_up_6 = {[12289:14336]};
-            bins group_up_7 = {[14337:15360]};
-            bins group_up_8 = {[15361:16384]};
-            illegal_bins illegal_vals_up = {[16385:65536]};
+            bins group_up_1  = {[0:4096]};
+            bins group_up_2  = {[4097:6144]};
+            bins group_up_3  = {[6145:8192]};
+            bins group_up_4  = {[8193:10240]};
+            bins group_up_5  = {[10241:12288]};
+            bins group_up_6  = {[12289:14336]};
+            bins group_up_7  = {[14337:15360]};
+            bins group_up_8  = {[15361:16384]};
+            bins group_up_9  = {[16385:20480]};
+            bins group_up_10 = {[20481:24576]};
+            bins group_up_11 = {[24577:28672]};
+            bins group_up_12 = {[28673:32767]};
+            illegal_bins illegal_vals_up = {[32768:65536]};
         }
         
         img_down_pix_value : coverpoint pix_down{
@@ -51,7 +55,11 @@ class gaussian_blur_rand_seq extends seq_rand_pkg::gaussian_blur_base_seq_rand;
             bins group_down_6 = {[12289:14336]};
             bins group_down_7 = {[14337:15360]};
             bins group_down_8 = {[15361:16384]};
-            illegal_bins illegal_vals_down = {[16385:65536]};
+            bins group_up_9   = {[16385:20480]};
+            bins group_up_10  = {[20481:24576]};
+            bins group_up_11  = {[24577:28672]};
+            bins group_up_12  = {[28673:32767]};
+            illegal_bins illegal_vals_up = {[32768:65536]};
         }
     endgroup
     
