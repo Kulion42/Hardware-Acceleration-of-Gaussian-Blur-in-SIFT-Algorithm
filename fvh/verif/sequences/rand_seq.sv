@@ -27,6 +27,8 @@ class gaussian_blur_rand_seq extends seq_rand_pkg::gaussian_blur_base_seq_rand;
     
     int fd;
     int unsigned pix_up, pix_down;
+
+    string num, num1, num2, num3;
     
     covergroup img_data_cover();
         option.per_instance = 1;
@@ -102,16 +104,27 @@ class gaussian_blur_rand_seq extends seq_rand_pkg::gaussian_blur_base_seq_rand;
         // ----------------------------------------------------------------------------------------------------------------------------------------------
                 
         //      LOADING AN IMAGE PART IN BRAM
-         $display("\nLoading image part begins...\n");
+        num.itoa(p_sequencer.cfg.rand_width);
+        num1.itoa(p_sequencer.cfg.rand_height);
+        num2.itoa(p_sequencer.cfg.rand_offset_up);
+        num3.itoa(p_sequencer.cfg.rand_offset_down);
+        $display("\nLoading image part begins...\n");
+        fd = $fopen({"../../../../../result_files/res_file_img_width_", num, "_height_", num1, "_offset_up_", num2, "_offset_down_", num3, "_input.txt"}, "w+");
+        if (fd) 
+            `uvm_info(get_name(), $sformatf("Successfully opened main_bram_read_file"),UVM_HIGH)
+        else
+            `uvm_info(get_name(), $sformatf("Error opening main_bram_read_file"),UVM_HIGH)
+
          for (i = 0 ; i < p_sequencer.cfg.rand_width*p_sequencer.cfg.rand_height/2 ; i++)
             begin
-             start_item(req_item);
+            start_item(req_item);
                 req_item.bram_axi_ctrl = 0;    
                 req_item.main_bram_a_en_i = 1'b1;    
                 req_item.main_bram_a_we_i = 4'b1111;    
                 req_item.main_bram_a_addr_i = i*4;   
                 pix_up = $urandom_range(MIN_PIX, MAX_PIX);
                 pix_down = $urandom_range(MIN_PIX, MAX_PIX);
+                $fdisplay(fd, "%0d\t%0d\t", pix_up, pix_down);
                 p_sequencer.cfg.img_in_data_arr.push_back(pix_up);
                 p_sequencer.cfg.img_in_data_arr.push_back(pix_down);
                 req_item.main_bram_a_wdata_i = pix_up << 16 | pix_down;                  
@@ -121,6 +134,7 @@ class gaussian_blur_rand_seq extends seq_rand_pkg::gaussian_blur_base_seq_rand;
                 data_parity_cover.sample();
             finish_item(req_item);     
             end
+        $fclose(fd);
             start_item(req_item);
                 req_item.bram_axi_ctrl = 0;    
                 req_item.main_bram_a_en_i = 1'b0;    

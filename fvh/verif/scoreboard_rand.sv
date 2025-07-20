@@ -154,7 +154,7 @@ class gaussian_blur_scoreboard_rand extends uvm_scoreboard;
                  `uvm_info(get_name(), $sformatf("Successfully opened log file"),UVM_HIGH)
            else
                  `uvm_info(get_name(), $sformatf("Error log file"),UVM_HIGH)
-         $fdisplay(fd, "File img_iwidth_%0d_iheight_%0d_ipo_%0d.txt offset_up = %0d, offset_down = %0d examined: %0d pixels, %0d succesfull pixel matches, %0d pixel mismatches",cfg.rand_width, cfg.rand_height, cfg.rand_img_per_octave, cfg.rand_offset_up , cfg.rand_offset_down, 2 *num_of_tr, 2 *num_of_tr - num_of_missed, num_of_missed);
+         $fdisplay(fd, "File ../result_files/res_file_img_width_%0d_height_%0d_offest_up_%0d_offset_down_%0d_in_out.txt examined: %0d pixels, %0d succesfull pixel matches, %0d pixel mismatches",cfg.rand_width, cfg.rand_height, cfg.rand_offset_up , cfg.rand_offset_down, 2 *num_of_tr, 2 *num_of_tr - num_of_missed, num_of_missed);
         $fclose(fd); 
         blur_out_data_arr.delete();    
     endfunction : report_phase

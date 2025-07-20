@@ -1,4 +1,3 @@
-
 `ifndef MONITOR_SV
 `define MONITOR_SV
 
@@ -6,6 +5,9 @@ class gaussian_blur_monitor extends uvm_monitor;
 
     bit checks_enable = 1;
     bit coverage_enable = 1;
+    int fd;
+    int tmp, tmp1, tmp2;
+    string num, num1, num2, num3;
     gaussian_blur_config_rand cfg;
     
     uvm_analysis_port #(gaussian_blur_seq_item) item_collected_port;
@@ -45,8 +47,18 @@ class gaussian_blur_monitor extends uvm_monitor;
         wait(vif.s00_axi_rdata == 0)
         wait(vif.s00_axi_rdata == 1)
         wait(vif.s00_axi_rdata == 0)
-        wait(vif.s00_axi_rdata == 1)       
-                          
+        wait(vif.s00_axi_rdata == 1)    
+
+        num.itoa(cfg.rand_width);
+        num1.itoa(cfg.rand_height);
+        num2.itoa(cfg.rand_offset_up);
+        num3.itoa(cfg.rand_offset_down);
+        fd = $fopen({"../../../../../result_files/res_file_img_width_", num, "_height_", num1, "_offset_up_", num2, "_offset_down_", num3, "_output.txt"}, "w+");
+        if (fd) 
+            `uvm_info(get_name(), $sformatf("Successfully opened main_bram_read_file"),UVM_HIGH)
+        else
+            `uvm_info(get_name(), $sformatf("Error opening main_bram_read_file"),UVM_HIGH)
+
         forever begin
         @(posedge vif.clk);
         if(vif.rst)
@@ -62,11 +74,19 @@ class gaussian_blur_monitor extends uvm_monitor;
                 
                 curr_it.main_bram_a_addr_i = vif.main_bram_a_addr_i - 4;
                 curr_it.main_bram_a_rdata_o = vif.main_bram_a_rdata_o;                
-                 
+
+                if (fd) begin                  
+                    tmp = vif.main_bram_a_rdata_o;
+                    tmp1 = (tmp >> 16) & 16'hffff;
+                    tmp2 = tmp & 16'hffff;
+                    $fdisplay(fd, "%0d\t%0d\t", tmp1, tmp2);
+                end 
+
                 item_collected_port.write(curr_it);
             end 
         end
         end
+        $fclose(fd);
    endtask 
 
 endclass : gaussian_blur_monitor
