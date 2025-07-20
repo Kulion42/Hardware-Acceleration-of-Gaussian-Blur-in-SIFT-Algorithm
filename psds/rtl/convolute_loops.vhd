@@ -43,6 +43,7 @@ Generic(
     KERNEL_ROM_SIZE : natural := 77; --FIXED 
     BRAM_SIZE : natural := 60000 --FIXED
 
+
 );
 Port ( 
     clk : in std_logic;
@@ -100,7 +101,7 @@ end component;
 component dsp_unit_mul_shift 
     generic (WIDTH1: natural := 16;
              WIDTH2: natural := 16;
-             SHIFT: natural := 14);
+             SHIFT: natural := 15);
     port (clk: in std_logic;
           mul_valid: in std_logic;
           in_1: in std_logic_vector(WIDTH2 - 1 downto 0);
@@ -321,7 +322,7 @@ end process;
 dsp_mul1: dsp_unit_mul_shift
 generic map(WIDTH1 => DATA_WIDTH,
             WIDTH2 => DATA_WIDTH,
-            SHIFT => 14)
+            SHIFT => 15)
 port map( clk => clk,
           mul_valid => valid_reg,
           in_1 => pix1,
@@ -332,7 +333,7 @@ port map( clk => clk,
 dsp_mul2: dsp_unit_mul_shift
 generic map(WIDTH1 => DATA_WIDTH,
             WIDTH2 => DATA_WIDTH,
-            SHIFT => 14)
+            SHIFT => 15)
 port map( clk => clk,
           mul_valid => valid_reg,
           in_1 => pix2,
