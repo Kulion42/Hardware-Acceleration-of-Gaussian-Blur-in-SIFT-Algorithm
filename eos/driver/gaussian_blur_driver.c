@@ -52,7 +52,7 @@ static int gaussian_blur_probe(struct platform_device *pdev);
 static int gaussian_blur_open(struct inode *i, struct file *f);
 static int gaussian_blur_close(struct inode *i, struct file *f);
 static ssize_t gaussian_blur_read(struct file *f, char __user *buf, size_t len, loff_t *offset);
-static ssize_t gaussian_blur_write(struct file *f, const char __user *buf, size_t length, loff_t *off);
+static ssize_t gaussian_blur_write(struct file *f, const char __user *buf, size_t length, loff_t *offset);
 static int __init gaussian_blur_init(void);
 static void __exit gaussian_blur_exit(void);
 static int gaussian_blur_remove(struct platform_device *pdev);
@@ -124,13 +124,13 @@ static int gaussian_blur_probe(struct platform_device *pdev)
 {
 	struct resource *r_mem;
 	int rc = 0;
-	printk(KERN_INFO "gaussian_blur_probe: Pokrećem probe funkciju\n");
+	printk(KERN_INFO "gaussian_blur_probe: Pokrecem probe funkciju\n");
 
 	// Dobavljanje resource-a tipa IORESOURCE_MEM (iz stabla uredjaja)
 	r_mem = platform_get_resource(pdev, IORESOURCE_MEM, 0);
 	if (!r_mem) 
 	{
-		printk(KERN_ALERT "gaussian_blur_probe: Nevažeća adresa\n");
+		printk(KERN_ALERT "gaussian_blur_probe: Nevazeca adresa\n");
 		return -ENODEV;
 	}
 
@@ -144,21 +144,21 @@ static int gaussian_blur_probe(struct platform_device *pdev)
 			return -ENOMEM;
 		}
 		
-		// Popunjavanje početne i krajnje adrese
+		// Popunjavanje pocetne i krajnje adrese
 		main_bram->mem_start = r_mem->start;
 		main_bram->mem_end   = r_mem->end;
 
-		// Rezervacija fizičkog memorijskog regiona
+		// Rezervacija fizickog memorijskog regiona
 		if(!request_mem_region(main_bram->mem_start,
 					main_bram->mem_end - main_bram->mem_start+1, DRIVER_NAME))
 		{
-			printk(KERN_ALERT "gaussian_blur_probe: Ne mogu da zaključam memorijsku regiju na adresi %p\n",
+			printk(KERN_ALERT "gaussian_blur_probe: Ne mogu da zakljucam memorijsku regiju na adresi %p\n",
 				 	(void *)main_bram->mem_start);
 			rc = -EBUSY;
-			goto error1; // Ako nije uspelo, idi na grešku
+			goto error1; // Ako nije uspelo, idi na gresku
 		}
 		
-		// Mapiranje fizičke adrese u virtuelnu adresu
+		// Mapiranje fizicke adrese u virtuelnu adresu
 		main_bram->base_addr = ioremap(main_bram->mem_start, main_bram->mem_end - main_bram->mem_start + 1);
 		if (!main_bram->base_addr)
 		{
@@ -186,21 +186,20 @@ static int gaussian_blur_probe(struct platform_device *pdev)
 			return -ENOMEM;
 		}
 		
-		// Popunjavanje početne i krajnje adrese
+		// Popunjavanje pocetne i krajnje adrese
 		gaussian_blur_core->mem_start = r_mem->start;
 		gaussian_blur_core->mem_end   = r_mem->end;
 
-		// Rezervacija fizičkog memorijskog regiona
+		// Rezervacija fizickog memorijskog regiona
 		if(!request_mem_region(gaussian_blur_core->mem_start,
 					gaussian_blur_core->mem_end - gaussian_blur_core->mem_start+1, DRIVER_NAME))
 		{
-			printk(KERN_ALERT "gaussian_blur_probe: Ne mogu da zaključam memorijsku regiju na adresi %p\n",
-					(void *)gaussian_blur_core->mem_start);
+			printk(KERN_ALERT "gaussian_blur_probe: Ne mogu da zakljucam memorijsku regiju na adresi %p\n", (void *)gaussian_blur_core->mem_start);
 			rc = -EBUSY;
-			goto error3; // Ako nije uspelo, idi na grešku
+			goto error3; // Ako nije uspelo, idi na gresku
 		}
 		
-		// Mapiranje fizičke adrese u virtuelnu adresu
+		// Mapiranje fizicke adrese u virtuelnu adresu
 		gaussian_blur_core->base_addr = ioremap(gaussian_blur_core->mem_start,
 				 	gaussian_blur_core->mem_end - gaussian_blur_core->mem_start + 1);
 		if (!gaussian_blur_core->base_addr)
@@ -221,8 +220,8 @@ static int gaussian_blur_probe(struct platform_device *pdev)
 		return rc;
 	}
 	else {
-		// Ako device nije ni jedan od očekivanih
-		printk(KERN_INFO "gaussian_blur_probe: Uređaj nije prepoznat\n");
+		// Ako device nije ni jedan od ocekivanih
+		printk(KERN_INFO "gaussian_blur_probe: Uredjaj nije prepoznat\n");
 		return -1;
 	}
 
@@ -231,7 +230,7 @@ static int gaussian_blur_probe(struct platform_device *pdev)
 
 static int gaussian_blur_remove(struct platform_device *pdev)
 {
-	// Uklanjanje main_bram uređaja
+	// Uklanjanje main_bram uredjaja
 	if (of_device_is_compatible(pdev->dev.of_node, "main_bram_ctrl")) {
 		printk(KERN_ALERT "gaussian_blur_remove: main_bram platform drajver uklonjen\n");
 		iowrite32(0, main_bram->base_addr);
@@ -239,7 +238,7 @@ static int gaussian_blur_remove(struct platform_device *pdev)
 		release_mem_region(main_bram->mem_start, main_bram->mem_end - main_bram->mem_start + 1);
 		kfree(main_bram);
 	}
-	// Uklanjanje gaussian_blur_core uređaja
+	// Uklanjanje gaussian_blur_core uredjaja
 	else if (of_device_is_compatible(pdev->dev.of_node, "gaussian_blur_core")) {
 		printk(KERN_ALERT "gaussian_blur_remove: gaussian_blur_core platform drajver uklonjen\n");
 		iowrite32(0, gaussian_blur_core->base_addr);
@@ -248,7 +247,7 @@ static int gaussian_blur_remove(struct platform_device *pdev)
 		kfree(gaussian_blur_core);
 	}
 	else {
-		printk(KERN_INFO "gaussian_blur_remove: Uređaj nije prepoznat\n");
+		printk(KERN_INFO "gaussian_blur_remove: Uredjaj nije prepoznat\n");
 		return -1;
 	}
 	return 0;
@@ -268,8 +267,7 @@ static int gaussian_blur_close(struct inode *i, struct file *f)
 }
 
 
-//***Globalne promenljive korišćene za rad sa read i write funkcijama**//
-u32 main_bram_i = 0;
+//***Globalne promenljive koriscene za rad sa read i write funkcijama**//
 u16 width, height = 0, offset_up = 0, offset_down = 0;
 int ready = 1;
 //*****//
@@ -295,12 +293,12 @@ ssize_t gaussian_blur_read(struct file *pfile, char __user *buf, size_t length, 
 	switch (minor)
 	{
 		case 0: // main_bram
-			// Čekanje da uređaj bude spreman za čitanje
+			// cekanje da uredjaj bude spreman za citanje
 			while (!ready)
 			{
-				// Otpuštanje semafora za sinhronizaciju
+				// Otpustanje semafora za sinhronizaciju
 				up(&sem);
-				// Čekanje dok se ne ispuni uslov ready == 1 
+				// cekanje dok se ne ispuni uslov ready == 1 
 				if (wait_event_interruptible(readyQ, (ready == 1)))
 						return -ERESTARTSYS;
 				// Zauzimanje semafora za sinhronizaciju
@@ -311,40 +309,40 @@ ssize_t gaussian_blur_read(struct file *pfile, char __user *buf, size_t length, 
 			// Provera da li je dostignut kraj fajla (EOF)
 			if (*offset >= width * (height - offset_up - offset_down)) 
             {
-                main_bram_i = 0; // Resetovanje za sledeći open() poziv
-				// Otpuštanje semafora za sinhronizaciju
+				// Otpustanje semafora za sinhronizaciju
                 up(&sem);
-                printk(KERN_INFO "gaussian_blur_read: Dostignut EOF za minor 0\n");
+                printk(KERN_WARNING "gaussian_blur_read: Dostignut EOF za minor 0\n");
                 return 0;
             }
-			// Čitanje vrednosti iz BRAM-a
+			// citanje vrednosti iz BRAM-a
             main_bram_val = ioread32(main_bram->base_addr + ADDR_FACTOR * (*offset / 2));
             len = scnprintf(buff, BUFF_SIZE, "%u ", main_bram_val);
 			// Kopiranje podataka korisniku
             if (copy_to_user(buf, buff, len))
             {
-				// Otpuštanje semafora za sinhronizaciju
+				// Otpustanje semafora za sinhronizaciju
                 up(&sem);
-                printk(KERN_ERR "gaussian_blur_read: Kopiranje u korisnički 
-						prostor nije uspelo (main_bram).\n");
+                printk(KERN_ERR "gaussian_blur_read: Kopiranje u korisnicki prostor nije uspelo (main_bram).\n");
                 return -EFAULT;
             }
-			// Ažuriranje indeksa za sledeće čitanje
+
+			// Azuriranje indeksa za sledece citanje
             *offset += 2;
-			// Otpuštanje semafora za sinhronizaciju
+			// Otpustanje semafora za sinhronizaciju
             up(&sem);
             return len;
 		
 		case 1: // gaussian_blur_core
-			// Ako je ofset već veći od 0, vraćamo EOF
+			// Ako je ofset vec veci od 0, vracamo EOF
 			if (*offset > 0)
             {
-				// Otpuštanje semafora za sinhronizaciju
+				// Otpustanje semafora za sinhronizaciju
                 up(&sem);
 
-                return 0; //  Veoma je važno: ako je već čitan, vraćamo EOF
+				// Ako je vec citan, vracamo EOF
+                return 0; 
             }
-			// Čitanje registara za podatke o slici i statusima
+			// citanje registara za podatke o slici i statusima
 			gaussian_blur_val[0] = ioread32(gaussian_blur_core->base_addr + IMG_WIDTH_REG_OFFSET);
 			gaussian_blur_val[1] = ioread32(gaussian_blur_core->base_addr + IMG_HEIGHT_REG_OFFSET); 
 			gaussian_blur_val[2] = ioread32(gaussian_blur_core->base_addr + IMG_OFFSET_UP_REG_OFFSET); 
@@ -354,10 +352,10 @@ ssize_t gaussian_blur_read(struct file *pfile, char __user *buf, size_t length, 
 			gaussian_blur_val[6] = ioread32(gaussian_blur_core->base_addr + START_REG_OFFSET); 
 			gaussian_blur_val[7] = ioread32(gaussian_blur_core->base_addr + READY_REG_OFFSET); 
 
-			// Ažuriranje statusa da li je IP core spreman
+			// Azuriranje statusa da li je IP core spreman
 			ready = gaussian_blur_val[7];
 			wake_up_interruptible(&readyQ);
-			// Formatiranje podataka za kopiranje u korisničku memoriju
+			// Formatiranje podataka za kopiranje u korisnicku memoriju
 			len = scnprintf(buff, BUFF_SIZE, "%u %u %u %u %u %u %u %u ",
                 gaussian_blur_val[0], gaussian_blur_val[1], gaussian_blur_val[2], gaussian_blur_val[3],
                 gaussian_blur_val[4], gaussian_blur_val[5], gaussian_blur_val[6], gaussian_blur_val[7]);
@@ -365,19 +363,18 @@ ssize_t gaussian_blur_read(struct file *pfile, char __user *buf, size_t length, 
 			// Kopiranje podataka korisniku
             if (copy_to_user(buf, buff, len))
             {
-				// Otpuštanje semafora za sinhronizaciju
+				// Otpustanje semafora za sinhronizaciju
                 up(&sem);
-                printk(KERN_ERR "gaussian_blur_read: Kopiranje u korisnički 
-						prostor nije uspelo (gaussian_blur_core).\n");
+                printk(KERN_ERR "gaussian_blur_read: Kopiranje u korisnicki prostor nije uspelo (gaussian_blur_core).\n");
                 return -EFAULT;
             }
-			// Obeležavanje da je čitanje završeno
+			// Obelezavanje da je citanje zavrseno
             *offset += len;
             up(&sem);
             return len;
 
 		default:
-			// Otpuštanje semafora za sinhronizaciju
+			// Otpustanje semafora za sinhronizaciju
 			up(&sem);
             printk(KERN_ERR "gaussian_blur_read: Nevalidan minor broj.\n");
             return -EINVAL;
@@ -386,23 +383,23 @@ ssize_t gaussian_blur_read(struct file *pfile, char __user *buf, size_t length, 
 }
 
 
-ssize_t gaussian_blur_write(struct file *pfile, const char __user *buf, size_t length, loff_t *off)
+ssize_t gaussian_blur_write(struct file *pfile, const char __user *buf, size_t length, loff_t *offset)
 {
 	char buff[BUFF_SIZE];
 	int minor = MINOR(pfile->f_inode->i_rdev);
-	// Varijable za vrednosti koje korisnik šalje
+	// Varijable za vrednosti koje korisnik salje
 	u32 val = 0;
 	u16 pos = 0;
 	// Zauzimanje semafora za sinhronizaciju
 	if(down_interruptible(&sem))
 		return -ERESTARTSYS;
 	
-	// Kopiranje podataka sa korisničkog prostora u kernel
+	// Kopiranje podataka sa korisnickog prostora u kernel
 	if (copy_from_user(buff, buf, length))
 	{
-		// Otpuštanje semafora za sinhronizaciju
+		// Otpustanje semafora za sinhronizaciju
 		up(&sem);
-		// Neuspešno kopiranje u korisnički prostor
+		// Neuspesno kopiranje u korisnicki prostor
 		return -EFAULT; 
 	}
 
@@ -411,21 +408,21 @@ ssize_t gaussian_blur_write(struct file *pfile, const char __user *buf, size_t l
 	// Proveri da li parsiranje prolazi
 	if (sscanf(buff, "%u, %hu\n", &val, &pos) != 2) 
 	{
-		// Otpuštanje semafora za sinhronizaciju
+		// Otpustanje semafora za sinhronizaciju
 		up(&sem);
-		// Pogrešni ulazni podaci
+		// Pogresni ulazni podaci
 		return -EINVAL; 
 	}
 	
 	switch (minor)
 	{
 		case 0: // main_bram
-			// Čekanje da uređaj bude spreman za upis
+			// cekanje da uredjaj bude spreman za upis
 			while (!ready)
 			{
-				// Otpuštanje semafora za sinhronizaciju
+				// Otpustanje semafora za sinhronizaciju
 				up(&sem);
-				// Čekanje dok se ne ispuni uslov ready == 1 
+				// cekanje dok se ne ispuni uslov ready == 1 
 				if (wait_event_interruptible(readyQ, (ready == 1)))
 					return -ERESTARTSYS;
 				// Zauzimanje semafora za sinhronizaciju
@@ -440,6 +437,12 @@ ssize_t gaussian_blur_write(struct file *pfile, const char __user *buf, size_t l
 		case 1: // gaussian_blur_core
 			if (pos == RESET_REG_OFFSET)
 			{
+				if(val != 1) {
+					printk(KERN_ERR "gaussian_blur_write: pogresna vrednost val za reset. (val = %d)\n", val);
+					// Otpustanje semafora za sinhronizaciju
+					up(&sem);
+					return -EINVAL; // Greska: pogresna vrednost registra
+				}
 				// Resetovanje IP jezgra
 				iowrite32(0, gaussian_blur_core->base_addr + START_REG_OFFSET);
 				iowrite32(1, gaussian_blur_core->base_addr + RESET_REG_OFFSET);
@@ -449,19 +452,32 @@ ssize_t gaussian_blur_write(struct file *pfile, const char __user *buf, size_t l
 			}
 			else if(pos == START_REG_OFFSET)
 			{
+				if(val != 1) {
+					printk(KERN_ERR "gaussian_blur_write: pogresna vrednost val za start. (val = %d)\n", val);
+					// Otpustanje semafora za sinhronizaciju
+					up(&sem);
+					return -EINVAL; // Greska: pogresna vrednost registra
+				}
 				// Pokretanje operacije IP jezgra
 				while (!ready)
 				{
-					// Otpuštanje semafora za sinhronizaciju
+					// Otpustanje semafora za sinhronizaciju
 					up(&sem);
-					// Čekanje dok se ne ispuni uslov ready == 1 
+					// cekanje dok se ne ispuni uslov ready == 1 
 					if (wait_event_interruptible(readyQ, (ready == 1)))
 						return -ERESTARTSYS;
 					// Zauzimanje semafora za sinhronizaciju
 					if (down_interruptible(&sem))
 						return -ERESTARTSYS;
 				}
+
+				// Do a reset because if start is called more times in a row, IP might crash
+				// iowrite32(0, gaussian_blur_core->base_addr + START_REG_OFFSET);
+				// iowrite32(1, gaussian_blur_core->base_addr + RESET_REG_OFFSET);
+				// while(!ioread32(gaussian_blur_core->base_addr + READY_REG_OFFSET));
+				// iowrite32(0, gaussian_blur_core->base_addr + RESET_REG_OFFSET);
 			
+				// Start sequence
 				iowrite32(1, gaussian_blur_core->base_addr + START_REG_OFFSET);
 				while(ioread32(gaussian_blur_core->base_addr + READY_REG_OFFSET));
 				iowrite32(0, gaussian_blur_core->base_addr + START_REG_OFFSET);
@@ -476,9 +492,9 @@ ssize_t gaussian_blur_write(struct file *pfile, const char __user *buf, size_t l
 				// Upisivanje u ostale registre
 				while (!ready)
 				{
-					// Otpuštanje semafora za sinhronizaciju
+					// Otpustanje semafora za sinhronizaciju
 					up(&sem);
-					// Čekanje dok se ne ispuni uslov ready == 1 
+					// cekanje dok se ne ispuni uslov ready == 1 
 					if (wait_event_interruptible(readyQ, (ready == 1)))
 						return -ERESTARTSYS;
 					// Zauzimanje semafora za sinhronizaciju
@@ -486,7 +502,7 @@ ssize_t gaussian_blur_write(struct file *pfile, const char __user *buf, size_t l
 						return -ERESTARTSYS;
 				}
 				iowrite32(val, gaussian_blur_core->base_addr + pos);
-				// Ažuriranje vrednosti parametara slike
+				// Azuriranje vrednosti parametara slike
 				if (pos == IMG_WIDTH_REG_OFFSET)
 					width = val;
 				else if (pos == IMG_HEIGHT_REG_OFFSET)
@@ -499,17 +515,17 @@ ssize_t gaussian_blur_write(struct file *pfile, const char __user *buf, size_t l
 			} 
 			else 
 			{
-				printk(KERN_ERR "gaussian_blur_write: pogrešna vrednost pos. (pos = %d)\n", pos);
-				// Otpuštanje semafora za sinhronizaciju
+				printk(KERN_ERR "gaussian_blur_write: pogresna vrednost pos. (pos = %d)\n", pos);
+				// Otpustanje semafora za sinhronizaciju
 				up(&sem);
-				return -EINVAL; // Greška: pogrešna vrednost registra
+				return -EINVAL; // Greska: pogresna vrednost registra
 			}
 			break;
 			
 		default:
 			printk(KERN_INFO "gaussian_blur_write: Nevalidan minor broj.\n");
 	}
-	// Otpuštanje semafora za sinhronizaciju
+	// Otpustanje semafora za sinhronizaciju
 	up(&sem);
 
 	return length;
@@ -519,69 +535,69 @@ ssize_t gaussian_blur_write(struct file *pfile, const char __user *buf, size_t l
 
 static int __init gaussian_blur_init(void)
 {
-	// Inicijalizacija semafora sa početnom vrednošću 1 (binarni semafor)
+	// Inicijalizacija semafora sa pocetnom vrednoscu 1 (binarni semafor)
 	sema_init(&sem,1);
 
-	// Ispisivanje početnih informacija u kernel log
+	// Ispisivanje pocetnih informacija u kernel log
 	printk(KERN_INFO "Pokretanje gaussian_blur drajvera putem insmod.\n");
 
-	// Registracija uređaja u sistemu
+	// Registracija uredjaja u sistemu
 	if (alloc_chrdev_region(&my_dev_id, 0, 2, "gaussian_blur_region") < 0)
 	{
-		printk(KERN_ERR "Neuspešno registrovanje uređaja.\n");
-		return -1; // Greška u registraciji
+		printk(KERN_ERR "Neuspesno registrovanje uredjaja.\n");
+		return -1; // Greska u registraciji
 	}
 	printk(KERN_INFO "Region za uredjaj je dodeljen.\n");
 
-	// Kreiranje klase uređaja
+	// Kreiranje klase uredjaja
 	my_class = class_create(THIS_MODULE,"gaussian_blur_class");
 
 	if (my_class == NULL)
 	{
-		printk(KERN_ERR "Neuspešno kreiranje klase uređaja.\n");
+		printk(KERN_ERR "Neuspesno kreiranje klase uredjaja.\n");
 		goto fail_0;
 	}
-	printk(KERN_INFO "Klasa uređaja je kreirana.\n");
+	printk(KERN_INFO "Klasa uredjaja je kreirana.\n");
 
-	// Kreiranje uređaja za "main_bram_ctrl"
+	// Kreiranje uredjaja za "main_bram_ctrl"
 	if (device_create(my_class, NULL, MKDEV(MAJOR(my_dev_id), 0), NULL,
 					 						"main_bram_ctrl") == NULL) 
 	{
-		printk(KERN_ERR "Neuspešno kreiranje uređaja main_bram.\n");
+		printk(KERN_ERR "Neuspesno kreiranje uredjaja main_bram.\n");
 		goto fail_1;
 	}
-	printk(KERN_INFO "Uređaj main_bram je kreiran.\n");
+	printk(KERN_INFO "Uredjaj main_bram je kreiran.\n");
 
-	// Kreiranje uređaja za "gaussian_blur_core"
+	// Kreiranje uredjaja za "gaussian_blur_core"
 	if (device_create(my_class, NULL, MKDEV(MAJOR(my_dev_id), 1), NULL,
 											"gaussian_blur_core") == NULL) 
 	{
-		printk(KERN_ERR "Neuspešno kreiranje uređaja gaussian_blur_core.\n");
+		printk(KERN_ERR "Neuspesno kreiranje uredjaja gaussian_blur_core.\n");
 		goto fail_2;
 	}
-	printk(KERN_INFO "Uređaj gaussian_blur_core je kreiran.\n");
+	printk(KERN_INFO "Uredjaj gaussian_blur_core je kreiran.\n");
 
 	// Alokacija i inicijalizacija cdev strukture
 	my_cdev = cdev_alloc();
-	// Postavljanje operacija karakterističnog uređaja
+	// Postavljanje operacija karakteristicnog uredjaja
 	my_cdev->ops = &my_fops;
 	my_cdev->owner = THIS_MODULE;
 
 	// Dodavanje cdev u sistem
 	if (cdev_add(my_cdev, my_dev_id, 2) == -1)
 	{
-		printk(KERN_ERR "Neuspešno dodavanje cdev u sistem.\n");
+		printk(KERN_ERR "Neuspesno dodavanje cdev u sistem.\n");
 		goto fail_3;
 	}
 
-	printk(KERN_INFO "cdev je uspešno dodat.\n");
+	printk(KERN_INFO "cdev je uspesno dodat.\n");
 
 	printk(KERN_INFO "Gaussian_blur drajver je inicijalizovan.\n");
 
 	// Registracija platformnog drajvera
 	return platform_driver_register(&my_driver);
 
-	// Ukoliko dođe do greške, uređaji i resursi se uništavaju
+	// Ukoliko dodje do greske, uredjaji i resursi se unistavaju
 	fail_3:
 		device_destroy(my_class, MKDEV(MAJOR(my_dev_id),1));
 	fail_2:
@@ -603,17 +619,17 @@ static void __exit gaussian_blur_exit(void)
 	// Brisanje cdev objekta
 	cdev_del(my_cdev);
 	
-	// Uništavanje uređaja
+	// Unistavanje uredjaja
 	device_destroy(my_class, MKDEV(MAJOR(my_dev_id),1));
 	device_destroy(my_class, MKDEV(MAJOR(my_dev_id),0));
 	
-	// Uništavanje klase uređaja
+	// Unistavanje klase uredjaja
 	class_destroy(my_class);
 	
-	// Otkazivanje registracije uređaja
+	// Otkazivanje registracije uredjaja
 	unregister_chrdev_region(my_dev_id, 1);
 	
-	printk(KERN_INFO "Gaussian_blur drajver je isključen.\n");
+	printk(KERN_INFO "Gaussian_blur drajver je iskljucen.\n");
 }
 
 module_init(gaussian_blur_init);

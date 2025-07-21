@@ -9,7 +9,6 @@ uint16_t floatToQ2_14(const float &value) {
     if (value < 0.0f || value >= 4.0f) {
         std::cout << "Value of pixel is out of [0, 4.0] bounds." << std::endl;
     }
-
     return static_cast<uint16_t>(std::round(value * (1 << 14)));
 }
 
@@ -22,6 +21,7 @@ void write_bram(const Image &image) {
     
     // Ako je slika veca od dozvoljenog
     if(image.height*image.width > MAX_BRAM_SIZE) {
+        std::cout << "Slika je veca od " << MAX_BRAM_SIZE << "piksela.\n";
         return;
     }
     
@@ -30,47 +30,32 @@ void write_bram(const Image &image) {
 		std::cout << "Nemoguce otvoriti /dev/main_bram_ctrl." << std::endl;
 		return;
 	}
+    // Iskljuci buffering
+    setvbuf(main_bram_file, NULL, _IONBF, 0);
 
-    std::fflush(main_bram_file);
-
-    // for (uint16_t i = 0; i < length; i += 2) {
-        
-    //     // Convert 2 pixels from float to Q2_14 format of uint16_t
-    //     uint16_t upper16bits = floatToQ2_14(image.data[i]);
-    //     uint16_t lower16bits = floatToQ2_14(image.data[i+1]);
-
-    //     // Pack those 2 pixels to uint32_t variable
-    //     uint32_t packed = (static_cast<uint32_t>(upper16bits << 16)) | lower16bits;
-
-    //     // Send image to the FPGA bram
-    //     std::fprintf(main_bram_file, "%" PRIu32 ", %" PRIu16 "\n", packed, i/2);
-    //     std::fflush(main_bram_file);
-    // }
-
-    for(int x = 0; x < image.width; x+=2) {    
-        for(int y = 0; y < image.height; y++) {
+    for (int y = 0; y < image.height; ++y) {
+        for (int x = 0; x < image.width; x += 2) {
             float pix1 = image.get_pixel(x, y, 0);
             float pix2 = (x + 1 < image.width) ? image.get_pixel(x + 1, y, 0) : 0.0f;
-            
+
             uint16_t upper16bits = floatToQ2_14(pix1);
             uint16_t lower16bits = floatToQ2_14(pix2);
 
-            // Pack those 2 pixels to uint32_t variable
-            uint32_t packed = (static_cast<uint32_t>(upper16bits << 16)) | lower16bits;
+            uint32_t packed = (static_cast<uint32_t>(upper16bits) << 16) | lower16bits;
 
-            // Send image to the FPGA bram
-            std::fprintf(main_bram_file, "%" PRIu32 ", %" PRIu16 "\n", packed, (y*image.width + x)/2);
-            std::fflush(main_bram_file);
+            // Indeks identican kao u prvoj funkciji
+            uint16_t linear_index = y * image.width + x;
+            std::fprintf(main_bram_file, "%" PRIu32 ", %" PRIu16 "\n", packed, linear_index / 2);
         }
-    }   
+    }
 
     std::fclose(main_bram_file);
 }
 
 void read_bram(Image &image) {
-    
     // Ako je slika veca od dozvoljenog
     if(image.height*image.width > MAX_BRAM_SIZE) {
+        std::cout << "Slika je veca od " << MAX_BRAM_SIZE << "piksela.\n";
         return;
     }
 
@@ -80,53 +65,52 @@ void read_bram(Image &image) {
 		return;
 	}
 
-    // for (int i = 0; i < length; i += 2) {
+    for (int y = 0; y < image.height; ++y) {
+        for (int x = 0; x < image.width; x += 2) {
+            uint32_t packed = 0;
 
-    //     uint32_t packed = 0;
+            // citanje 2 spojena piksela iz BRAM-a
+            if (std::fscanf(main_bram_file, "%" PRIu32 " ", &packed) != 1) {
+                std::cerr << "Greska u citanju BRAM-a na poziciji y=" << y << ", x=" << x << "\n";
+                break;
+            }
+            float pix1 = q2_14ToFloat(static_cast<uint16_t>((packed >> 16) & 0xFFFF));
+            float pix2 = q2_14ToFloat(static_cast<uint16_t>(packed & 0xFFFF));
 
-    //     // Read 2 pixels from BRAM
-    //     std::fscanf(main_bram_file, "%" PRIu32 " ", &packed);
-
-    //     // Store 2 pixels to data array of the image
-    //     image.data[i + 1] = q2_14ToFloat(static_cast<uint16_t>(packed & 0xFFFF));
-    //     image.data[i] = q2_14ToFloat(static_cast<uint16_t>((packed >> 16) & 0xFFFF));
-    // }
-
-    for(int x = 0; x < image.width; x+=2) {    
-        for(int y = 0; y < image.height; y++) {
-                float pix1, pix2;
-
-                uint32_t packed = 0;
-
-                // Read 2 pixels from BRAM
-                std::fscanf(main_bram_file, "%" PRIu32 " ", &packed);
-
-                pix1 = q2_14ToFloat(static_cast<uint16_t>((packed >> 16) & 0xFFFF));
-                pix2 = q2_14ToFloat(static_cast<uint16_t>(packed & 0xFFFF));
-
-                image.set_pixel(x, y, 0, pix1);
-                if(x + 1 < image.width)
-                image.set_pixel(x+1, y, 0, pix2);
+            // Upis nazad u sliku
+            image.set_pixel(x, y, 0, pix1);
+            if (x + 1 < image.width)
+                image.set_pixel(x + 1, y, 0, pix2);
         }
     }
     
-    std::fscanf(main_bram_file, "\n");
     std::fclose(main_bram_file);
 }
 
 void write_hard(const uint16_t& addr, const uint16_t& val) {
+    if((addr % 4) != 0) {
+        std::cerr << "Greska u adresi " << addr << ". Adresa mora biti deljiva sa 4.\n";
+        return;
+    }
+    
     FILE* gaussian_blur_core_file = std::fopen("/dev/gaussian_blur_core", "w");
     if (!gaussian_blur_core_file) {
 		std::cout << "Nemoguce otvoriti /dev/gaussian_blur_core." << std::endl;
 		return;
 	}
+    // Iskljuci buffering
+    setvbuf(gaussian_blur_core_file, NULL, _IONBF, 0);
 
     std::fprintf(gaussian_blur_core_file, "%" PRIu32 ", %" PRIu16 "\n", val, addr);
-    std::fflush(gaussian_blur_core_file);
     std::fclose(gaussian_blur_core_file);
 }
 
 std::optional<uint16_t> read_hard(const uint16_t& addr) {
+    if((addr % 4) != 0) {
+        std::cerr << "Greska u adresi " << addr << ". Adresa mora biti deljiva sa 4.\n";
+        return std::nullopt;
+    }
+    
     FILE* gaussian_blur_core_file = std::fopen("/dev/gaussian_blur_core", "r");
     if (!gaussian_blur_core_file) {
 		std::cout << "Nemoguce otvoriti /dev/gaussian_blur_core." << std::endl;
@@ -161,12 +145,11 @@ void clear_bram() {
 		std::cout << "Nemoguce otvoriti /dev/main_bram_ctrl." << std::endl;
 		return;
 	}
-
-    std::fflush(main_bram_file);
+    // Iskljuci buffering
+    setvbuf(main_bram_file, NULL, _IONBF, 0);
 
     for (uint16_t i = 0; i < 60000; i += 2) {
         std::fprintf(main_bram_file, "%" PRIu32 ", %" PRIu16 "\n", 0, i/2);
-        std::fflush(main_bram_file);
     }
 
     std::fclose(main_bram_file);
