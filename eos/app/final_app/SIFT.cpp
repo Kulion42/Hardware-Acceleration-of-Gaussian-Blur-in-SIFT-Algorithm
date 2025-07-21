@@ -81,16 +81,23 @@ std::vector<Image> generate_gaussian_pyramid_vector(const Image& img, int img_nu
         if (ready && ready.value()) break;
     }
 
+
     write_hard(IMG_WIDTH_REG_OFFSET, img.width);
     write_hard(IMG_HEIGHT_REG_OFFSET, img.height);
+
+    // DEBUG PART
+    // Image start_image(img.width, img.height, 1);
+    // write_bram(img);
+    // read_bram(start_image);
+    // start_image.save("start_image.jpg");
+
     write_hard(IMG_OFFSET_UP_REG_OFFSET, offset_up); 
     write_hard(IMG_OFFSET_DOWN_REG_OFFSET, offset_down);
     write_hard(IMG_OCTAVE_NUM_REG_OFFSET, 0);
 
-    write_bram(img, img.width*img.height);
+    write_bram(img);
 	
-	write_hard(START_REG_OFFSET, 1);
-    //std::cout << "Waiting for IP to finish." << std::endl;	
+	write_hard(START_REG_OFFSET, 1);	
     while (true) 
     {
     std::optional<uint16_t> ready = read_hard(READY_REG_OFFSET);
@@ -99,7 +106,10 @@ std::vector<Image> generate_gaussian_pyramid_vector(const Image& img, int img_nu
 
     Image base_img(img.width, img.height-offset_up-offset_down, 1);
 
-    read_bram(base_img, base_img.width*base_img.height);
+    read_bram(base_img);
+
+    // DEBUG PART
+    // base_img.save("base_image.jpg");
 
     offset_up = 0;
     offset_down = 0;
@@ -133,14 +143,14 @@ std::vector<Image> generate_gaussian_pyramid_vector(const Image& img, int img_nu
 
                 
             write_hard(START_REG_OFFSET, 1);
-            std::cout << "Waiting for IP to finish." << std::endl;	
+            // std::cout << "Waiting for IP to finish." << std::endl;	
             while (true) 
             {
             std::optional<uint16_t> ready = read_hard(READY_REG_OFFSET);
             if (ready && ready.value()) break;
             }
 	        
-	        read_bram(tmp, prev_img.width*prev_img.height);
+	        read_bram(tmp);
         
             pyramid_images[i*imgs_per_octave + j] = tmp;
         }
@@ -148,7 +158,7 @@ std::vector<Image> generate_gaussian_pyramid_vector(const Image& img, int img_nu
         const Image& next_base_img = pyramid_images[i*imgs_per_octave + (imgs_per_octave - 3)];
         base_img = next_base_img.resize(next_base_img.width/2, next_base_img.height/2, Interpolation::NEAREST);
 
-        write_bram(base_img, base_img.height*base_img.width);
+        write_bram(base_img);
     }
 
     return pyramid_images;

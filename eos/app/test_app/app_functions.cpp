@@ -1,9 +1,18 @@
 #include <iostream>
 #include <cinttypes>
+#include <optional>
 
 #include "app_functions.hpp"
 
+// Funkcija za upis niza uint16_t podataka u glavnu BRAM memoriju
 void write_bram(const uint16_t* val, const uint32_t& length) {
+
+    // Ako je slika veca od dozvoljenog
+    if (length > MAX_BRAM_SIZE || length % 2 != 0)
+    {
+        std::cout << "Slika je neparne velicine ili je veca od " << MAX_BRAM_SIZE << "piksela.\n";
+        return;
+    }
 
     FILE* main_bram_file = std::fopen("/dev/main_bram_ctrl", "w");
     if (!main_bram_file)
@@ -11,19 +20,27 @@ void write_bram(const uint16_t* val, const uint32_t& length) {
 		std::cout << "Nemoguce otvoriti /dev/main_bram_ctrl." << std::endl;
 		return;
 	}
-
-    std::fflush(main_bram_file);
+    // Iskljuci buffering
+    setvbuf(main_bram_file, NULL, _IONBF, 0);
 
     for (uint16_t i = 0; i < length; i += 2) {
         uint32_t packed = (static_cast<uint32_t>(val[i]) << 16) | val[i + 1];
         std::fprintf(main_bram_file, "%" PRIu32 ", %" PRIu16 "\n", packed, i/2);
-        std::fflush(main_bram_file);
     }
 
     std::fclose(main_bram_file);
 }
 
+// Funkcija za citanje niza uint16_t podataka iz glavne BRAM memorije
 void read_bram(uint16_t* val, const uint32_t& length) {
+    
+    // Ako je slika veca od dozvoljenog
+   if (length > MAX_BRAM_SIZE || length % 2 != 0)
+    {
+        std::cout << "Slika je neparne velicine ili je veca od " << MAX_BRAM_SIZE << "piksela.";
+        return;
+    }
+    
     FILE* main_bram_file = std::fopen("/dev/main_bram_ctrl", "r");
     if (!main_bram_file)
 	{
@@ -32,31 +49,46 @@ void read_bram(uint16_t* val, const uint32_t& length) {
 	}
 
     uint32_t packed = 0;
-
     for (int i = 0; i < length; i += 2) {
-        std::fscanf(main_bram_file, "%" PRIu32 " ", &packed);
+        if(std::fscanf(main_bram_file, "%" PRIu32 " ", &packed) != 1) {
+            std::cerr << "Greska u citanju BRAM-a na indeksu " << i << ".\n";
+            break;
+        }
+
         val[i + 1] = static_cast<uint16_t>(packed & 0xFFFF);
         val[i] = static_cast<uint16_t>((packed >> 16) & 0xFFFF);
     }
     
-    std::fscanf(main_bram_file, "\n");
     std::fclose(main_bram_file);
 }
 
+// Funkcija za upis podataka u registar IP jezgra
 void write_hard(const uint16_t& addr, const uint16_t& val) {
+    if((addr % 4) != 0) {
+        std::cerr << "Greska u adresi " << addr << ". Adresa mora biti deljiva sa 4.\n";
+        return;
+    }    
+    
     FILE* gaussian_blur_core_file = std::fopen("/dev/gaussian_blur_core", "w");
     if (!gaussian_blur_core_file) 
 	{
 		std::cout << "Nemoguce otvoriti /dev/gaussian_blur_core." << std::endl;
 		return;
 	}
+    // Iskljuci buffering
+    setvbuf(gaussian_blur_core_file, NULL, _IONBF, 0);
 
     std::fprintf(gaussian_blur_core_file, "%" PRIu32 ", %" PRIu16 "\n", val, addr);
-    std::fflush(gaussian_blur_core_file);
     std::fclose(gaussian_blur_core_file);
 }
 
+// Funkcija za citanje podataka iz registra IP jezgra
 std::optional<uint16_t> read_hard(const uint16_t& addr) {
+    if((addr % 4) != 0) {
+        std::cerr << "Greska u adresi " << addr << ". Adresa mora biti deljiva sa 4.\n";
+        return std::nullopt;
+    } 
+
     FILE* gaussian_blur_core_file = std::fopen("/dev/gaussian_blur_core", "r");
     if (!gaussian_blur_core_file)
 	{
@@ -77,7 +109,6 @@ std::optional<uint16_t> read_hard(const uint16_t& addr) {
         std::cerr << "fscanf error: Procitano " << count << " vrednosti iz /dev/gaussian_blur_core." << std::endl;
         return std::nullopt;
     }
-
     if (index >= 8) {
         std::cerr << "read_hard(): addr " << addr << " daje pogresan index " << static_cast<int>(index) << std::endl;
         return std::nullopt;
@@ -85,6 +116,7 @@ std::optional<uint16_t> read_hard(const uint16_t& addr) {
 
     return val[index];
 }
+
 
 void clear_bram()
 {
@@ -94,12 +126,11 @@ void clear_bram()
 		std::cout << "Nemoguce otvoriti /dev/main_bram_ctrl." << std::endl;
 		return;
 	}
+    // Iskljuci buffering
+    setvbuf(main_bram_file, NULL, _IONBF, 0);
 
-    std::fflush(main_bram_file);
-
-    for (uint16_t i = 0; i < 60000; i += 2) {
+    for (uint16_t i = 0; i < MAX_BRAM_SIZE; i += 2) {
         std::fprintf(main_bram_file, "%" PRIu32 ", %" PRIu16 "\n", 0, i/2);
-        std::fflush(main_bram_file);
     }
 
     std::fclose(main_bram_file);
