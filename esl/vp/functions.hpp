@@ -44,17 +44,11 @@ template <typename T1, typename T2 = unsigned char > void toChar(T2 *buf,T1 val,
 
 }
 
-inline unsigned char Convert_to_UnsignedC(char val)
-{
-    unsigned char buf = (unsigned)val;
-    return buf;
-}
+unsigned char Convert_to_UnsignedC(char val);
 
-inline char Convert_to_SigendC(unsigned char val)
-{
-    char buf = signed(val);
-    return buf;
-}
+char Convert_to_SigendC(unsigned char val);
+
+uint16_t to_Uint16_t(data_t input, int shift = FIXED_POINT_FRACTIONAL_BITS_DATA_T);
 
 //void Fixed_to_Uchar(unsigned char *buf, data_t input1, data_t input2);
 template <typename T1> void to_Uchar(unsigned char *buf, T1 *input, int shift = FIXED_POINT_FRACTIONAL_BITS_DATA_T)

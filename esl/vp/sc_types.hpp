@@ -10,7 +10,7 @@ const int INTEGER = 1; //number of bits in the integer part of the data_t type
 const int FRACTIONAL = WIDTH - INTEGER ; //number of bits in the fractional part of the data_t type
 
 //----------------SC TYPES-----------------------
-typedef sc_dt::sc_ufixed_fast<WIDTH, 0> kernel_t; //16 0
+//typedef sc_dt::sc_ufixed_fast<WIDTH, 0> kernel_t; //16 0
 //typedef sc_dt::sc_ufixed_fast<24, 3> sigma_base_diff_t; //16.2 bilo, 24.3 
 typedef sc_dt::sc_ufixed_fast<32, 9> sigma_t;// 16.3 bilo, 32.9 
 //typedef sc_dt::sc_ufixed_fast<32, 10> k_t; //16.1 je bilo, 32.10

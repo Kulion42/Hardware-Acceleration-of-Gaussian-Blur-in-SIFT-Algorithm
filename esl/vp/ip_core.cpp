@@ -144,14 +144,14 @@ void Ip_Core::gaussian_blur(sc_core::sc_time& offset)
                     c_y = y + dy;
                     
                  data_t pix[2];
-				 kernel_t val1;
-                 read_rom(VP_ADDR_KERNEL_ROM_L + addr_off + k, &val1);
-				 //cout << "Reading kernel value: " << val1 << " at address: " << addr_off + k << endl;
+				 data_t kernel_val;
+                 read_rom(VP_ADDR_KERNEL_ROM_L + addr_off + k, &kernel_val);
+				 //cout << "Reading kernel value: " << kernel_val << " at address: " << addr_off + k << endl;
                  //cout << std::hex << VP_ADDR_MAIN_BRAM_L + (y+dy)*img_width + x << endl;
                  read_mem(VP_ADDR_MAIN_BRAM_L + 2 *(c_y*img_width + x), pix);
                  //cout << pix[0] << " " << pix[1] << endl;
-                 sum[0] += pix[0] * val1;
-				 sum[1] += pix[1] * val1;
+                 sum[0] += pix[0] * kernel_val;
+				 sum[1] += pix[1] * kernel_val;
                  
                  //cout << sum << endl;
                  offset += sc_time(DELAY, SC_NS);
@@ -178,12 +178,12 @@ void Ip_Core::gaussian_blur(sc_core::sc_time& offset)
                     c_x1 = x + dx;
                     
                  data_t pix[2];  
-				 kernel_t val1;
-                 read_rom(VP_ADDR_KERNEL_ROM_L + addr_off + k, &val1);
+				 data_t kernel_val;
+                 read_rom(VP_ADDR_KERNEL_ROM_L + addr_off + k, &kernel_val);
                  read_mem(VP_ADDR_TMP_BRAM_L + 2 * (y*img_width + c_x1), pix);                 
                  
-                 sum[0] += pix[0] * val1;
-				 sum[1] += pix[1] * val1;
+                 sum[0] += pix[0] * kernel_val;
+				 sum[1] += pix[1] * kernel_val;
 
                  offset += sc_time(DELAY, SC_NS);
                
@@ -267,7 +267,7 @@ void Ip_Core::read_mem(sc_dt::sc_uint<64> addr, data_t *pix)
 	
 }
 
-void Ip_Core::read_rom(sc_dt::sc_uint<64> addr, kernel_t *val)    
+void Ip_Core::read_rom(sc_dt::sc_uint<64> addr, data_t *val)    
 {
     pl_t pl;
     sc_dt::uint64 taddr = addr & 0x00FFFFFF;

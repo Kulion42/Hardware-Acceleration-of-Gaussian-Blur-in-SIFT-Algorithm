@@ -51,7 +51,7 @@ protected:
 	void gaussian_blur(sc_core::sc_time&);
 	void read_mem(sc_dt::sc_uint<64> addr, data_t *pix);
 	void write_mem(sc_dt::sc_uint<64> addr, data_t *pix1);
-	void read_rom(sc_dt::sc_uint<64> addr, kernel_t *val);
+	void read_rom(sc_dt::sc_uint<64> addr, data_t *val);
 
     
 }  ; 

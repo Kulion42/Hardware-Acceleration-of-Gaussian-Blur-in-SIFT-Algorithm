@@ -32,7 +32,7 @@ void Kernel_Rom::b_transport(pl_t &pl, sc_core::sc_time &offset)
 	{
 		case tlm::TLM_READ_COMMAND:
 
-				value = (uint16_t)(((kernel_t)kernel_rom[addr]) * (1<< 16));
+				value = (uint16_t)(((data_t)kernel_rom[addr]) * (1<< 16));
 				
 				toChar<uint16_t>(buf, value, 2);
 			    
