@@ -20,7 +20,7 @@ Image gaussian_blur(const Image& img, sigma_t sigma, uint16_t offset_up , uint16
     Image kernel(size, 1, 1);
     sigma_t sum = 0;
         for (int k = -size/2; k <= size/2; k++) {
-        num_t val = std::exp(-(k*k) / (2*sigma*sigma));
+        data_t val = std::exp(-(k*k) / (2*sigma*sigma));
         kernel.set_pixel(center+k, 0, 0, val);
         sum += val;
     }
@@ -37,7 +37,7 @@ Image gaussian_blur(const Image& img, sigma_t sigma, uint16_t offset_up , uint16
     for (uint16_t x = 0; x < img.width; x++) {
         for (uint16_t y = offset_up; y < img.height - offset_down; y++) {
        //cout << img.height - offset_down << y << endl;
-            num_t sum = 0;
+            data_t sum = 0;
             for (int k = 0; k < size; k++) {
                 int dy = -center + k;
                 
@@ -51,7 +51,7 @@ Image gaussian_blur(const Image& img, sigma_t sigma, uint16_t offset_up , uint16
     // convolve horizontal
     for (uint16_t x = 0; x < img.width; x++) {
         for (uint16_t y = 0; y < tmp.height; y++) {
-            num_t sum = 0;
+            data_t sum = 0;
             for (uint8_t k = 0; k < size; k++) {
                 int8_t dx = -center + k;
 

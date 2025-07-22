@@ -59,7 +59,7 @@ std::vector<Image> generate_gaussian_pyramid_vector(const Image& img, int img_nu
 
     // assume initial sigma is 1.0 (after resizing) and smooth
     // the image with sigma_diff to reach requried base_sigma
-    sigma_t base_sigma, sigma_diff;
+    float base_sigma, sigma_diff;
     base_sigma = sigma_min / MIN_PIX_DIST;
   
     sigma_diff = std::sqrt(base_sigma*base_sigma - 1.0f);
@@ -137,7 +137,7 @@ std::vector<Image> image_partitions(const Image& img, int num_of_parts)
         Image first_part(img.width, std::ceil(img.height/num_of_parts) + OFFSET_UP_DOWN, 1);
             for (int x = 0; x < img.width; x++) {
                 for (int y = 0; y < std::ceil(img.height/num_of_parts) + OFFSET_UP_DOWN; y++) {
-                        data_t val = img.get_pixel(x, y, 0);
+                        float val = img.get_pixel(x, y, 0);
                         first_part.set_pixel(x, y, 0,  val);                                    
                 }
             }    
@@ -147,7 +147,7 @@ std::vector<Image> image_partitions(const Image& img, int num_of_parts)
                 Image partitions(img.width, std::ceil(img.height/num_of_parts) + 2 *OFFSET_UP_DOWN, 1);
                 for (int x = 0; x < img.width; x++) {
                     for (int y = i*std::ceil(img.height/num_of_parts) - OFFSET_UP_DOWN; y < (i+1)*std::ceil(img.height/num_of_parts) + OFFSET_UP_DOWN; y++) {
-                            data_t val = img.get_pixel(x, y, 0);
+                            float val = img.get_pixel(x, y, 0);
                             partitions.set_pixel(x, y - i*std::ceil(img.height/num_of_parts) + OFFSET_UP_DOWN, 0,  val);                                    
                     }
                 }    
@@ -159,7 +159,7 @@ std::vector<Image> image_partitions(const Image& img, int num_of_parts)
         for (int x = 0; x < img.width; x++) {
         
                  for (int y = (num_of_parts -1)*std::ceil(img.height/num_of_parts) - OFFSET_UP_DOWN; y < img.height; y++) {
-                        data_t val = img.get_pixel(x, y, 0);
+                        float val = img.get_pixel(x, y, 0);
                         last_part.set_pixel(x, y - (num_of_parts -1)*std::ceil(img.height/num_of_parts) + OFFSET_UP_DOWN, 0, val);                                    
                 }
         }   
@@ -189,7 +189,7 @@ std::vector<Image> combine_partitions(std::vector< std::vector <Image> > img_vec
                   
                     for (int y= 0; y < fixed_height; y++){  
                                        
-                        data_t val = img_vec[i][j].get_pixel(x, y, 0);
+                        float val = img_vec[i][j].get_pixel(x, y, 0);
                          combined.set_pixel(x, i*fixed_height + y , 0, val);  
                              
                     }

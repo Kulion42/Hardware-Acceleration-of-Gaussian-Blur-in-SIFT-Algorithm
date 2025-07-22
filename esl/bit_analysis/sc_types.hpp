@@ -5,9 +5,8 @@
 
 #include <systemc>
 
-typedef sc_dt::sc_ufixed_fast<16, 1> num_t;
+typedef sc_dt::sc_ufixed_fast<16, 1> data_t;
 typedef sc_dt::sc_ufixed_fast<32, 9> sigma_t;
-typedef sc_dt::sc_fixed_fast<16, 2> data_t;
 
 
 #endif
