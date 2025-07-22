@@ -8,9 +8,10 @@ class gaussian_blur_scoreboard extends uvm_scoreboard;
     bit coverage_enable = 1;
     gaussian_blur_config cfg;
     int num_of_tr, num_of_missed = 0;
+    int num_of_zeros = 0;
+    int zeros = 0;
     int ref_d = 1;
     int fd;
-    int blur_out_data_arr[$];
     int pixel_data_of = 1;
     string num;
     uvm_analysis_imp#(agent_pkg::gaussian_blur_seq_item, gaussian_blur_scoreboard) item_collected_import;
@@ -37,7 +38,7 @@ class gaussian_blur_scoreboard extends uvm_scoreboard;
     endfunction : connect_phase               
     
     function void gaussian_blur_ref(int img_in_data_arr[$], int img_width, int img_height, int img_offset_up, int img_offset_down, int num_img_per_octave, ref int output_data_arr[$]);
-        int tmp_arr[60000];
+         int tmp_arr[60000];
         int sigma_vals[6] = {9, 9, 11, 13, 15, 19};
         int size = sigma_vals[num_img_per_octave];
         int center = size/2;
@@ -48,13 +49,14 @@ class gaussian_blur_scoreboard extends uvm_scoreboard;
         
         // Kernel values for Gaussian blur
         // These values are derived from the Gaussian function and normalized
-        // to ensure the sum of the kernel equals 1.
+        // Kernel values for Gaussian blur (sum normalized to 1 << SHIFT)
         kernel_vals[0] = '{61, 584, 2904, 7597, 10468, 7597, 2904, 584, 61};
         kernel_vals[1] = '{52, 534, 2819, 7645, 10661, 7645, 2819, 534, 52};
         kernel_vals[2] = '{44, 296, 1284, 3661, 6864, 8463, 6864, 3661, 1284, 296, 44};
         kernel_vals[3] = '{57, 247, 813, 2049, 3964, 5889, 6720, 5889, 3964, 2049, 813, 247, 57};
         kernel_vals[4] = '{90, 267, 668, 1412, 2527, 3829, 4915, 5340, 4915, 3829, 2527, 1412, 668, 267, 90};
         kernel_vals[5] = '{60, 148, 325, 643, 1144, 1833, 2646, 3437, 4022, 4238, 4022, 3437, 2646, 1833, 1144, 643, 325, 148, 60};
+        
         
         for (int y = img_offset_up; y < img_height - img_offset_down; y++) begin
             for (int x = 0; x < img_width; x+=2) begin
@@ -73,8 +75,8 @@ class gaussian_blur_scoreboard extends uvm_scoreboard;
                     else
                         c_y = y + dy;
                         
-                    sum1 += int'((img_in_data_arr[c_y * img_width + x] * kernel_vals[num_img_per_octave][k]) / (1 << SHIFT));
-                    sum2 += int'((img_in_data_arr[c_y * img_width + x + 1] * kernel_vals[num_img_per_octave][k]) / (1 << SHIFT));
+                    sum1 += (img_in_data_arr[c_y * img_width + x] * kernel_vals[num_img_per_octave][k]) / (1 << SHIFT);
+                    sum2 += (img_in_data_arr[c_y * img_width + x + 1] * kernel_vals[num_img_per_octave][k]) / (1 << SHIFT);
                 end
                 tmp_arr[(y - img_offset_up) * img_width + x] = sum1;
                 tmp_arr[(y - img_offset_up) * img_width + x + 1] = sum2;
@@ -94,8 +96,8 @@ class gaussian_blur_scoreboard extends uvm_scoreboard;
                     else
                         c_x = x + dx;
         
-                    sum1 += int'((tmp_arr[y * img_width + c_x] * kernel_vals[num_img_per_octave][k]) / (1 << SHIFT));
-                    sum2 += int'((tmp_arr[y * img_width + c_x + 1] * kernel_vals[num_img_per_octave][k]) / (1 << SHIFT));
+                    sum1 += (tmp_arr[y * img_width + c_x] * kernel_vals[num_img_per_octave][k]) / (1 << SHIFT);
+                    sum2 += (tmp_arr[y * img_width + c_x + 1] * kernel_vals[num_img_per_octave][k]) / (1 << SHIFT);
                 end
                 output_data_arr.push_back(sum1);
                 output_data_arr.push_back(sum2);
@@ -105,48 +107,67 @@ class gaussian_blur_scoreboard extends uvm_scoreboard;
     endfunction : gaussian_blur_ref 
 
     function void write(agent_pkg::gaussian_blur_seq_item curr_it);
-        if (ref_d) begin
-            gaussian_blur_ref(cfg.ref_in_data_arr, cfg.img_width, cfg.img_height, cfg.img_offset_up, cfg.img_offset_down, cfg.num_img_per_oct, blur_out_data_arr);
+         if (ref_d) begin
+            gaussian_blur_ref(cfg.ref_in_data_arr, cfg.img_width, cfg.img_height, cfg.img_offset_up, cfg.img_offset_down, cfg.num_img_per_oct, cfg.ref_out_data_arr);
             ref_d = 0;  
-        end 
+        end    
+
+        if ((curr_it.main_bram_a_rdata_o >> 16) == 0) begin
+            num_of_zeros++;
+        end
+        if ((curr_it.main_bram_a_rdata_o & 16'hffff) == 0) begin
+            num_of_zeros++;
+        end
 
         `uvm_info(get_type_name(),$sformatf("\n[Scoreboard] Scoreboard function write called..."),UVM_MEDIUM);
         if(checks_enable && !ref_d) begin
-            ass_check_pix_up : assert((((curr_it.main_bram_a_rdata_o >> 16) & 16'hffff) >= (blur_out_data_arr[curr_it.main_bram_a_addr_i/2]) -pixel_data_of) && (((curr_it.main_bram_a_rdata_o >> 16) & 16'hffff) <= ((blur_out_data_arr[curr_it.main_bram_a_addr_i/2]) + pixel_data_of)))
+            ass_check_pix_up : assert((((curr_it.main_bram_a_rdata_o >> 16) & 16'hffff) >= (cfg.ref_out_data_arr[curr_it.main_bram_a_addr_i/2]) -pixel_data_of) && (((curr_it.main_bram_a_rdata_o >> 16) & 16'hffff) <= ((cfg.ref_out_data_arr[curr_it.main_bram_a_addr_i/2]) + pixel_data_of)))
             `uvm_info(get_type_name(),$sformatf("\nComparison match succesfull\nObserved value is %0d, expected is %0d.\n",        
                                                     (curr_it.main_bram_a_rdata_o >> 16) & 16'hffff, 
-                                                    blur_out_data_arr[curr_it.main_bram_a_addr_i/2]),UVM_MEDIUM)
+                                                    cfg.ref_out_data_arr[curr_it.main_bram_a_addr_i/2]),UVM_MEDIUM)
                                                          
              else begin 
                 `uvm_error(get_type_name(),$sformatf("\nComparison mismatch for main_bram address[%0d]\nObserved value is %0d, expected is %0d.\n",
                                                         curr_it.main_bram_a_addr_i/4,
                                                         (curr_it.main_bram_a_rdata_o >> 16)& 16'hffff, 
-                                                        blur_out_data_arr[curr_it.main_bram_a_addr_i/2]))
+                                                        cfg.ref_out_data_arr[curr_it.main_bram_a_addr_i/2]))
                  ++num_of_missed; 
                                                        
              end
              
-             ass_check_pix_down : assert(((curr_it.main_bram_a_rdata_o & 16'hffff) >= (blur_out_data_arr[curr_it.main_bram_a_addr_i/2 + 1]) - pixel_data_of) && ((curr_it.main_bram_a_rdata_o & 16'hffff) <= ((blur_out_data_arr[curr_it.main_bram_a_addr_i/2 + 1]) + pixel_data_of)))
+             ass_check_pix_down : assert(((curr_it.main_bram_a_rdata_o & 16'hffff) >= (cfg.ref_out_data_arr[curr_it.main_bram_a_addr_i/2 + 1]) - pixel_data_of) && ((curr_it.main_bram_a_rdata_o & 16'hffff) <= ((cfg.ref_out_data_arr[curr_it.main_bram_a_addr_i/2 + 1]) + pixel_data_of)))
             `uvm_info(get_type_name(),$sformatf("\nComparison match succesfull\nObserved value is %0d, expected is %0d.\n",
                                                     curr_it.main_bram_a_rdata_o & 16'hffff, 
-                                                    blur_out_data_arr[curr_it.main_bram_a_addr_i/2 + 1]),UVM_MEDIUM)
+                                                    cfg.ref_out_data_arr[curr_it.main_bram_a_addr_i/2 + 1]),UVM_MEDIUM)
                                                     
              
              else begin
                 `uvm_error(get_type_name(),$sformatf("\nComparison mismatch for main_bram address[%0d]\nObserved value is %0d, expected is %0d.\n",
                                                         curr_it.main_bram_a_addr_i/4,
                                                         curr_it.main_bram_a_rdata_o & 16'hffff, 
-                                                        blur_out_data_arr[curr_it.main_bram_a_addr_i/2 + 1]))
+                                                        cfg.ref_out_data_arr[curr_it.main_bram_a_addr_i/2 + 1]))
                  ++num_of_missed;
                                             
              end
             ++num_of_tr;
-         end        
+         end          
     endfunction : write
     
     function void report_phase(uvm_phase phase);
         `uvm_info(get_type_name(), $sformatf("Gaussian blur scoreboard examined: %0d transactions(%0d pixels), %0d succesfull pixel matches, %0d pixel mismatches", num_of_tr,2 *num_of_tr, 2 *num_of_tr - num_of_missed, num_of_missed), UVM_LOW);
+         for (int i = 0; i < cfg.ref_out_data_arr.size(); i++) begin
+            if (cfg.ref_out_data_arr[i] == 0) begin
+                zeros++;
+            end
+         end
+         $display(cfg.main_bram_wdata_arr.size());
+         $display(cfg.ref_in_data_arr.size());
+         $display(cfg.ref_out_data_arr.size());
+
+
          cfg.main_bram_wdata_arr.delete();
+         cfg.ref_out_data_arr.delete();
+         cfg.ref_in_data_arr.delete();
          //cfg.main_bram_gv_arr.delete();
          num = cfg.rand_ipo == 0 ? cfg.ipo_str[0] : cfg.ipo_str[1];
          
@@ -155,7 +176,7 @@ class gaussian_blur_scoreboard extends uvm_scoreboard;
                  `uvm_info(get_name(), $sformatf("Successfully opened log file"),UVM_HIGH)
            else
                  `uvm_info(get_name(), $sformatf("Error log file"),UVM_HIGH)
-         $fdisplay(fd, "File img_%s_ipart_%0d_oct_%0d_ipo%s.txt examined: %0d pixels, %0d succesfull pixel matches, %0d pixel mismatches",cfg.image_names[cfg.rand_img], cfg.rand_part, cfg.rand_oct, num, 2 *num_of_tr, 2 *num_of_tr - num_of_missed, num_of_missed);
+         $fdisplay(fd, "File img_%s_ipart_%0d_oct_%0d_ipo%s.txt examined: %0d pixels, %0d succesfull pixel matches, %0d pixel mismatches",cfg.image_names[cfg.rand_img], cfg.rand_part, (cfg.rand_oct) ? cfg.rand_oct - 1 : 0, num, 2 *num_of_tr, 2 *num_of_tr - num_of_missed, num_of_missed);
         $fclose(fd); 
             
     endfunction : report_phase

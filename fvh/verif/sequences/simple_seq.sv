@@ -15,16 +15,13 @@
 class gaussian_blur_simple_seq extends seq_pkg::gaussian_blur_base_seq;
     int i = 0; 
     int j = 0;
-    int img_width, img_height;
-    int img_offset_up;
-    int img_offset_down;
-    int num_img_per_oct;
+
     int pix_up, pix_down;
     
     covergroup img_data_cover();
         option.per_instance = 1;
         img_up_pix_value : coverpoint pix_up{
-            bins group_up_1 = {[0:4096]};
+            bins group_up_1 = {[1:4096]};
             bins group_up_2 = {[4097:6144]};
             bins group_up_3 = {[6145:8192]};
             bins group_up_4 = {[8193:10240]};
@@ -40,7 +37,7 @@ class gaussian_blur_simple_seq extends seq_pkg::gaussian_blur_base_seq;
         }
         
         img_down_pix_value : coverpoint pix_down{
-            bins group_down_1 = {[0:4096]};
+            bins group_down_1 = {[1:4096]};
             bins group_down_2 = {[4097:6144]};
             bins group_down_3 = {[6145:8192]};
             bins group_down_4 = {[8193:10240]};
@@ -81,11 +78,6 @@ class gaussian_blur_simple_seq extends seq_pkg::gaussian_blur_base_seq;
     
     virtual task body();
         
-        img_width = p_sequencer.cfg.img_width;
-        img_height = p_sequencer.cfg.img_height;
-        img_offset_up = p_sequencer.cfg.img_offset_up;
-        img_offset_down = p_sequencer.cfg.img_offset_down;
-        num_img_per_oct = p_sequencer.cfg.num_img_per_oct;
         
         req_item = gaussian_blur_seq_item::type_id::create("req_item");  
         if (req_item == null) begin
@@ -120,11 +112,11 @@ class gaussian_blur_simple_seq extends seq_pkg::gaussian_blur_base_seq;
          
          //     SETTING IMAGE PROPERTIES 
          $display("\nSetting image parameters...\n\n");
-        `uvm_do_with(req_item,{   req_item.bram_axi_ctrl == 1;   req_item.s00_axi_awaddr == AXI_BASE+IMG_WIDTH_REG_OFFSET;          req_item.s00_axi_wdata == img_width;});                            
-        `uvm_do_with(req_item,{   req_item.bram_axi_ctrl == 1;   req_item.s00_axi_awaddr == AXI_BASE+IMG_HEIGHT_REG_OFFSET;         req_item.s00_axi_wdata == img_height;});
-        `uvm_do_with(req_item,{   req_item.bram_axi_ctrl == 1;   req_item.s00_axi_awaddr == AXI_BASE+IMG_OFFSET_UP_REG_OFFSET;      req_item.s00_axi_wdata == img_offset_up;});
-        `uvm_do_with(req_item,{   req_item.bram_axi_ctrl == 1;   req_item.s00_axi_awaddr == AXI_BASE+IMG_OFFSET_DOWN_REG_OFFSET;    req_item.s00_axi_wdata == img_offset_down;});
-        `uvm_do_with(req_item,{   req_item.bram_axi_ctrl == 1;   req_item.s00_axi_awaddr == AXI_BASE+NUM_IMG_OCT_REG_OFFSET;        req_item.s00_axi_wdata == num_img_per_oct;}); 
+        `uvm_do_with(req_item,{   req_item.bram_axi_ctrl == 1;   req_item.s00_axi_awaddr == AXI_BASE+IMG_WIDTH_REG_OFFSET;          req_item.s00_axi_wdata == p_sequencer.cfg.img_width;});                            
+        `uvm_do_with(req_item,{   req_item.bram_axi_ctrl == 1;   req_item.s00_axi_awaddr == AXI_BASE+IMG_HEIGHT_REG_OFFSET;         req_item.s00_axi_wdata == p_sequencer.cfg.img_height;});
+        `uvm_do_with(req_item,{   req_item.bram_axi_ctrl == 1;   req_item.s00_axi_awaddr == AXI_BASE+IMG_OFFSET_UP_REG_OFFSET;      req_item.s00_axi_wdata == p_sequencer.cfg.img_offset_up;});
+        `uvm_do_with(req_item,{   req_item.bram_axi_ctrl == 1;   req_item.s00_axi_awaddr == AXI_BASE+IMG_OFFSET_DOWN_REG_OFFSET;    req_item.s00_axi_wdata == p_sequencer.cfg.img_offset_down;});
+        `uvm_do_with(req_item,{   req_item.bram_axi_ctrl == 1;   req_item.s00_axi_awaddr == AXI_BASE+NUM_IMG_OCT_REG_OFFSET;        req_item.s00_axi_wdata == p_sequencer.cfg.num_img_per_oct;}); 
          $display("\nImage parameters set!\n");     
         // ----------------------------------------------------------------------------------------------------------------------------------------------
         

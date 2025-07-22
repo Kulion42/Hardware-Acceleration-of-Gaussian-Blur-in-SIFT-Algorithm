@@ -10,7 +10,6 @@ class gaussian_blur_scoreboard_rand extends uvm_scoreboard;
     gaussian_blur_config_rand cfg;
     int num_of_tr, num_of_missed = 0;
     int fd;
-    int blur_out_data_arr[$];
     int pixel_data_of = 1;
     int ref_d = 1;
 
@@ -109,36 +108,36 @@ class gaussian_blur_scoreboard_rand extends uvm_scoreboard;
     
     function void write(agent_rand_pkg::gaussian_blur_seq_item curr_it);
         if (ref_d) begin
-            gaussian_blur_ref(cfg.img_in_data_arr, cfg.rand_width, cfg.rand_height, cfg.rand_offset_up, cfg.rand_offset_down, cfg.rand_img_per_octave, blur_out_data_arr);
+            gaussian_blur_ref(cfg.img_in_data_arr, cfg.rand_width, cfg.rand_height, cfg.rand_offset_up, cfg.rand_offset_down, cfg.rand_img_per_octave, cfg.ref_out_data_arr);
             ref_d = 0;  
         end    
         `uvm_info(get_type_name(),$sformatf("\n[Scoreboard] Scoreboard function write called..."),UVM_MEDIUM);
         if(checks_enable && !ref_d) begin
-            ass_check_pix_up : assert((((curr_it.main_bram_a_rdata_o >> 16) & 16'hffff) >= (blur_out_data_arr[curr_it.main_bram_a_addr_i/2]) -pixel_data_of) && (((curr_it.main_bram_a_rdata_o >> 16) & 16'hffff) <= ((blur_out_data_arr[curr_it.main_bram_a_addr_i/2]) + pixel_data_of)))
+            ass_check_pix_up : assert((((curr_it.main_bram_a_rdata_o >> 16) & 16'hffff) >= (cfg.ref_out_data_arr[curr_it.main_bram_a_addr_i/2]) -pixel_data_of) && (((curr_it.main_bram_a_rdata_o >> 16) & 16'hffff) <= ((cfg.ref_out_data_arr[curr_it.main_bram_a_addr_i/2]) + pixel_data_of)))
             `uvm_info(get_type_name(),$sformatf("\nComparison match succesfull\nObserved value is %0d, expected is %0d.\n",        
                                                     (curr_it.main_bram_a_rdata_o >> 16) & 16'hffff, 
-                                                    blur_out_data_arr[curr_it.main_bram_a_addr_i/2]),UVM_MEDIUM)
+                                                    cfg.ref_out_data_arr[curr_it.main_bram_a_addr_i/2]),UVM_MEDIUM)
                                                          
              else begin 
                 `uvm_error(get_type_name(),$sformatf("\nComparison mismatch for main_bram address[%0d]\nObserved value is %0d, expected is %0d.\n",
                                                         curr_it.main_bram_a_addr_i/4,
                                                         (curr_it.main_bram_a_rdata_o >> 16)& 16'hffff, 
-                                                        blur_out_data_arr[curr_it.main_bram_a_addr_i/2]))
+                                                        cfg.ref_out_data_arr[curr_it.main_bram_a_addr_i/2]))
                  ++num_of_missed; 
                                                        
              end
              
-             ass_check_pix_down : assert(((curr_it.main_bram_a_rdata_o & 16'hffff) >= (blur_out_data_arr[curr_it.main_bram_a_addr_i/2 + 1]) - pixel_data_of) && ((curr_it.main_bram_a_rdata_o & 16'hffff) <= ((blur_out_data_arr[curr_it.main_bram_a_addr_i/2 + 1]) + pixel_data_of)))
+             ass_check_pix_down : assert(((curr_it.main_bram_a_rdata_o & 16'hffff) >= (cfg.ref_out_data_arr[curr_it.main_bram_a_addr_i/2 + 1]) - pixel_data_of) && ((curr_it.main_bram_a_rdata_o & 16'hffff) <= ((cfg.ref_out_data_arr[curr_it.main_bram_a_addr_i/2 + 1]) + pixel_data_of)))
             `uvm_info(get_type_name(),$sformatf("\nComparison match succesfull\nObserved value is %0d, expected is %0d.\n",
                                                     curr_it.main_bram_a_rdata_o & 16'hffff, 
-                                                    blur_out_data_arr[curr_it.main_bram_a_addr_i/2 + 1]),UVM_MEDIUM)
+                                                    cfg.ref_out_data_arr[curr_it.main_bram_a_addr_i/2 + 1]),UVM_MEDIUM)
                                                     
              
              else begin
                 `uvm_error(get_type_name(),$sformatf("\nComparison mismatch for main_bram address[%0d]\nObserved value is %0d, expected is %0d.\n",
                                                         curr_it.main_bram_a_addr_i/4,
                                                         curr_it.main_bram_a_rdata_o & 16'hffff, 
-                                                        blur_out_data_arr[curr_it.main_bram_a_addr_i/2 + 1]))
+                                                        cfg.ref_out_data_arr[curr_it.main_bram_a_addr_i/2 + 1]))
                  ++num_of_missed;
                                             
              end
@@ -154,9 +153,9 @@ class gaussian_blur_scoreboard_rand extends uvm_scoreboard;
                  `uvm_info(get_name(), $sformatf("Successfully opened log file"),UVM_HIGH)
            else
                  `uvm_info(get_name(), $sformatf("Error log file"),UVM_HIGH)
-         $fdisplay(fd, "File ../result_files/res_file_img_width_%0d_height_%0d_offest_up_%0d_offset_down_%0d_in_out.txt examined: %0d pixels, %0d succesfull pixel matches, %0d pixel mismatches",cfg.rand_width, cfg.rand_height, cfg.rand_offset_up , cfg.rand_offset_down, 2 *num_of_tr, 2 *num_of_tr - num_of_missed, num_of_missed);
+         $fdisplay(fd, "File ../result_files/res_file_img_width_%0d_height_%0d_offest_up_%0d_offset_down_%0d_output.txt examined: %0d pixels, %0d succesfull pixel matches, %0d pixel mismatches",cfg.rand_width, cfg.rand_height, cfg.rand_offset_up , cfg.rand_offset_down, 2 *num_of_tr, 2 *num_of_tr - num_of_missed, num_of_missed);
         $fclose(fd); 
-        blur_out_data_arr.delete();    
+        cfg.ref_out_data_arr.delete();    
     endfunction : report_phase
     
 endclass : gaussian_blur_scoreboard_rand

@@ -23,6 +23,7 @@ class gaussian_blur_config_rand extends uvm_object;
     //--------------------------------------------------------------------------------------------------------------------
     
     int img_in_data_arr[$];
+    int ref_out_data_arr[$];
     int offsets_arr[6] = {5, 6, 7, 8, 9, 10};
 
     `uvm_object_utils_begin(gaussian_blur_config_rand)
@@ -39,12 +40,14 @@ class gaussian_blur_config_rand extends uvm_object;
     constraint rand_offset_constr2 {offset_p dist {0:= 10, [1:5]:= 5};}  
     constraint rand_constr_ipo1 {rand_img_per_octave >= 0 ; rand_img_per_octave < NUM_OF_IMGS_PER_OCTAVE;}
     constraint rand_constr_ipo2 {rand_img_per_octave dist {0:= 15, [1:5]:/ 35 };}
-    constraint rand_off_or_0_constr1 {off_or_0 >= 0; off_or_0 < 2;} 
-    constraint rand_off_or_0_constr2 {(rand_img_per_octave != 0) -> (off_or_0 == 0);} 
-    //constraint rand_off_or_0_constr3 {(rand_img_per_octave == 0) -> (off_or_0 == 1);} 
-    constraint rand_off_or_1_constr1 {off_or_1 >= 0; off_or_1 < 2;} 
-    constraint rand_off_or_1_constr2 {(rand_img_per_octave != 0) -> (off_or_1 == 0);} 
-    //constraint rand_off_or_1_constr3 {(rand_img_per_octave == 0) -> (off_or_1 == 1);} 
+    constraint rand_off_or_0_constr1 {off_or_0 >= 0; off_or_0 < 2;}
+    constraint rand_off_or_0_constr2 {(off_or_0 == 1) -> rand_img_per_octave == 0;}
+    //constraint rand_off_or_0_constr3 {(rand_img_per_octave != 0) -> (off_or_0 == 0);} 
+    //constraint rand_off_or_0_constr4 {(rand_img_per_octave == 0) -> (off_or_0 == 1);} 
+    constraint rand_off_or_1_constr1 {off_or_1 >= 0; off_or_1 < 2;}
+    constraint rand_off_or_1_constr2 {(off_or_1 == 1) -> rand_img_per_octave == 0;} 
+    //constraint rand_off_or_1_constr3 {(rand_img_per_octave != 0) -> (off_or_1 == 0);} 
+    //constraint rand_off_or_1_constr4 {(rand_img_per_octave == 0) -> (off_or_1 == 1);} 
 
      function new(string name = "gaussian_blur_config_rand");
         super.new(name);

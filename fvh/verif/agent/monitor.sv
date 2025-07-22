@@ -79,7 +79,7 @@ class gaussian_blur_monitor extends uvm_monitor;
                     tmp = vif.main_bram_a_rdata_o;
                     tmp1 = (tmp >> 16) & 16'hffff;
                     tmp2 = tmp & 16'hffff;
-                    $fdisplay(fd, "%0d\t%0d\t", tmp1, tmp2);
+                    $fdisplay(fd, "%0d\t%0d", tmp1, tmp2);
                 end 
                 item_collected_port.write(curr_it);
             end 

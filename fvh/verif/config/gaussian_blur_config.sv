@@ -30,6 +30,7 @@ class gaussian_blur_config extends uvm_object;
     int tmp;
     int tmp1;
     int tmp2;
+    int num_of_zeros = 0;
     
     //FILES
     string ipo_str[2] = {"_0", "_1-5"};
@@ -44,7 +45,8 @@ class gaussian_blur_config extends uvm_object;
     
     //int main_bram_gv_arr[$];
     int main_bram_wdata_arr[$];
-    int ref_in_data_arr[$];    
+    int ref_in_data_arr[$];  
+    int ref_out_data_arr[$];  
     
     `uvm_object_utils_begin(gaussian_blur_config)
         `uvm_field_enum(uvm_active_passive_enum,is_active,UVM_DEFAULT)
@@ -100,8 +102,8 @@ class gaussian_blur_config extends uvm_object;
     endgroup
 
      constraint rand_constr_img {rand_img >= 0 ; rand_img < NUMBER_OF_IMAGES;}
-     constraint rand_constr_oct1 {rand_oct == 0 ; rand_oct < NUMBER_OF_OCTAVES;} 
-     constraint rand_constr_oct2 {rand_oct dist {0:= 20, [1:3]:/ 30} ; } 
+     constraint rand_constr_oct1 {rand_oct >=0 ; rand_oct < NUMBER_OF_OCTAVES;} 
+     constraint rand_constr_oct2 {rand_oct dist {0:/ 20, [1:4]:/ 30} ; } 
      constraint rand_constr_ipart {rand_part >= 0 ; rand_part < NUMBER_OF_IMAGE_PARTS;}
      constraint rand_constr_ipo1 {rand_ipo >= 0 ; rand_ipo < NUMBER_OF_IMAGES_PER_OCTAVE;} 
      constraint rand_constr_ipo2 {(rand_oct == 0) -> (rand_ipo == 0);}
@@ -152,17 +154,24 @@ class gaussian_blur_config extends uvm_object;
         img_cover_oct.sample();
         img_cover_ipo.sample();
 
-        //IMAGE DIMENSIONS LOADING
+        //IMAGE DIMENSIONS LOADING4
         fd = $fopen(img_dimensions_file[((rand_img*NUMBER_OF_IMAGE_PARTS + rand_part) *NUMBER_OF_OCTAVES + rand_oct)], "r");
         
         if (fd) begin
             `uvm_info(get_name(), $sformatf("Successfully opened img_dimensons_file"),UVM_HIGH)
              
-             $fscanf(fd, "%d\n", img_width);
+             $fscanf(fd, "%0d", img_width);
+             if (img_width <= 0) begin
+                 `uvm_fatal(get_name(), $sformatf("Error: Image width is not valid!"))
+             end
              $display("Image width : %0d", img_width);
              $fscanf(fd, "%d\n", img_height);
+                if (img_height <= 0) begin
+                    `uvm_fatal(get_name(), $sformatf("Error: Image height is not valid!"));
+                end
              $display("Image height : %0d", img_height);
              $fscanf(fd, "%d\n", img_offset_up);
+
              $display("Image offset up : %0d", img_offset_up);
              $fscanf(fd, "%d\n", img_offset_down);
              $display("Image offset down: %0d", img_offset_down);
@@ -170,7 +179,7 @@ class gaussian_blur_config extends uvm_object;
              $display("Image number image per octave: %0d", num_img_per_oct);       
         end
         else
-            `uvm_info(get_name(), $sformatf("Error opening img_dimensons_file"),UVM_HIGH)        
+            `uvm_fatal(get_name(), $sformatf("Error opening img_dimensons_file"))        
         $fclose(fd);
         //------------------------------------------------------------------------------------
        
@@ -181,16 +190,22 @@ class gaussian_blur_config extends uvm_object;
             `uvm_info(get_name(), $sformatf("Successfully opened main_bram_load_file"),UVM_HIGH)
             
             while(!$feof(fd)) begin
-                $fscanf(fd, "%d\t%d\n", tmp1, tmp2);
+                $fscanf(fd, "%0d\t%0d", tmp1, tmp2);
                 ref_in_data_arr.push_back(tmp1);
-                ref_in_data_arr.push_back(tmp2);                
+                ref_in_data_arr.push_back(tmp2);   
+                if (tmp1 == 0 || tmp2 == 0) begin
+                    num_of_zeros++;
+                end 
+                if (num_of_zeros > 2) begin
+                    `uvm_fatal(get_name(), $sformatf("Error: Too many zeros in image part!Image %s, part %0d, octave %0d, scale per octave %s", image_names[rand_img], rand_part, rand_oct, ipo_str[rand_ipo]))
+                end            
                 tmp =  (tmp1 << 16) | tmp2;
-                //$display("Tmp value = %d", tmp);
+                
                 main_bram_wdata_arr.push_back(tmp);
             end
         end
         else
-            `uvm_info(get_name(), $sformatf("Error opening main_bram_load_file"),UVM_HIGH)        
+            `uvm_fatal(get_name(), $sformatf("Error opening main_bram_load_file"))        
         $fclose(fd);
         //------------------------------------------------------------------------------------------
 
@@ -202,9 +217,9 @@ class gaussian_blur_config extends uvm_object;
             `uvm_info(get_name(), $sformatf("Successfully opened main_bram_gv_file"),UVM_HIGH)
             
             while(!$feof(fd)) begin
-                $fscanf(fd, "%d\t%d\n", tmp1, tmp2);
-                tmp =  (tmp1 << 16) | tmp2;
-                main_bram_gv_arr.push_back(tmp);
+                $fscanf(fd, "%0d\t%0d", tmp1, tmp2);
+                main_bram_gv_arr.push_back(tmp1);
+                main_bram_gv_arr.push_back(tmp2);
             end
         end
         else
