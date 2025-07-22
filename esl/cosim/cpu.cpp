@@ -143,41 +143,41 @@ std::vector<Image> Cpu::generate_gaussian_pyramid_vector(const Image& img, int i
     
     //cout << "IP core register initialization" << endl;
    	cout << "IP core register initialization" << endl;
-   	write_hard(ADDR_RESET, 1, 1);
+   	write_hard(ADDR_RESET, 1);
 	while(!read_hard(ADDR_READY));
-    write_hard(ADDR_RESET, 1, 0);
+    write_hard(ADDR_RESET, 0);
     
-    write_hard(ADDR_IMG_WIDTH, 16, img.width); 
-   	write_hard(ADDR_IMG_HEIGHT, 16, img.height);
+    write_hard(ADDR_IMG_WIDTH, img.width, 2); 
+   	write_hard(ADDR_IMG_HEIGHT, img.height, 2);
 
-    write_hard(ADDR_NUM_IMG_OCT, 16, 0); 
-    write_hard(ADDR_IMG_OFFSET_UP, 16, offset_up); 
-    write_hard(ADDR_IMG_OFFSET_DOWN, 16, offset_down);
+    write_hard(ADDR_NUM_IMG_OCT, 0, 2); 
+    write_hard(ADDR_IMG_OFFSET_UP, offset_up, 2); 
+    write_hard(ADDR_IMG_OFFSET_DOWN, offset_down, 2);
     cout << "IP core registers initialized" << endl;
 
 
     for ( int x = 0; x < img.width; x+=2) {    
         for (int y = 0; y < img.height; y++) {
-          data_t pix1, pix2, pix3, pix4; 
-          pix1= img.get_pixel(x, y, 0);
+          data_t pix1[2];
+          pix[0]= img.get_pixel(x, y, 0);
           if(x +1 < img.width)
-          pix2 = img.get_pixel(x+1, y, 0);
+          pix[1] = img.get_pixel(x+1, y, 0);
           //cout << pix1 << " "<<pix2 << endl;
-          write_mem(VP_ADDR_MAIN_BRAM_L  + 2 *(y*img.width + x), pix1, pix2);
+          write_mem(VP_ADDR_MAIN_BRAM_L  + 2 *(y*img.width + x), pix);
         }
     }    
 	//cout << "Bram initialized" << endl;
 	
 	//------------------------------------------------
 	//cout << endl;
-    write_hard(ADDR_RESET, 1, 1);
+    write_hard(ADDR_RESET, 1);
     while(!read_hard(ADDR_READY));
-    write_hard(ADDR_RESET, 1, 0);
-	write_hard(ADDR_START, 1, 1);
+    write_hard(ADDR_RESET, 0);
+	write_hard(ADDR_START, 1);
 	//cout << "IP core activated " << endl;
 	//cout << endl;
 
-    write_hard(ADDR_START, 1, 0);
+    write_hard(ADDR_START, 0);
 	while(!read_hard(ADDR_READY));
     Image base_img(img.width, img.height-offset_up-offset_down, 1) ; //= gaussian_blur(img, sigma_diff, offset_up, offset_down);
 
@@ -191,11 +191,11 @@ std::vector<Image> Cpu::generate_gaussian_pyramid_vector(const Image& img, int i
 
         for ( int x = 0; x < base_img.width; x+=2) {    
             for (int y = 0; y < base_img.height; y++) {
-                  data_t pix1, pix2;
-                  read_mem(VP_ADDR_MAIN_BRAM_L  + 2 * (y*base_img.width + x), pix1, pix2);                  
-                    base_img.set_pixel(x, y, 0, pix1);
+                  data_t pix[2];
+                  read_mem(VP_ADDR_MAIN_BRAM_L  + 2 * (y*base_img.width + x), pix);                  
+                    base_img.set_pixel(x, y, 0, pix[0]);
                   if(x + 1 < base_img.width)
-                    base_img.set_pixel(x+1, y, 0, pix2);
+                    base_img.set_pixel(x+1, y, 0, pix[1]);
             }
          }
          
@@ -216,19 +216,19 @@ std::vector<Image> Cpu::generate_gaussian_pyramid_vector(const Image& img, int i
           Image tmp (prev_img.width, prev_img.height, prev_img.channels);
           
     //-----------------------------------------------
-            write_hard(ADDR_RESET, 1, 1);
+            write_hard(ADDR_RESET, 1);
             while(!read_hard(ADDR_READY));
-            write_hard(ADDR_RESET, 1, 0);
-            write_hard(ADDR_IMG_WIDTH, 16, prev_img.width); 
-	        write_hard(ADDR_IMG_HEIGHT, 16, prev_img.height);
-	        write_hard(ADDR_IMG_OFFSET_UP, 16, offset_up); 
-	        write_hard(ADDR_IMG_OFFSET_DOWN, 16, offset_down);     
-            write_hard(ADDR_NUM_IMG_OCT, 16, j); 
+            write_hard(ADDR_RESET, 0);
+            write_hard(ADDR_IMG_WIDTH, prev_img.width, 2); 
+	        write_hard(ADDR_IMG_HEIGHT, prev_img.height, 2);
+	        write_hard(ADDR_IMG_OFFSET_UP, offset_up, 2); 
+	        write_hard(ADDR_IMG_OFFSET_DOWN, offset_down, 2);     
+            write_hard(ADDR_NUM_IMG_OCT, j, 2); 
             
-            write_hard(ADDR_START, 1, 1);
+            write_hard(ADDR_START, 1);
 	        //cout << "IP core activated " <<  i*(imgs_per_octave-1) + j << endl;
 	        //cout << endl;
-            write_hard(ADDR_START, 1, 0);
+            write_hard(ADDR_START, 0);
 		        
 	        while(!read_hard(ADDR_READY));
 	        
@@ -236,11 +236,11 @@ std::vector<Image> Cpu::generate_gaussian_pyramid_vector(const Image& img, int i
 	       // cout << "Saving bram state " << endl;
             for ( int x = 0; x < prev_img.width; x+=2) {
                 for (int y = 0; y < prev_img.height; y++) {
-                  data_t pix1, pix2, pix3, pix4;
-                  read_mem(VP_ADDR_MAIN_BRAM_L  + 2 * (y*prev_img.width + x), pix1, pix2);                  
-                  tmp.set_pixel(x, y, 0, pix1);
+                  data_t pix[2];
+                  read_mem(VP_ADDR_MAIN_BRAM_L  + 2 * (y*prev_img.width + x), pix);                  
+                  tmp.set_pixel(x, y, 0, pix[0]);
                   if (x +1 < prev_img.width)
-                  tmp.set_pixel(x+1, y, 0, pix2);
+                  tmp.set_pixel(x+1, y, 0, pix[1]);
                 }
             }
              // cout << "Bram state saved" << endl;
@@ -256,12 +256,12 @@ std::vector<Image> Cpu::generate_gaussian_pyramid_vector(const Image& img, int i
 
           for (int y = 0; y < base_img.height; y++) {
             for ( int x = 0; x < base_img.width; x+=2) {    
-                  data_t pix1, pix2; 
-                  pix1= base_img.get_pixel(x, y, 0);
+                  data_t pix[2];
+                  pix[0] = base_img.get_pixel(x, y, 0);
                   if(x +1 < base_img.width)
-                  pix2 = base_img.get_pixel(x+1, y, 0);
+                  pix[1] = base_img.get_pixel(x+1, y, 0);
                   
-                  write_mem(VP_ADDR_MAIN_BRAM_L  + 2 *(y*base_img.width + x), pix1, pix2);
+                  write_mem(VP_ADDR_MAIN_BRAM_L  + 2 *(y*base_img.width + x), pix);
             }
         }
         //-------------------------------------------------  
@@ -776,11 +776,11 @@ std::vector<Image> Cpu::combine_partitions(std::vector< std::vector <Image> > im
      return comb_part; 
 }
 
-void Cpu::write_hard(sc_dt::sc_uint<64> addr, int length, int val)
+void Cpu::write_hard(sc_dt::sc_uint<64> addr, int val, int lenght)
 {
 	pl_t pl;
 	unsigned char buf[2];
-	toUchar2(buf, val);
+	toUchar<int>(buf, val, lenght);
 	pl.set_address(VP_ADDR_IP_CORE_L + addr);
 	pl.set_data_length(length); 
 	pl.set_data_ptr(buf);
@@ -801,15 +801,15 @@ int Cpu::read_hard(sc_dt::sc_uint<64> addr)
 	pl.set_response_status ( tlm::TLM_INCOMPLETE_RESPONSE );
 	interconnect_socket->b_transport(pl, offset);
 	//cout << "Correct read transaction to ip_core" << endl;
-	return toInt1(&buf);
+	return toInt<int>(&buf, 1);
 }
 
-void Cpu::write_mem(sc_dt::sc_uint<64> addr, data_t pix1, data_t pix2)
+void Cpu::write_mem(sc_dt::sc_uint<64> addr, data_t *pix)
 {
     //offset += sc_core::sc_time(10*DELAY , sc_core::SC_NS);	
 	pl_t pl;
 	unsigned char buf[4];
-	Fixed_to_Uchar(buf, pix1, pix2);
+	to_Uchar(buf, pix);
 	pl.set_address(addr);
 	pl.set_data_length(BUS_WIDTH); 
 	pl.set_data_ptr(buf);
@@ -819,7 +819,7 @@ void Cpu::write_mem(sc_dt::sc_uint<64> addr, data_t pix1, data_t pix2)
 	//cout << "Correct write transaction to mem " << endl;
 }
 
-void Cpu::read_mem(sc_dt::sc_uint<64> addr, data_t& pix1, data_t& pix2)
+void Cpu::read_mem(sc_dt::sc_uint<64> addr, data_t *pix)
 {
     //offset += sc_core::sc_time(10*DELAY , sc_core::SC_NS);	
 	pl_t pl;
@@ -831,7 +831,7 @@ void Cpu::read_mem(sc_dt::sc_uint<64> addr, data_t& pix1, data_t& pix2)
 	pl.set_response_status ( tlm::TLM_INCOMPLETE_RESPONSE );
 	interconnect_socket->b_transport(pl, offset);
 	//cout << "Correct read transaction to mem" << endl;
-	Uchar_to_Fixed(buf, pix1, pix2);
+	from_Uchar(buf, pix);
 }
 
 tlm_sync_enum Cpu::nb_transport_bw(pl_t& pl, ph_t& phase, sc_time& offset)

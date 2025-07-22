@@ -8,43 +8,72 @@
 #include <bitset>
 #include <math.h>
 #include <string>
-#include <systemc>
 #include <tlm>
 #include "sc_types.hpp"
 
 using namespace std;
 
-static const int FIXED_POINT_FRACTIONAL_BITS_DATA_T = 14;
+static const int FIXED_POINT_FRACTIONAL_BITS_DATA_T = FRACTIONAL;
 static const int FIXED_POINT_FRACTIONAL_BITS_SIGMA_T = 23;
 
-int toInt(unsigned char *buf);
+extern sc_core::sc_time offset_system;
 
-int toInt2(unsigned char *buf);
+template <typename T1, typename T2 = unsigned char> T1 toInt(T2 *buf, int len)
+{
+    if (len< 1 || len> 4) {
+        throw std::invalid_argument("Length must be between 1 and 4.");
+    }
+    
+    T1 val = 0;
+    for (int i = 0; i < len; ++i) {
+        val += ((T1)buf[i]) << (8 * (len- 1 - i));
+    }
+    return val;
+}
 
-int toInt1(unsigned char *buf);
 
-void toUchar1(unsigned char *buf,int val);
+template <typename T1, typename T2 = unsigned char > void toChar(T2 *buf,T1 val, int len)
+{
+    if (len< 1 || len> 4) {
+        throw std::invalid_argument("Length must be between 1 and 4.");
+    }
+    
+    for (int i = 0; i < len; ++i) {
+        buf[i] = (T2)((val >> (8 * (len- 1 - i))) & 0xFF);
+    }
 
-void toUchar2(unsigned char *buf,int val);
-
-void toUchar4(unsigned char *buf,int val);
+}
 
 unsigned char Convert_to_UnsignedC(char val);
 
-unsigned char Convert_to_UnsignedD(double val);
-
 char Convert_to_SigendC(unsigned char val);
 
-void Fixed_to_Uchar(unsigned char *buf, data_t input1, data_t input2);
+uint16_t to_Uint16_t(data_t input, int shift = FIXED_POINT_FRACTIONAL_BITS_DATA_T);
 
-void Uchar_to_Fixed(unsigned char *buf, data_t& output1, data_t& output2);
+//void Fixed_to_Uchar(unsigned char *buf, data_t input1, data_t input2);
+template <typename T1 = data_t> void to_Uchar(unsigned char *buf, T1 *input, int shift = FIXED_POINT_FRACTIONAL_BITS_DATA_T)
+{
+    /*if constexpr (std::is_same<T1, uint16_t>::value || std::is_same<T1, int16_t>::value) {
+        toChar<T1>(buf, input[0], 2);
+        toChar<T1>(buf + 2, input[1], 2);
+    }*/
+  //  else if constexpr (std::is_same<T1, data_t>::value) {
+        toChar<uint16_t>(buf, (uint16_t)(input[0] * (1 << shift)), 2);
+        toChar<uint16_t>(buf + 2, (uint16_t)(input[1] * (1 << shift)), 2);
+    //}
 
-void to_Uchar(unsigned char *buf, uint32_t in);
-
-uint32_t to_Uint(unsigned char *buf);
-
-data_t Uchar_to_Data_t(unsigned char *buf);
-
-uint16_t to_Uint16_t(data_t val);
+}
+//void Uchar_to_Fixed(unsigned char *buf, data_t& output1, data_t& output2);
+template <typename T1 = data_t> void from_Uchar(unsigned char *buf, T1 *output, int shift = FIXED_POINT_FRACTIONAL_BITS_DATA_T)
+{
+   /* if constexpr (std::is_same<T1, uint16_t>::value || std::is_same<T1, int16_t>::value) {
+   //     output[0] = toInt<T1>(buf, 2);
+    //    output[1] = toInt<T1>(buf + 2, 2);
+    } */
+   // else if constexpr (std::is_same<T1, data_t>::value) {
+        output[0] = (double)(toInt<uint16_t>(buf, 2)) / (double)(1 << shift);
+        output[1] = (double)(toInt<uint16_t>(buf + 2, 2)) / (double)(1 << shift);
+    //}
+}
 
 #endif

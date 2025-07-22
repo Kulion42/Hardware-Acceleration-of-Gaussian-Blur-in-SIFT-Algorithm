@@ -73,51 +73,51 @@ void Ip_Core::b_transport(pl_t &pl, sc_time &offset)
 	 	case tlm::TLM_WRITE_COMMAND:
 			if (addr == VP_ADDR_IP_CORE_L + ADDR_START)
 			{
-				start.write(static_cast<sc_logic> (toInt2(buf)));
-				//cout << "Write " << toInt1(buf) << " in start"<<endl;
-				printf("write %d in start\n", toInt1(buf));
+				start.write(static_cast<sc_logic> (toInt<int>(buf, 1)));
+				//cout << "Write " << toInt<int>(buf, 1) << " in start"<<endl;
+				printf("write %d in start\n", toInt<int>(buf, 1));
 				wait(DELAY, SC_NS);
 			}
 			else if (addr == VP_ADDR_IP_CORE_L + ADDR_RESET)
 			{
-				reset.write(static_cast<sc_logic> (toInt2(buf)));
-				//cout << "Write " << toInt1(buf) << " in reset"<<endl;
-				printf("write %d in reset\n", toInt1(buf));
+				reset.write(static_cast<sc_logic> (toInt<int>(buf, 1)));
+				//cout << "Write " << toInt<int>(buf, 1) << " in reset"<<endl;
+				printf("write %d in reset\n", toInt<int>(buf, 1));
 				wait(DELAY, SC_NS);
 			}
 			else if (addr == VP_ADDR_IP_CORE_L + ADDR_IMG_WIDTH)
 			{
-				img_width.write(static_cast< sc_lv<16> > (toInt2(buf)));
+				img_width.write(static_cast< sc_lv<16> > (toInt<int>(buf, 2)));
 				//cout << "Write " << toIn2t(buf) << " in img_width"<<endl;
-				printf("write %d in img_width\n", toInt2(buf));
+				printf("write %d in img_width\n", toInt<int>(buf, 2));
 				wait(DELAY, SC_NS);
 			}
 			else if (addr == VP_ADDR_IP_CORE_L + ADDR_IMG_HEIGHT)
 			{
-				img_height.write(static_cast< sc_lv<16> > (toInt2(buf)));
-				//cout << "Write " << toInt2(buf) << " in img_height"<<endl;
-				printf("write %d in img_height\n", toInt2(buf));
+				img_height.write(static_cast< sc_lv<16> > (toInt<int>(buf, 2)));
+				//cout << "Write " << toInt<int>(buf, 2) << " in img_height"<<endl;
+				printf("write %d in img_height\n", toInt<int>(buf, 2));
 				wait(DELAY, SC_NS);
 			}
 			else if (addr == VP_ADDR_IP_CORE_L + ADDR_IMG_OFFSET_UP)
 			{
-				img_offset_up.write(static_cast< sc_lv<16> > (toInt2(buf)));
-				//cout << "Write " << toInt2(buf) << " in img_offset_up"<<endl;
-				printf("write %d in img_offset_up\n", toInt2(buf));
+				img_offset_up.write(static_cast< sc_lv<16> > (toInt<int>(buf, 2)));
+				//cout << "Write " << toInt<int>(buf, 2) << " in img_offset_up"<<endl;
+				printf("write %d in img_offset_up\n", toInt<int>(buf, 2));
 				wait(DELAY, SC_NS);
 			}
 			else if (addr == VP_ADDR_IP_CORE_L + ADDR_IMG_OFFSET_DOWN)
 			{
-				img_offset_down.write(static_cast< sc_lv<16> > (toInt2(buf)));
-				//cout << "Write " << toInt2(buf) << " in img_offset_down"<<endl;
-				printf("write %d in img_offset_down\n", toInt(buf));
+				img_offset_down.write(static_cast< sc_lv<16> > (toInt<int>(buf, 2)));
+				//cout << "Write " << toInt<int>(buf, 2) << " in img_offset_down"<<endl;
+				printf("write %d in img_offset_down\n", toInt<int>(buf, 2));
 				wait(DELAY, SC_NS);
 			}
 			else if (addr == VP_ADDR_IP_CORE_L + ADDR_NUM_IMG_OCT)
 			{
-				img_per_octave.write(static_cast< sc_lv<16> > (toInt2(buf)));
-				//cout << "Write " << toInt2(buf) << " in num_img_oct"<<endl;
-				printf("write %d in img_per_ocatve\n", toInt(buf));
+				img_per_octave.write(static_cast< sc_lv<16> > (toInt<int>(buf, 2)));
+				//cout << "Write " << toInt<int>(buf, 2) << " in num_img_oct"<<endl;
+				printf("write %d in img_per_ocatve\n", toInt<int>(buf, 2));
 				wait(DELAY, SC_NS);
 			}
 			else if (addr >= VP_ADDR_MAIN_BRAM_L and addr <= VP_ADDR_MAIN_BRAM_H)
@@ -126,12 +126,12 @@ void Ip_Core::b_transport(pl_t &pl, sc_time &offset)
 				main_bram_a_cpu_en.write(static_cast<sc_logic> (1)) ;
                 main_bram_a_cpu_we.write(static_cast< sc_lv<4> > (15)) ;
                 main_bram_a_cpu_addr.write(static_cast< sc_lv<15> > (taddr/4)) ;
-                main_bram_a_cpu_wdata.write(static_cast< sc_lv<32> > (toInt(buf))) ;
+                main_bram_a_cpu_wdata.write(static_cast< sc_lv<32> > (toInt<unsigned int>(buf, 4))) ;
                 
 				wait(DELAY, SC_NS);
 				main_bram_a_cpu_we.write(static_cast< sc_lv<4> > (0));
 				main_bram_a_cpu_en.write(static_cast<sc_logic> (0)) ;
-                printf("write %X in addres %d of main bram\n", toInt(buf), taddr/4);
+                //printf("write %X in addres %d of main bram\n", toInt<unsigned int>(buf, 4), taddr/4);
 			}
 			else
 			{
@@ -145,13 +145,13 @@ void Ip_Core::b_transport(pl_t &pl, sc_time &offset)
 				wait(DELAY, SC_NS);
 				if (ready.read() == '1')
 				{
-					toUchar1(buf, 1);
-					//printf("read %d from ready\n", toInt(buf));
+					toUchar<int>(buf, 1, 1);
+					//printf("read %d from ready\n", toInt<int>(buf, 1));
 				}				
 				else
 				{
-					toUchar1(buf, 0);
-					//printf("read %d from ready\n", toInt(buf));
+					toUchar<int>(buf, 0, 1);
+					//printf("read %d from ready\n", toInt<int>(buf, 1));
 				}			
 
 			}
@@ -161,9 +161,9 @@ void Ip_Core::b_transport(pl_t &pl, sc_time &offset)
 				main_bram_a_cpu_en.write(static_cast<sc_logic> (1)) ;
 				main_bram_a_cpu_addr.write(static_cast< sc_lv<15> > (taddr/4)) ;
 				wait(DELAY, SC_NS);
-				toUchar4(buf, static_cast< sc_uint<32> > (main_bram_a_cpu_rdata.read()));
+				toUchar<unsigned int>(buf, static_cast< sc_uint<32> > (main_bram_a_cpu_rdata.read()), 4);
 				main_bram_a_cpu_en.write(static_cast<sc_logic> (0)) ;
-				printf("read %X from addres %d of main bram\n", toInt(buf), taddr/4);
+				//printf("read %X from addres %d of main bram\n", toInt<unsigned int>(buf, 4), taddr/4);
 			}
 			else
 			{

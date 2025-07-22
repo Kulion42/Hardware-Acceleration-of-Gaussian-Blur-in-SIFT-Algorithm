@@ -75,10 +75,10 @@ class Cpu : public sc_core::sc_module, public tlm::tlm_bw_transport_if<>
 		Image draw_keypoints(const Image& img, const std::vector<Keypoint>& kps);
 	    
 	    int read_hard(sc_dt::sc_uint<64> addr);
-	    void write_hard(sc_dt::sc_uint<64> addr, int length , int val);
+	    void write_hard(sc_dt::sc_uint<64> addr, int val, int lenght = 1);
 	    
-        void read_mem(sc_dt::sc_uint<64> addr, data_t& pix1, data_t& pix2);
-	    void write_mem(sc_dt::sc_uint<64> addr, data_t pix1, data_t pix2);
+      void read_mem(sc_dt::sc_uint<64> addr, data_t *pix);
+	    void write_mem(sc_dt::sc_uint<64> addr, data_t *pix);
    
 
         void hists_to_vec(float histograms[N_HIST][N_HIST][N_ORI], std::array<uint8_t, 128>& feature_vec);
