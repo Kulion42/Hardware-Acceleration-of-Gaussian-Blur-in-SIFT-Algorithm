@@ -779,10 +779,10 @@ std::vector<Image> Cpu::combine_partitions(std::vector< std::vector <Image> > im
 void Cpu::write_hard(sc_dt::sc_uint<64> addr, int val, int lenght)
 {
 	pl_t pl;
-	unsigned char buf[2];
-	toUchar<int>(buf, val, lenght);
+	unsigned char buf[lenght];
+	toChar(buf, val, lenght);
 	pl.set_address(VP_ADDR_IP_CORE_L + addr);
-	pl.set_data_length(length); 
+	pl.set_data_length(lenght); 
 	pl.set_data_ptr(buf);
 	pl.set_command( tlm::TLM_WRITE_COMMAND );
 	pl.set_response_status ( tlm::TLM_INCOMPLETE_RESPONSE );
@@ -801,7 +801,7 @@ int Cpu::read_hard(sc_dt::sc_uint<64> addr)
 	pl.set_response_status ( tlm::TLM_INCOMPLETE_RESPONSE );
 	interconnect_socket->b_transport(pl, offset);
 	//cout << "Correct read transaction to ip_core" << endl;
-	return toInt<int>(&buf, 1);
+	return toInt(&buf, 1);
 }
 
 void Cpu::write_mem(sc_dt::sc_uint<64> addr, data_t *pix)

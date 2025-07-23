@@ -18,7 +18,7 @@ static const int FIXED_POINT_FRACTIONAL_BITS_SIGMA_T = 23;
 
 extern sc_core::sc_time offset_system;
 
-template <typename T1, typename T2 = unsigned char> T1 toInt(T2 *buf, int len)
+template <typename T1 = int, typename T2 = unsigned char> T1 toInt(T2 *buf, int len)
 {
     if (len< 1 || len> 4) {
         throw std::invalid_argument("Length must be between 1 and 4.");
@@ -32,7 +32,7 @@ template <typename T1, typename T2 = unsigned char> T1 toInt(T2 *buf, int len)
 }
 
 
-template <typename T1, typename T2 = unsigned char > void toChar(T2 *buf,T1 val, int len)
+template <typename T1 int, typename T2 = unsigned char > void toChar(T2 *buf,T1 val, int len)
 {
     if (len< 1 || len> 4) {
         throw std::invalid_argument("Length must be between 1 and 4.");
