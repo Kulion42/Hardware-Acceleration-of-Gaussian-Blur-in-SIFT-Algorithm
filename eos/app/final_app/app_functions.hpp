@@ -16,8 +16,8 @@
 
 #define MAX_BRAM_SIZE 60000
 
-uint16_t floatToQ2_14(const float &value);
-float q2_14ToFloat(const uint16_t &value);
+uint16_t floatToQ1_15(const float &value);
+float q1_15ToFloat(const uint16_t &value);
 void write_bram(const Image &image);
 void read_bram(Image &image);
 void write_hard(const uint16_t& addr, const uint16_t& val);
