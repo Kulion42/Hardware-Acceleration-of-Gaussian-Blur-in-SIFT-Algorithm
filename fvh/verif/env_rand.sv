@@ -4,7 +4,7 @@
 
 class gaussian_blur_env_rand extends uvm_env;
 
-    gaussian_blur_agent agent;
+    gaussian_blur_agent_rand agent;
     gaussian_blur_config_rand cfg;
     gaussian_blur_scoreboard_rand scbd;
     
@@ -31,7 +31,7 @@ class gaussian_blur_env_rand extends uvm_env;
         uvm_config_db#(virtual gaussian_blur_if)::set(this, "agent", "gaussian_blur_if", vif);
         //uvm_config_db#(virtual gaussian_blur_if)::set(this, "axi_agent", "gaussian_blur_if", h_vif);
 
-        agent = agent_rand_pkg::gaussian_blur_agent::type_id::create("agent",this);
+        agent = agent_rand_pkg::gaussian_blur_agent_rand::type_id::create("agent",this);
         if (agent == null) begin
             `uvm_fatal("AGENT_NULL", "Agent is null!")
         end

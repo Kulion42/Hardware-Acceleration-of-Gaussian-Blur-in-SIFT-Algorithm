@@ -160,10 +160,6 @@ class gaussian_blur_scoreboard extends uvm_scoreboard;
                 zeros++;
             end
          end
-         $display(cfg.main_bram_wdata_arr.size());
-         $display(cfg.ref_in_data_arr.size());
-         $display(cfg.ref_out_data_arr.size());
-
 
          cfg.main_bram_wdata_arr.delete();
          cfg.ref_out_data_arr.delete();

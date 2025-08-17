@@ -1,7 +1,7 @@
-`ifndef MONITOR_SV
-`define MONITOR_SV
+`ifndef MONITOR_RAND_SV
+`define MONITOR_RAND_SV
 
-class gaussian_blur_monitor extends uvm_monitor;
+class gaussian_blur_monitor_rand extends uvm_monitor;
 
     bit checks_enable = 1;
     bit coverage_enable = 1;
@@ -12,7 +12,7 @@ class gaussian_blur_monitor extends uvm_monitor;
     
     uvm_analysis_port #(gaussian_blur_seq_item) item_collected_port;
         
-    `uvm_component_utils_begin(gaussian_blur_monitor)
+    `uvm_component_utils_begin(gaussian_blur_monitor_rand)
         `uvm_field_int(checks_enable, UVM_DEFAULT)
         `uvm_field_int(coverage_enable, UVM_DEFAULT)       
     `uvm_component_utils_end
@@ -22,7 +22,7 @@ class gaussian_blur_monitor extends uvm_monitor;
     gaussian_blur_seq_item curr_it;
     
     
-    function new(string name = "gaussian_blur_monitor", uvm_component parent = null);
+    function new(string name = "gaussian_blur_monitor_rand", uvm_component parent = null);
         super.new(name, parent);
         
         item_collected_port = new("item_collected_port", this);
@@ -89,6 +89,6 @@ class gaussian_blur_monitor extends uvm_monitor;
         $fclose(fd);
    endtask 
 
-endclass : gaussian_blur_monitor
+endclass : gaussian_blur_monitor_rand
 
 `endif

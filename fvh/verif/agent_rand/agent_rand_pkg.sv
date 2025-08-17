@@ -8,11 +8,11 @@ package agent_rand_pkg;
     `include "uvm_macros.svh"
     
     
-    import gaussian_blur_config_rand_pkg::*;   
+    import gaussian_blur_config_rand_pkg::*; 
+    import agent_pkg::gaussian_blur_seq_item;
+    import agent_pkg::gaussian_blur_driver;
     
-    `include "seq_item.sv"
     `include "sequencer.sv"
-    `include "driver.sv"
     `include "monitor.sv"
     `include "agent.sv"
     

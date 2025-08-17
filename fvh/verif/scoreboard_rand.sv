@@ -13,7 +13,7 @@ class gaussian_blur_scoreboard_rand extends uvm_scoreboard;
     int pixel_data_of = 1;
     int ref_d = 1;
 
-    uvm_analysis_imp#(agent_rand_pkg::gaussian_blur_seq_item, gaussian_blur_scoreboard_rand) item_collected_import;
+    uvm_analysis_imp#(agent_pkg::gaussian_blur_seq_item, gaussian_blur_scoreboard_rand) item_collected_import;
     
      `uvm_component_utils_begin(gaussian_blur_scoreboard_rand)
         `uvm_field_int(checks_enable, UVM_DEFAULT)
@@ -106,7 +106,7 @@ class gaussian_blur_scoreboard_rand extends uvm_scoreboard;
         
     endfunction : gaussian_blur_ref       
     
-    function void write(agent_rand_pkg::gaussian_blur_seq_item curr_it);
+    function void write(agent_pkg::gaussian_blur_seq_item curr_it);
         if (ref_d) begin
             gaussian_blur_ref(cfg.img_in_data_arr, cfg.rand_width, cfg.rand_height, cfg.rand_offset_up, cfg.rand_offset_down, cfg.rand_img_per_octave, cfg.ref_out_data_arr);
             ref_d = 0;  

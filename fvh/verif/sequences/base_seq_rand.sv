@@ -5,7 +5,7 @@
 class gaussian_blur_base_seq_rand extends uvm_sequence#(gaussian_blur_seq_item);
 
    `uvm_object_utils(gaussian_blur_base_seq_rand)
-   `uvm_declare_p_sequencer(gaussian_blur_sequencer)
+   `uvm_declare_p_sequencer(gaussian_blur_sequencer_rand)
 
    function new(string name = "gaussian_blur_base_seq_rand");
       super.new(name);
