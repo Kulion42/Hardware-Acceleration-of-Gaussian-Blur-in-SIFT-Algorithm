@@ -4,17 +4,17 @@
 
 #include "app_functions.hpp"
 
-// Funkcija za konverziju float vrednosti u Q2_14 format koji se koristi u IP jezgru
-uint16_t floatToQ2_14(const float &value) {
-    if (value < 0.0f || value >= 4.0f) {
-        std::cout << "Value of pixel is out of [0, 4.0] bounds." << std::endl;
+// Funkcija za konverziju float vrednosti u Q1_15 format koji se koristi u IP jezgru
+uint16_t floatToQ1_15(const float &value) {
+    if (value < 0.0f || value >= 2.0f) {
+        std::cout << "Value of pixel is out of [0, 2.0] bounds." << std::endl;
     }
-    return static_cast<uint16_t>(std::round(value * (1 << 14)));
+    return static_cast<uint16_t>(std::round(value * (1 << 15)));
 }
 
-// Funkcija za konvertiju Q2_14 formata u float format
-float q2_14ToFloat(const uint16_t &value) {
-    return static_cast<float>(value) / (1 << 14);
+// Funkcija za konvertiju Q1_15 formata u float format
+float q1_15ToFloat(const uint16_t &value) {
+    return static_cast<float>(value) / (1 << 15);
 }
 
 void write_bram(const Image &image) {
@@ -38,8 +38,8 @@ void write_bram(const Image &image) {
             float pix1 = image.get_pixel(x, y, 0);
             float pix2 = (x + 1 < image.width) ? image.get_pixel(x + 1, y, 0) : 0.0f;
 
-            uint16_t upper16bits = floatToQ2_14(pix1);
-            uint16_t lower16bits = floatToQ2_14(pix2);
+            uint16_t upper16bits = floatToQ1_15(pix1);
+            uint16_t lower16bits = floatToQ1_15(pix2);
 
             uint32_t packed = (static_cast<uint32_t>(upper16bits) << 16) | lower16bits;
 
@@ -74,8 +74,8 @@ void read_bram(Image &image) {
                 std::cerr << "Greska u citanju BRAM-a na poziciji y=" << y << ", x=" << x << "\n";
                 break;
             }
-            float pix1 = q2_14ToFloat(static_cast<uint16_t>((packed >> 16) & 0xFFFF));
-            float pix2 = q2_14ToFloat(static_cast<uint16_t>(packed & 0xFFFF));
+            float pix1 = q1_15ToFloat(static_cast<uint16_t>((packed >> 16) & 0xFFFF));
+            float pix2 = q1_15ToFloat(static_cast<uint16_t>(packed & 0xFFFF));
 
             // Upis nazad u sliku
             image.set_pixel(x, y, 0, pix1);
