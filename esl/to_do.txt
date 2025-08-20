@@ -1,8 +1,0 @@
-Komentarisati source files.
-
-Izmeniti program tako da bude podrzana odgovarajuca velicina slike (Moja preporuka 256x256 - To je slicno onoj knjizi sa kojom odlicno radi)
-
-Bitska analiza pomocu castovanja svih argumenata funkcije pre njenog pozivanja i svih koriscenih promenljivih unutar nje pomocu sc tipova podataka
-
-Virtuelna platforma sa svim komponentama
-
