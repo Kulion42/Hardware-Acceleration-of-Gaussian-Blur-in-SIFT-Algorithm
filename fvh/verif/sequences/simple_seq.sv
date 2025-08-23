@@ -87,7 +87,6 @@ class gaussian_blur_simple_seq extends seq_pkg::gaussian_blur_base_seq;
          //     INITALIZATION OF THE SYSTEM    
         
         $display("\nStarting AXI initialization...\n");
-        `uvm_do_with(req_item,{   req_item.bram_axi_ctrl == 1;   req_item.s00_axi_awaddr == AXI_BASE+START_REG_OFFSET;     req_item.s00_axi_wdata == 32'd0;});  
         `uvm_do_with(req_item,{   req_item.bram_axi_ctrl == 1;   req_item.s00_axi_awaddr == AXI_BASE+RESET_REG_OFFSET;     req_item.s00_axi_wdata == 32'd1;});
         $display("\nAXI initialization finished!\n");
         // ----------------------------------------------------------------------------------------------------------------------------------------------
@@ -122,7 +121,6 @@ class gaussian_blur_simple_seq extends seq_pkg::gaussian_blur_base_seq;
         
         //      STARTING GAUSSIAN BLUR
         $display("\nStarting gaussian blur...\n");
-        `uvm_do_with(req_item,{   req_item.bram_axi_ctrl == 1;   req_item.s00_axi_awaddr == AXI_BASE+RESET_REG_OFFSET;     req_item.s00_axi_wdata == 32'd1;}); 
         `uvm_do_with(req_item,{   req_item.bram_axi_ctrl == 1; req_item.s00_axi_awaddr == AXI_BASE+START_REG_OFFSET; req_item.s00_axi_wdata == 32'd1;});
         // ----------------------------------------------------------------------------------------------------------------------------------------------
         

@@ -28,3 +28,5 @@ fvh/*.txt
 
 psds/tb/.Xil/
 psds/tcl/.Xil/
+psds/tcl/*.str
+psds/project_folder/

@@ -169,7 +169,7 @@ class gaussian_blur_driver extends uvm_driver#(gaussian_blur_seq_item);
                     
                             @(posedge vif.clk iff vif.s00_axi_awready);
                             @(posedge vif.clk iff !vif.s00_axi_awready);
-                            #20
+                            @(posedge vif.clk);
                             
                             vif.s00_axi_awvalid = 1'b0;
                             vif.s00_axi_awaddr = 1'b0;
@@ -178,7 +178,7 @@ class gaussian_blur_driver extends uvm_driver#(gaussian_blur_seq_item);
                             vif.s00_axi_wstrb = 4'b0000;
                     
                             @(posedge vif.clk iff !vif.s00_axi_bvalid); 
-                            #20
+                            @(posedge vif.clk);
                             vif.s00_axi_bready = 1'b0;
                             $display("\nReset signal taken down! \n");
 

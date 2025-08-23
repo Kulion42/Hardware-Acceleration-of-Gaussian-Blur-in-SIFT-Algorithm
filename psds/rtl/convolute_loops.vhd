@@ -135,11 +135,7 @@ begin
         state_reg <= idle;
         
         x_reg <= (others => '0');
-        if HORIZONTAL = false then
-            y_reg <= signed(img_offset_up);
-        else
-            y_reg <= (others => '0');
-        end if;    
+        y_reg <= (others => '0');   
         k_reg <= (others => '0');
         
         sum1_reg <= (others => '0');
@@ -179,6 +175,11 @@ begin
     case state_reg is    
         when idle =>
             if start = '1' then
+                if HORIZONTAL = false then
+                    y_next <= signed(img_offset_up);
+                else
+                    y_next <= (others => '0');
+                end if; 
                 state_next <= loops;                                                
             else
                 ready <= '1';                                                                
@@ -290,14 +291,27 @@ begin
 
 end process; 
 
-address_generation: process(x_reg, y_reg, c_x, c_y, sum1_reg, sum2_reg, bram1_a_rdata, bram1_b_rdata, img_width, img_offset_up)
+address_generation: process(state_reg, x_reg, y_reg, c_x, c_y, sum1_reg, sum2_reg, bram1_a_rdata, bram1_b_rdata, img_width, img_offset_up)
 begin
     x2_coord <= std_logic_vector(x_reg);
     c_y_vec <= std_logic_vector(c_y);
     c_x1_vec <= std_logic_vector(c_x);
     pix2 <= '0'&bram1_b_rdata((DATA_WIDTH-1) -1 downto 0);
 
-    if HORIZONTAL = true then
+    if HORIZONTAL = false then
+        bram2_b_wdata <= std_logic_vector(sum2_reg(DATA_WIDTH -2 downto 0));
+        bram2_a_wdata <= std_logic_vector(sum1_reg(DATA_WIDTH -2 downto 0));
+        if state_reg /= IDLE then
+            y_coord <= std_logic_vector(y_reg- signed(img_offset_up));
+        else
+            y_coord <= (others => '0');
+        end if;
+        x1_coord <= std_logic_vector(x_reg + 1);
+        c_x2_vec <= std_logic_vector(c_x/2);
+        pix1 <= '0'&bram1_b_rdata(R_PIXEL *(DATA_WIDTH-1) -1 downto (DATA_WIDTH-1));
+        img_w1 <= img_width;
+        img_w2 <= std_logic_vector(shift_right(unsigned(img_width), 1));
+    else
         bram2_b_wdata <= std_logic_vector(sum1_reg(DATA_WIDTH -2 downto 0)&sum2_reg(DATA_WIDTH -2 downto 0));
         bram2_a_wdata <= (others => '0');
         y_coord <= std_logic_vector(y_reg);
@@ -306,15 +320,6 @@ begin
         pix1 <= '0'&bram1_a_rdata((DATA_WIDTH-1) -1 downto 0);
         img_w1 <= std_logic_vector(shift_right(unsigned(img_width), 1));
         img_w2 <= img_width;
-    else
-        bram2_b_wdata <= std_logic_vector(sum2_reg(DATA_WIDTH -2 downto 0));
-        bram2_a_wdata <= std_logic_vector(sum1_reg(DATA_WIDTH -2 downto 0));
-        y_coord <= std_logic_vector(y_reg- signed(img_offset_up));
-        x1_coord <= std_logic_vector(x_reg + 1);
-        c_x2_vec <= std_logic_vector(c_x/2);
-        pix1 <= '0'&bram1_b_rdata(R_PIXEL *(DATA_WIDTH-1) -1 downto (DATA_WIDTH-1));
-        img_w1 <= img_width;
-        img_w2 <= std_logic_vector(shift_right(unsigned(img_width), 1));
     end if;
 
 end process;
