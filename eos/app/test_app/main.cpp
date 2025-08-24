@@ -55,11 +55,11 @@ void run_test(
      std::optional<uint16_t> img_per_octave_read = read_hard(IMG_OCTAVE_NUM_REG_OFFSET);
      std::cout << "Image data read." << std::endl;
 
-	if(width_read)           {std::cout << "Width in core is: " << width_read.value();}
-	if(height_read)          {std::cout << "Height in core is: " << height_read.value();}
-	if(offset_up_read)       {std::cout << "Offset up in core is: " << offset_up_read.value();}
-	if(offset_down_read)     {std::cout << "Offset down core is: " << offset_down_read.value();}
-	if(img_per_octave_read)  {std::cout << "Imgs pre octave in core is: " << img_per_octave_read.value();}
+	if(width_read)           {std::cout << "Width in core is: " << width_read.value() << std::endl;}
+	if(height_read)          {std::cout << "Height in core is: " << height_read.value() << std::endl;}
+	if(offset_up_read)       {std::cout << "Offset up in core is: " << offset_up_read.value() << std::endl;}
+	if(offset_down_read)     {std::cout << "Offset down core is: " << offset_down_read.value() << std::endl;}
+	if(img_per_octave_read)  {std::cout << "Imgs pre octave in core is: " << img_per_octave_read.value() << std::endl;}
 
      write_bram(image_data, width*height);
      std::cout << "Image sent to BRAM." << std::endl;
@@ -89,7 +89,7 @@ void run_test(
 
 	std::cout << "Correct: " << correct << ", Incorrect: " << incorrect << ", Zeros: " << zeros << std::endl;
 
-     std::cout << std::endl << "--------------- TEST OF " << image_name << " FINISHED ---------------" << std::endl;
+     std::cout << std::endl << "--------------- TEST OF " << image_name << " FINISHED ---------------" << std::endl << std::endl;
 }
 
 int main()

@@ -311,7 +311,7 @@ ssize_t gaussian_blur_read(struct file *pfile, char __user *buf, size_t length, 
             {
 				// Otpustanje semafora za sinhronizaciju
                 up(&sem);
-                printk(KERN_WARNING "gaussian_blur_read: Dostignut EOF za minor 0\n");
+                printk(KERN_INFO "gaussian_blur_read: Dostignut EOF za minor 0\n");
                 return 0;
             }
 			// citanje vrednosti iz BRAM-a
