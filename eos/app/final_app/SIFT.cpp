@@ -74,26 +74,18 @@ std::vector<Image> generate_gaussian_pyramid_vector(const Image& img, int img_nu
         offset_down = OFFSET_UP_DOWN;
     }
     
+    write_hard(IMG_WIDTH_REG_OFFSET, img.width);
+    write_hard(IMG_HEIGHT_REG_OFFSET, img.height);
+    write_hard(IMG_OFFSET_UP_REG_OFFSET, offset_up); 
+    write_hard(IMG_OFFSET_DOWN_REG_OFFSET, offset_down);
+    write_hard(IMG_OCTAVE_NUM_REG_OFFSET, 0);
+
     write_hard(RESET_REG_OFFSET, 1);
     while (true) 
     {
         std::optional<uint16_t> ready = read_hard(READY_REG_OFFSET);
         if (ready && ready.value()) break;
     }
-
-
-    write_hard(IMG_WIDTH_REG_OFFSET, img.width);
-    write_hard(IMG_HEIGHT_REG_OFFSET, img.height);
-
-    // DEBUG PART
-    // Image start_image(img.width, img.height, 1);
-    // write_bram(img);
-    // read_bram(start_image);
-    // start_image.save("start_image.jpg");
-
-    write_hard(IMG_OFFSET_UP_REG_OFFSET, offset_up); 
-    write_hard(IMG_OFFSET_DOWN_REG_OFFSET, offset_down);
-    write_hard(IMG_OCTAVE_NUM_REG_OFFSET, 0);
 
     write_bram(img);
 	
@@ -107,9 +99,6 @@ std::vector<Image> generate_gaussian_pyramid_vector(const Image& img, int img_nu
     Image base_img(img.width, img.height-offset_up-offset_down, 1);
 
     read_bram(base_img);
-
-    // DEBUG PART
-    // base_img.save("base_image.jpg");
 
     offset_up = 0;
     offset_down = 0;
@@ -125,15 +114,8 @@ std::vector<Image> generate_gaussian_pyramid_vector(const Image& img, int img_nu
         
       for(int j = 1; j < imgs_per_octave; j++)
       {  
-          const Image& prev_img = pyramid_images[i*imgs_per_octave + (j-1)];
-          Image tmp (prev_img.width, prev_img.height, prev_img.channels);
-          
-            write_hard(RESET_REG_OFFSET, 1);
-            while (true) 
-            {
-                std::optional<uint16_t> ready = read_hard(READY_REG_OFFSET);
-                if (ready && ready.value()) break;
-            }
+            const Image& prev_img = pyramid_images[i*imgs_per_octave + (j-1)];
+            Image tmp (prev_img.width, prev_img.height, prev_img.channels);
 
             write_hard(IMG_WIDTH_REG_OFFSET, prev_img.width);
             write_hard(IMG_HEIGHT_REG_OFFSET, prev_img.height);
@@ -141,9 +123,14 @@ std::vector<Image> generate_gaussian_pyramid_vector(const Image& img, int img_nu
             write_hard(IMG_OFFSET_DOWN_REG_OFFSET, offset_down);
             write_hard(IMG_OCTAVE_NUM_REG_OFFSET, j);
 
+            write_hard(RESET_REG_OFFSET, 1);
+            while (true) 
+            {
+                std::optional<uint16_t> ready = read_hard(READY_REG_OFFSET);
+                if (ready && ready.value()) break;
+            }
                 
             write_hard(START_REG_OFFSET, 1);
-            // std::cout << "Waiting for IP to finish." << std::endl;	
             while (true) 
             {
             std::optional<uint16_t> ready = read_hard(READY_REG_OFFSET);
@@ -193,13 +180,8 @@ vector<Keypoint> find_keypoints(const ScaleSpacePyramid& dog_pyramid, float cont
     std::vector<Keypoint> keypoints;
     for (int i = 0; i < dog_pyramid.num_octaves; i++) {
         
-        //const std::vector<Image>& octave = dog_pyramid.images[i];
-        //Treba kopirati celu oktavu iz 1D niza, npr 0-5 element, 6-11 itd.
-        
-        //const std::vector<Image>& octave; Imam problem sa ovim
-        
         auto start_iterator = dog_pyramid.images.begin() + i*dog_pyramid.imgs_per_octave;
-        auto end_iterator = start_iterator + 5; //exclusive je... ne ide 4 nego 5
+        auto end_iterator = start_iterator + 5;
         
         const std::vector<Image>& octave = std::vector<Image>(start_iterator, end_iterator);
         
@@ -234,8 +216,6 @@ ScaleSpacePyramid generate_gradient_pyramid(const ScaleSpacePyramid& pyramid)
         std::vector<Image>(pyramid.num_octaves*pyramid.imgs_per_octave)
     };
     for (int i = 0; i < pyramid.num_octaves; i++) {
-    
-        //grad_pyramid.octaves[i].reserve(grad_pyramid.imgs_per_octave);
         
         int width = pyramid.images[i*pyramid.imgs_per_octave].width;
         int height = pyramid.images[i*pyramid.imgs_per_octave].height;
@@ -376,8 +356,6 @@ Image draw_keypoints(const Image& img, const std::vector<Keypoint>& kps)
 }
 
 //--------------------------------------------------------------------
-
-
 
 void hists_to_vec(float histograms[N_HIST][N_HIST][N_ORI], std::array<uint8_t, 128>& feature_vec)
 {
@@ -583,10 +561,6 @@ bool refine_or_discard_keypoint(Keypoint& kp, const std::vector<Image>& octave,
 std::vector<Image> image_partitions(const Image& img, int num_of_parts)
 {
     std::vector<Image> img_part(num_of_parts);
-    
-    std::string resize = "resized_part_";
-    char numstr[21];
-    std::string res;
         
         Image first_part(img.width, (img.height/num_of_parts) + OFFSET_UP_DOWN , 1);
             for (int x = 0; x < img.width; x++) {
@@ -596,11 +570,7 @@ std::vector<Image> image_partitions(const Image& img, int num_of_parts)
                 }
             }    
             img_part[0] = (first_part); 
-            
-           /*sprintf(numstr, "%d", 1);
-            res = resize + numstr + ".jpg";
-            first_part.save(res) ;*/
-               
+                      
             for (int i = 1; i < num_of_parts -1; i++) {
                 Image partitions(img.width, (img.height/num_of_parts) + 2 * OFFSET_UP_DOWN , 1);
                 for (int x = 0; x < img.width; x++) {
@@ -610,10 +580,6 @@ std::vector<Image> image_partitions(const Image& img, int num_of_parts)
                     }
                 }    
                 img_part[i] = (partitions);
-                
-                /*sprintf(numstr, "%d", i+1);
-                res = resize + numstr + ".jpg";
-                partitions.save(res) ; */ 
             }
 
         Image last_part(img.width, (img.height/num_of_parts) +OFFSET_UP_DOWN, 1);
@@ -625,10 +591,7 @@ std::vector<Image> image_partitions(const Image& img, int num_of_parts)
                 }
         }   
         img_part[num_of_parts - 1]= (last_part);
-           /*  
-            sprintf(numstr, "%d", num_of_parts);
-            res = resize + numstr + ".jpg";
-            last_part.save(res) ; */    
+  
     return img_part;
 }
 
@@ -660,9 +623,6 @@ std::vector<Image> combine_partitions(std::vector< std::vector <Image> > img_vec
                 } 
             }
           comb_part[j]= (combined);
-         /* sprintf(numstr, "%d", j);
-          res = resize + numstr + ".jpg";
-          combined.save(res) ; */
       } 
      
      return comb_part; 
