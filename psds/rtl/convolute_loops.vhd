@@ -121,7 +121,7 @@ signal mul_reg_1, mul_reg_2: std_logic_vector(DATA_WIDTH -1 downto 0);
 signal sigma_center: signed(DATA_WIDTH/2 -1 downto 0);
 signal img_w1, img_w2: std_logic_vector(DATA_WIDTH -1 downto 0);
 signal valid_reg, valid_next: std_logic;
-type state_t is (idle, loops, sum_calc, stal1, stal2, stal3, conv_end);
+type state_t is (idle, loops, sum_calc, stal1, stal2, stal3);
 signal state_reg, state_next : state_t;
 
 begin
@@ -188,7 +188,8 @@ begin
             
         when loops =>           
             if (HORIZONTAL = true and y_reg>= signed(img_height) - signed(img_offset_down) - signed(img_offset_up)) or (HORIZONTAL = false and y_reg>= signed(img_height) - signed(img_offset_down)) then             
-                state_next <= conv_end;          
+                y_next <= (others => '0');
+                state_next <= idle;          
             elsif x_reg>= signed(img_width) then    
                 y_next <= y_reg + 1; 
                 x_next <= (others => '0');
@@ -216,10 +217,7 @@ begin
                 sum1_next <= sum1_reg + unsigned(mul_reg_1);   
                 sum2_next <= sum2_reg + unsigned(mul_reg_2);
                 k_next <= k_reg + 1;
-                state_next <= loops; 
-        when conv_end =>
-                ready <= '1';
-                state_next <= conv_end;                           
+                state_next <= loops;                           
         when others => 
             state_next <= idle;
     
