@@ -20,7 +20,6 @@ update_ip_catalog -rebuild
 ipx::edit_ip_in_project -upgrade true -name edit_gaussian_blur_ip_v1_0 -directory ip_repo ip_repo/gaussian_blur_ip_1_0/component.xml
 update_compile_order -fileset sources_1
 
-
 # Ucitavanje potrebnih fajlova i podesavanje vrha hijerarhije
 add_files -norecurse -copy_to ip_repo/gaussian_blur_ip_1_0/src ../rtl/dsp_unit_mac_shift.vhd 
 add_files -norecurse -copy_to ip_repo/gaussian_blur_ip_1_0/src ../rtl/utils_pkg.vhd 
@@ -74,7 +73,6 @@ update_ip_catalog -rebuild -repo_path ip_repo/gaussian_blur_ip_1_0
 
 # Stvaranje blok-dizajna
 create_bd_design "gaussian_blur_bd"
-update_compile_order -fileset sources_1
 
 # Ubacivanje Zynq procesorske jedinice i njena podesavanja
 startgroup
@@ -82,7 +80,7 @@ create_bd_cell -type ip -vlnv xilinx.com:ip:processing_system7:5.5 processing_sy
 endgroup
 apply_bd_automation -rule xilinx.com:bd_rule:processing_system7 -config {make_external "FIXED_IO, DDR" apply_board_preset "1" Master "Disable" Slave "Disable" }  [get_bd_cells processing_system7_0]
 set_property -dict [list CONFIG.PCW_QSPI_PERIPHERAL_ENABLE {1} CONFIG.PCW_ENET0_PERIPHERAL_ENABLE {1} CONFIG.PCW_SD0_PERIPHERAL_ENABLE {1} CONFIG.PCW_UART1_PERIPHERAL_ENABLE {1} CONFIG.PCW_SPI0_PERIPHERAL_ENABLE {1} CONFIG.PCW_USB0_PERIPHERAL_ENABLE {1} CONFIG.PCW_I2C0_PERIPHERAL_ENABLE {1} CONFIG.PCW_GPIO_MIO_GPIO_ENABLE {1}] [get_bd_cells processing_system7_0]
-set_property -dict [list CONFIG.PCW_FPGA0_PERIPHERAL_FREQMHZ {95}] [get_bd_cells processing_system7_0]
+set_property -dict [list CONFIG.PCW_FPGA0_PERIPHERAL_FREQMHZ {90}] [get_bd_cells processing_system7_0]
 
 # Ubacivanje gaussian_blur IP
 startgroup
@@ -124,7 +122,6 @@ set_property location {3 976 609} [get_bd_cells axi_bram_ctrl_0]
 set_property location {3.5 1513 602} [get_bd_cells gaussian_blur_ip_0]
 regenerate_bd_layout -routing
 
-
 # Stvaranje HDL wrapper-a
 make_wrapper -files [get_files gaussian_blur_project/gaussian_blur_project.srcs/sources_1/bd/gaussian_blur_bd/gaussian_blur_bd.bd] -top
 add_files -norecurse gaussian_blur_project/gaussian_blur_project.gen/sources_1/bd/gaussian_blur_bd/hdl/gaussian_blur_bd_wrapper.vhd
@@ -139,5 +136,3 @@ write_hw_platform -fixed -force -include_bit -file gaussian_blur_bd_wrapper.xsa
 # Kopiranje .xsa i .bit fajlova u vitis folder
 file copy -force gaussian_blur_bd_wrapper.xsa ../vitis/gaussian_blur_bd_wrapper.xsa
 file copy -force gaussian_blur_project/gaussian_blur_project.runs/impl_1/gaussian_blur_bd_wrapper.bit ../vitis/gaussian_blur_bd_wrapper.bit
-
-
