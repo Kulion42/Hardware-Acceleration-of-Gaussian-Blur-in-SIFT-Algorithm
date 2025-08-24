@@ -59,7 +59,7 @@ module gaussian_blur_top;
    initial begin
       clk <= 0;
       rst <= 0;
-      #50 rst <= 1;
+      #500 rst <= 1;
    end
 
    // clock generation

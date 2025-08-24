@@ -93,11 +93,12 @@ class gaussian_blur_config extends uvm_object;
     covergroup img_cover_ipo();   
         option.per_instance = 1;
         ipo_num_cover : coverpoint rand_ipo {
-            bins oct0 = {0};
-            bins oct1 = {1};
-            bins oct2 = {2}; 
-            bins oct3 = {3};
-            bins oct4 = {4};
+            bins ipo0 = {0};
+            bins ipo1 = {1};
+            bins ipo2 = {2}; 
+            bins ipo3 = {3};
+            bins ipo4 = {4};
+            bins ipo5 = {5};
         }
     endgroup
 

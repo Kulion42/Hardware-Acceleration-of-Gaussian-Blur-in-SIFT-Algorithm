@@ -82,6 +82,6 @@ for {set i 0} {$i < $test_count} {incr i} {
         puts "Test $i is over !!!!"
     }
 }
-
+exec xcrg -report_format html -dir $resultDir/gaussian_blur_verif.sim/sim_1/behav/xsim -report_dir $resultDir/coverage
 puts "Regression is over !!!!"
 exit 0

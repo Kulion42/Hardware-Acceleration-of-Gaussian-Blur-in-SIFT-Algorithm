@@ -23,6 +23,8 @@ eos/driver/result.jpg
 fvh/uvm_project/
 fvh/uvm_rand_project/
 fvh/scripts/.Xil/
+fvh/scripts/*.log
+fvh/scripts/xsim.covdb
 fvh/result_files/
 fvh/*.txt
 

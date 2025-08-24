@@ -175,17 +175,17 @@ begin
     case state_reg is    
         when idle =>
             if start = '1' then
+                state_next <= loops;                                               
+            else
+                ready <= '1'; 
                 if HORIZONTAL = false then
                     y_next <= signed(img_offset_up);
                 else
                     y_next <= (others => '0');
-                end if; 
-                state_next <= loops;                                                
-            else
-                ready <= '1';                                                                
+                end if;                                                                 
                 state_next <= idle;
             end if;
-            
+
         when loops =>           
             if (HORIZONTAL = true and y_reg>= signed(img_height) - signed(img_offset_down) - signed(img_offset_up)) or (HORIZONTAL = false and y_reg>= signed(img_height) - signed(img_offset_down)) then             
                 y_next <= (others => '0');
@@ -299,11 +299,7 @@ begin
     if HORIZONTAL = false then
         bram2_b_wdata <= std_logic_vector(sum2_reg(DATA_WIDTH -2 downto 0));
         bram2_a_wdata <= std_logic_vector(sum1_reg(DATA_WIDTH -2 downto 0));
-        if state_reg /= IDLE then
-            y_coord <= std_logic_vector(y_reg- signed(img_offset_up));
-        else
-            y_coord <= (others => '0');
-        end if;
+        y_coord <= std_logic_vector(y_reg- signed(img_offset_up));
         x1_coord <= std_logic_vector(x_reg + 1);
         c_x2_vec <= std_logic_vector(c_x/2);
         pix1 <= '0'&bram1_b_rdata(R_PIXEL *(DATA_WIDTH-1) -1 downto (DATA_WIDTH-1));
