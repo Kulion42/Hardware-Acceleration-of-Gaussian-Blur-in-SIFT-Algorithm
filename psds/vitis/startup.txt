@@ -1,0 +1,9 @@
+Open Vitis Classic IDE
+Create Platform project called "gaus" using .xsa file generated in vitis directory.
+Build platform project ("Out of date" should get removed here).
+Create Application project called "gaus_app".
+Chose Uart supported Hello world application project.
+Copy helloworld.c and images .h files from ./source and ./images into ./gaus_app/src/.
+Build Application project.
+Open Putty or any serial terminal on /dev/ttyUSB1 with baud rate 115200 (microcom -> microcom -p /dev/ttyUSB1 -s 115200).
+Start application using "Launch as Hardware".
