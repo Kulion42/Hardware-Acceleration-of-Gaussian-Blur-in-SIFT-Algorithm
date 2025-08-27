@@ -234,14 +234,17 @@ end process;
 
         horiz_proc : process(x_reg, dx, img_width, y_reg) 
         begin
+
+            -- Default value
+            c_y <= unsigned(y_reg);
+
             if (x_reg + dx) < TO_SIGNED(0, 16)  then
                 c_x <= (others => '0');
             elsif (x_reg + dx) >= signed(img_width) then 
                 c_x <= unsigned(img_width) -1;
             else
                 c_x <= unsigned(x_reg + dx);
-            end if;
-                c_y <= unsigned(y_reg);                    
+            end if;                 
         end process;    
     end generate;
 
@@ -249,6 +252,11 @@ end process;
 
         vertic_proc: process(y_reg, dy, img_offset_up, img_offset_down, img_height, x_reg)
         begin
+
+            -- Default values 
+            c_x <= unsigned(x_reg); 
+            c_y <= unsigned(y_reg);
+
             if TO_INTEGER(signed(img_offset_down)) = 0 and TO_INTEGER(signed(img_offset_up)) = 0  then                    
                 if  (y_reg + dy) < TO_SIGNED(0, 16)  then
                     c_y <= (others => '0');                                   
@@ -257,9 +265,8 @@ end process;
                 else
                     c_y <= unsigned(y_reg + dy);
                 end if;
-            end if;
                         
-            if TO_INTEGER(signed(img_offset_down)) /= 0 and TO_INTEGER(signed(img_offset_up)) /= 0  then
+            elsif TO_INTEGER(signed(img_offset_down)) /= 0 and TO_INTEGER(signed(img_offset_up)) /= 0  then
                 if  (y_reg + dy) < signed(img_offset_up) then
                     c_y <= unsigned(signed(img_offset_up) + dy);                           
                 elsif (y_reg + dy) >= signed(img_height) - signed(img_offset_down) then
@@ -267,9 +274,8 @@ end process;
                 else
                     c_y <= unsigned(y_reg + dy);
                 end if;
-            end if;
                         
-            if TO_INTEGER(signed(img_offset_down)) /= 0 and TO_INTEGER(signed(img_offset_up)) = 0  then                    
+            elsif TO_INTEGER(signed(img_offset_down)) /= 0 and TO_INTEGER(signed(img_offset_up)) = 0  then                    
                 if (y_reg + dy) < TO_SIGNED(0, 16)  then
                     c_y <= (others => '0');                        
                 elsif (y_reg + dy) >= signed(img_height) - signed(img_offset_down) then
@@ -277,9 +283,8 @@ end process;
                 else
                     c_y <= unsigned(y_reg + dy);
                 end if;
-            end if;
                         
-            if TO_INTEGER(signed(img_offset_down)) = 0 and TO_INTEGER(signed(img_offset_up)) /= 0  then
+            elsif TO_INTEGER(signed(img_offset_down)) = 0 and TO_INTEGER(signed(img_offset_up)) /= 0  then
                 if (y_reg + dy) < signed(img_offset_up) then
                     c_y <= unsigned(signed(img_offset_up) + dy);                           
                 elsif (y_reg + dy) >= signed(img_height) then
@@ -287,8 +292,7 @@ end process;
                 else
                     c_y <= unsigned(y_reg + dy);
                 end if;
-            end if;    
-            c_x <= unsigned(x_reg);                   
+            end if;                     
         end process; 
 
     end generate;

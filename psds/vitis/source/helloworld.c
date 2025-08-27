@@ -65,11 +65,21 @@ void run_test(
     uint16_t *end_buffer,
     const char* image_name)
 {
+	// Variables which store periods of execution of various operations 
 	float d1, d2, d3, d4, d5, d6;
+
+	// Variable which stores period of whole image processing in regular flow.
+	float duration_image;
+
+	// Variable which stores calculated throughput
+	float throughput;
+
+	// Variables used to store result validations
 	int incorrect = 0;
 	int correct = 0;
 	int zeros = 0;
 
+	// XTime structures to calculate period of each step execution
 	XTime p0_time, p1_time;
 	XTime p2_time, p3_time;
 	XTime p4_time, p5_time;
@@ -132,6 +142,7 @@ void run_test(
 	//------------------------Write image to BRAM---------------------------------
 	for (uint16_t i = 0; i < width*height; i+=2)
 	{
+		// Pack 2 pixels in uint32_t value and send it to Main BRAM
 		uint32_t packed = (image_data[i] << 16) | image_data[i+1];
 		Xil_Out32(XPAR_AXI_BRAM_CTRL_0_S_AXI_BASEADDR + 2*i, packed);
 	}
@@ -159,6 +170,7 @@ void run_test(
 	//------------------------Read to end_buffer from BRAM---------------------------------
 	for(uint16_t j = 0; j < width*(height - offset_up - offset_down)-1; j+=2)
 	{
+		// Read uint32_t value from Main BRAM and unpack 2 pixels
 		uint32_t packed = Xil_In32(XPAR_AXI_BRAM_CTRL_0_S_AXI_BASEADDR + 2*j);
 		end_buffer[j+1] = packed & 0xFFFF;
 		end_buffer[j] = (packed >> 16) & 0xFFFF;
@@ -169,7 +181,7 @@ void run_test(
 
 	// Compare results
 	for(uint16_t j = 0; j < width*(height - offset_up - offset_down); j++)
-	{
+	{	
 		if(end_buffer[j] < result_data[j] - 1 || end_buffer[j] > result_data[j] + 1)
 			incorrect++;
 		else
@@ -203,7 +215,21 @@ void run_test(
 	printf("Duration of reading the parameters from IP core is %.2f[us].\n", d3);
 	printf("Duration of the sending image to the main BRAM is %.2f[us].\n", d4);
 	printf("Duration of IP core processing the image is %.2f[us].\n", d5);
-	printf("Duration of reading processed image from main BRAM is %.2f[us].\n", d6);
+	printf("Duration of reading processed image from main BRAM is %.2f[us].\n\n", d6);
+
+	duration_image = d1 + d2 + d4 + d5 + d6;
+	throughput = 1000000 / duration_image;
+
+	printf("Duration to process one image in regular work flow is %.2f[us].\n", duration_image);
+	printf("For image with parameters: \n");
+	printf("\tWIDTH:%d\n", width);
+	printf("\tHEIGHT:%d\n", height);
+	printf("\tOFFSET UP:%d\n", offset_up);
+	printf("\tOFFSET DOWN:%d\n", offset_down);
+	printf("\IMG PER OCTAVE:%d\n", img_per_octave);
+	printf("Throughput is %.2f [Images/s]\n", throughput);
+	printf("This equals to %.2f [MPix/s]\n", (throughput*width*height)/1000000);
+
 
     printf("--------------- TEST OF %s FINISHED ---------------\n\n", image_name);
 }
@@ -221,12 +247,18 @@ int main()
 	printf("--- GAUSSIAN BLUR IP CORE ---\n");
 	printf("------------------------------------\n\n");
 
-	run_test(image_data0, result_data0, IMG0_WIDTH_C, IMG0_HEIGHT_C, IMG0_OFFSET_UP_C, IMG0_OFFSET_DOWN_C, IMG0_OCTAVE_C, end_buffer0, "IMAGE 0");
-	run_test(image_data1, result_data1, IMG1_WIDTH_C, IMG1_HEIGHT_C, IMG1_OFFSET_UP_C, IMG1_OFFSET_DOWN_C, IMG1_OCTAVE_C, end_buffer1, "IMAGE 1");
-	run_test(image_data2, result_data2, IMG2_WIDTH_C, IMG2_HEIGHT_C, IMG2_OFFSET_UP_C, IMG2_OFFSET_DOWN_C, IMG2_OCTAVE_C, end_buffer2, "IMAGE 2");
-	run_test(image_data3, result_data3, IMG3_WIDTH_C, IMG3_HEIGHT_C, IMG3_OFFSET_UP_C, IMG3_OFFSET_DOWN_C, IMG3_OCTAVE_C, end_buffer3, "IMAGE 3");
-	run_test(image_data4, result_data4, IMG4_WIDTH_C, IMG4_HEIGHT_C, IMG4_OFFSET_UP_C, IMG4_OFFSET_DOWN_C, IMG4_OCTAVE_C, end_buffer4, "IMAGE 4");
-	run_test(image_data5, result_data5, IMG5_WIDTH_C, IMG5_HEIGHT_C, IMG5_OFFSET_UP_C, IMG5_OFFSET_DOWN_C, IMG5_OCTAVE_C, end_buffer5, "IMAGE 5");
+	run_test(image_data0, result_data0, IMG0_WIDTH_C, IMG0_HEIGHT_C, IMG0_OFFSET_UP_C,
+			IMG0_OFFSET_DOWN_C, IMG0_OCTAVE_C, end_buffer0, "IMAGE 0");
+	run_test(image_data1, result_data1, IMG1_WIDTH_C, IMG1_HEIGHT_C, IMG1_OFFSET_UP_C,
+			IMG1_OFFSET_DOWN_C, IMG1_OCTAVE_C, end_buffer1, "IMAGE 1");
+	run_test(image_data2, result_data2, IMG2_WIDTH_C, IMG2_HEIGHT_C, IMG2_OFFSET_UP_C,
+			IMG2_OFFSET_DOWN_C, IMG2_OCTAVE_C, end_buffer2, "IMAGE 2");
+	run_test(image_data3, result_data3, IMG3_WIDTH_C, IMG3_HEIGHT_C, IMG3_OFFSET_UP_C,
+			IMG3_OFFSET_DOWN_C, IMG3_OCTAVE_C, end_buffer3, "IMAGE 3");
+	run_test(image_data4, result_data4, IMG4_WIDTH_C, IMG4_HEIGHT_C, IMG4_OFFSET_UP_C,
+			IMG4_OFFSET_DOWN_C, IMG4_OCTAVE_C, end_buffer4, "IMAGE 4");
+	run_test(image_data5, result_data5, IMG5_WIDTH_C, IMG5_HEIGHT_C, IMG5_OFFSET_UP_C,
+			IMG5_OFFSET_DOWN_C, IMG5_OCTAVE_C, end_buffer5, "IMAGE 5");
 
 	printf("\n--------------- EXIT ---------------\n");
 	printf("------------------------------------\n\n\n\n");
