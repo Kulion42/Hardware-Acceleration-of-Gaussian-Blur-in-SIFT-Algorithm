@@ -45,11 +45,11 @@ class gaussian_blur_simple_seq extends seq_pkg::gaussian_blur_base_seq;
             bins group_down_6 = {[12289:14336]};
             bins group_down_7 = {[14337:15360]};
             bins group_down_8 = {[15361:16384]};
-            bins group_up_9 = {[16385:20480]};
-            bins group_up_10 = {[20481:24576]};
-            bins group_up_11 = {[24577:28672]};
-            bins group_up_12 = {[28673:32767]};
-            illegal_bins illegal_vals_up = {[32768:65536]};
+            bins group_down_9 = {[16385:20480]};
+            bins group_down_10 = {[20481:24576]};
+            bins group_down_11 = {[24577:28672]};
+            bins group_down_12 = {[28673:32767]};
+            illegal_bins illegal_vals_down = {[32768:65536]};
         }
     endgroup
     
