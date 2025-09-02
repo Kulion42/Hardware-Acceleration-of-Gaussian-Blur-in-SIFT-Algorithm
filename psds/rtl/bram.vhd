@@ -5,6 +5,7 @@ use work.utils_pkg.ALL;
 
 entity bram is
     generic (WIDTH: positive := 15;
+            -- Variable used because we have one 15 bit BRAM and one 30 bit BRAM
              R_W_BYTES: positive := 2;
              SIZE: positive := 60000);
     port (clk_a : in std_logic;
@@ -23,6 +24,7 @@ end bram;
 
 architecture Behavioral of bram is
 
+    -- RAM memory
     type ram_type is array(SIZE/R_W_BYTES-1 downto 0) of bit_vector(R_W_BYTES*WIDTH-1 downto 0);
     signal RAM: ram_type;
     
@@ -31,6 +33,8 @@ architecture Behavioral of bram is
        
 begin
 
+    -- enable signal is used to control both BRAM functionalities (Without it, BRAM doesn't work)
+    -- write enable signal controls if BRAM can be written to
     process(clk_a, clk_b)
     begin
         if (rising_edge(clk_a)) then

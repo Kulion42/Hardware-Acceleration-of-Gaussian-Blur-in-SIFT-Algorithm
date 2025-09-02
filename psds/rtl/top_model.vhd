@@ -43,20 +43,21 @@ Port (
     reset: in std_logic;
     start: in std_logic;
     
-    --IMAGE ELEMENTS
+    -- IMAGE ELEMENTS (Values from Memory Subsystem)
     img_height: in std_logic_vector(DATA_WIDTH -1 downto 0);
     img_width: in std_logic_vector(DATA_WIDTH -1 downto 0);
     img_offset_up: in std_logic_vector(DATA_WIDTH -1 downto 0); 
     img_offset_down: in std_logic_vector(DATA_WIDTH -1 downto 0);
     img_per_octave: in std_logic_vector(DATA_WIDTH -1 downto 0);
     
-    --CPU PORTS FOR MAIN_BRAM
+    -- Port for Main BRAM to be filled from CPU side.
     main_bram_a_cpu_en: in std_logic;
     main_bram_a_cpu_we: in std_logic_vector(3 downto 0);
     main_bram_a_cpu_addr: in std_logic_vector(log2c(BRAM_SIZE/2) - 1 downto 0);
     main_bram_a_cpu_rdata: out std_logic_vector(2 *DATA_WIDTH -1 downto 0);
     main_bram_a_cpu_wdata: in std_logic_vector(2 *DATA_WIDTH -1 downto 0); 
     
+    -- Ready signal of top gaussian blur module
     ready: out std_logic
 );
 end top_model;
@@ -84,7 +85,6 @@ Port (
     img_per_octave: in std_logic_vector(DATA_WIDTH  -1 downto 0);
     
     --BRAMS  
-    main_bram_a_en: in std_logic; 
     main_bram_b_en: out std_logic;
     main_bram_b_we: out std_logic_vector(3 downto 0);
     main_bram_b_addr: out std_logic_vector(log2c(BRAM_SIZE/2) - 1 downto 0);
@@ -158,7 +158,6 @@ Port map(
     img_per_octave => img_per_octave,
     
     --BRAMS
-    main_bram_a_en => main_bram_a_cpu_en,
     main_bram_b_en => main_bram_b_en_blur_s,
     main_bram_b_we => main_bram_b_we_blur_s,
     main_bram_b_addr => main_bram_b_addr_blur_s,

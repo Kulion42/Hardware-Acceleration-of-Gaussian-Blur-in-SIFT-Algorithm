@@ -21,27 +21,27 @@ entity gaussian_blur_v1_0_S00_AXI is
 	port (
 		-- Users to add ports here
 		
-		--Vrednost koja se upisuje
+		-- Value which is coming from CPU and is transfered towards gaussian blur
         reg_data_o : out std_logic_vector(DATA_WIDTH - 1 downto 0);
     
-        --kontrolni signali
+        -- Control write enable signals
         img_height_we_o: out std_logic;
         img_width_we_o: out std_logic;
         img_offset_up_we_o: out std_logic; 
         img_offset_down_we_o: out std_logic;
         img_per_octave_we_o: out std_logic;
-        
         start_we_o : out std_logic;
         reset_we_o : out std_logic;
-        --ready_wr_o : out std_logic;
+		-- Ready is changed from gaussian blur side.
+        -- ready_we_o : out std_logic;
                
-        --software read - podatak nazad kroz axi ka softveru
+        -- Software (CPU) Read. Data from gaussian blur back to AXI Lite and CPU. 
         img_height_axi_i: in std_logic_vector(DATA_WIDTH -1 downto 0);
         img_width_axi_i: in std_logic_vector(DATA_WIDTH -1 downto 0);
         img_offset_up_axi_i: in std_logic_vector(DATA_WIDTH -1 downto 0); 
         img_offset_down_axi_i: in std_logic_vector(DATA_WIDTH -1 downto 0);
         img_per_octave_axi_i: in std_logic_vector(DATA_WIDTH -1 downto 0);
-        
+		-- All 3 can be read from CPU. Reset is not necessary.
         ready_axi_i : in std_logic;
         start_axi_i : in std_logic;
         reset_axi_i : in std_logic;
@@ -139,7 +139,7 @@ architecture arch_imp of gaussian_blur_v1_0_S00_AXI is
 	---- Number of Slave Registers 8
 	signal slv_reg_rden	: std_logic;
 	signal slv_reg_wren	: std_logic;
-	signal reg_data_out	:std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
+	signal reg_data_out	: std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
 	signal byte_index	: integer;
 	signal aw_en	: std_logic;
 
@@ -234,6 +234,8 @@ begin
 	-- and the slave is ready to accept the write address and write data.
 	slv_reg_wren <= axi_wready and S_AXI_WVALID and axi_awready and S_AXI_AWVALID ;
 
+	----------------------------------------------------------------------------------------------------------------------------------
+	-- Process which controls write enable signals.
 	process (S_AXI_ACLK)
 	variable loc_addr :std_logic_vector(OPT_MEM_ADDR_BITS downto 0); 
 	begin
@@ -248,10 +250,10 @@ begin
             
            start_we_o <= '0';
            reset_we_o <= '0';
-           --ready_wr_o <= '0'; --mozda treba mozda ne, mislim da ne
+           --ready_we_o <= '0';
 	    else
 	    
-	       --default
+	       -- Default values
 	       img_height_we_o <= '0';
            img_width_we_o  <= '0';
            img_offset_up_we_o  <= '0';
@@ -260,7 +262,9 @@ begin
             
            start_we_o <= '0';
            reset_we_o <= '0';
-           --ready_wr_o <= '0'; --mozda treba mozda ne, mislim da ne
+
+		   -- CPU can't change ready register
+           --ready_we_o <= '0';
 	    
 	      loc_addr := axi_awaddr(ADDR_LSB + OPT_MEM_ADDR_BITS downto ADDR_LSB);
 	      if (slv_reg_wren = '1') then
@@ -280,13 +284,16 @@ begin
 	          when "110" =>
 	               start_we_o <= '1';
 	          when "111" =>
-	               --ready_wr_o <= '1'; ne znam da li treba cpu da moze da promeni
+	               --ready_we_o <= '1';
 	          when others =>
 	        end case;
 	      end if;
 	    end if;
 	  end if;                   
 	end process; 
+
+	----------------------------------------------------------------------------------------------------------------------------------
+
 
 	-- Implement write response logic generation
 	-- The write response and response valid signals are asserted by the slave 
@@ -369,6 +376,9 @@ begin
 	-- and the slave is ready to accept the read address.
 	slv_reg_rden <= axi_arready and S_AXI_ARVALID and (not axi_rvalid) ;
 
+	----------------------------------------------------------------------------------------------------------------------------------
+	-- Process for CPU to read values from registers. reg_data_out is assigned one of the register values depending on address.
+	-- reg_data_out is later assigned to axi_rdata.
 	process (img_width_axi_i, img_height_axi_i, img_offset_up_axi_i, img_offset_down_axi_i, img_per_octave_axi_i, ready_axi_i, reset_axi_i, start_axi_i, axi_araddr, S_AXI_ARESETN, slv_reg_rden)
 	variable loc_addr :std_logic_vector(OPT_MEM_ADDR_BITS downto 0);
 	begin
@@ -396,6 +406,8 @@ begin
 	    end case;
 	end process; 
 
+	----------------------------------------------------------------------------------------------------------------------------------
+
 	-- Output register or memory read data
 	process( S_AXI_ACLK )
 	begin
@@ -408,7 +420,7 @@ begin
 	        -- acceptance of read address by the slave (axi_arready), 
 	        -- output the read dada 
 	        -- Read address mux
-	          axi_rdata <= reg_data_out;     -- register read data
+	          axi_rdata <= reg_data_out;
 	      end if;   
 	    end if;
 	  end if;
@@ -417,11 +429,12 @@ begin
 
 	-- Add user logic here
 	
-	--register koji stalluje podatak za 1 takt, sa vezbi
+	-- Process which accepts value from AXI Lite towards CPU.
+	-- Register which stalls data for 1 clock, this was introduced on lectures
         process (S_AXI_ACLK)
         begin
             if (S_AXI_ACLK'event and S_AXI_ACLK = '1') then
-            reg_data_o <= S_AXI_WDATA((DATA_WIDTH-1) downto 0); -- za ovo nisam siguran
+            reg_data_o <= S_AXI_WDATA((DATA_WIDTH-1) downto 0);
          end if;
         end process;
         

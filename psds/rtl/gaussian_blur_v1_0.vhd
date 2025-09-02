@@ -9,17 +9,14 @@ entity gaussian_blur_v1_0 is
         
         --DATA WIDTH
         DATA_WIDTH : natural := 16;
-    
         --SIZE OF BRAMS AND ROM
         KERNEL_ROM_SIZE : natural := 78; --FIXED 
         BRAM_SIZE : natural := 60000; --FIXED
-
-
-        BRAM_ADDR_WIDTH : natural := 15; --log2c(BRAM_SIZE = 30.000) = 15. Iz nekog razloga ne moze ova funckija u portove
+        BRAM_ADDR_WIDTH : natural := 15;
         BYTE_OFFSET : natural := 2;
+
 		-- User parameters ends
 		-- Do not modify the parameters beyond this line
-
 
 		-- Parameters of Axi Slave Bus Interface S00_AXI
 		C_S00_AXI_DATA_WIDTH	: integer	:= 32;
@@ -28,18 +25,15 @@ entity gaussian_blur_v1_0 is
 	port (
 		-- Users to add ports here
     
-        --Ports for bram controller
+        --Ports for BRAM controller. BRAM controller is used between Main BRAM and IP Core.
         main_bram_a_en_i: in std_logic;
         main_bram_a_we_i: in std_logic_vector(3 downto 0);
-        main_bram_a_addr_i: in std_logic_vector(BRAM_ADDR_WIDTH + BYTE_OFFSET - 1 downto 0);    --17 bit
+        main_bram_a_addr_i: in std_logic_vector(BRAM_ADDR_WIDTH + BYTE_OFFSET - 1 downto 0);    --17 bit (Byte addressable from CPU Side)
         main_bram_a_rdata_o: out std_logic_vector(2*DATA_WIDTH - 1 downto 0);                   --32 bit
         main_bram_a_wdata_i: in std_logic_vector(2*DATA_WIDTH - 1 downto 0);                    --32 bit
 
-
-
 		-- User ports ends
 		-- Do not modify the ports beyond this line
-
 
 		-- Ports of Axi Slave Bus Interface S00_AXI
 		s00_axi_aclk	: in std_logic;
@@ -70,58 +64,55 @@ architecture arch_imp of gaussian_blur_v1_0 is
     
     --signal declaration
     
-    signal system_reset_s : std_logic; --koristi se samo za memorijski podsistem
+    -- Reset signal used for memory subsystem.
+    signal system_reset_s : std_logic;
+
+    ---------------------------- Interface to the AXI LITE controller ----------------------------
     
+    -- Output of AXI Lite, Input into gaussian blur. Value transfered from CPU to gaussian blur IP.
+    signal reg_data_s : std_logic_vector(DATA_WIDTH - 1 downto 0);
     
-    --Interface to the AXI LITE controller
-    
-    signal reg_data_s : std_logic_vector(DATA_WIDTH - 1 downto 0); --izlaz axi lite, ulaz u memorijski podsistem
-    
-    signal img_height_we_s: std_logic; --izlazni axi lite a ulazni u memorijski podsistem
+    -- Outputs of the AXI Lite, Inputs into Memory subsystem. Write enable signals for CPU Write to Memory Subsystem.
+    signal img_height_we_s: std_logic;
     signal img_width_we_s: std_logic;
     signal img_offset_up_we_s: std_logic; 
     signal img_offset_down_we_s: std_logic;
     signal img_per_octave_we_s: std_logic;
-            
     signal start_we_s : std_logic;
     signal reset_we_s : std_logic;
-    --signal ready_we_s : std_logic;
+    -- signal ready_we_s : std_logic;
                
-    --software read
-    signal img_height_axi_s: std_logic_vector(DATA_WIDTH -1 downto 0);          --16 bit
-    signal img_width_axi_s: std_logic_vector(DATA_WIDTH -1 downto 0);           --16 bit
-    signal img_offset_up_axi_s: std_logic_vector(DATA_WIDTH -1 downto 0);       --16 bit
-    signal img_offset_down_axi_s: std_logic_vector(DATA_WIDTH -1 downto 0);     --16 bit
-    signal img_per_octave_axi_s: std_logic_vector(DATA_WIDTH -1 downto 0);      --16 bit
-        
+    -- Outputs of Memory Subsystem. Input into AXI Lite. Register Values to be read by CPU.
+    signal img_height_axi_s: std_logic_vector(DATA_WIDTH -1 downto 0);
+    signal img_width_axi_s: std_logic_vector(DATA_WIDTH -1 downto 0);
+    signal img_offset_up_axi_s: std_logic_vector(DATA_WIDTH -1 downto 0);
+    signal img_offset_down_axi_s: std_logic_vector(DATA_WIDTH -1 downto 0);
+    signal img_per_octave_axi_s: std_logic_vector(DATA_WIDTH -1 downto 0);
     signal ready_axi_s : std_logic;
     signal start_axi_s : std_logic;
     signal reset_axi_s : std_logic;
+
+    ----------------------------------------------------------------------------------------------
            
-    --Interace to the Gaussian blur module
+    ---------------------------- Interace to the Gaussian blur module ----------------------------
     
+    -- Outputs of Memory Subsystem. Input into Gaussian Blur. Register Values to be read by Gaussian Blur top model.
     signal reset_reg_s: std_logic;
     signal start_reg_s: std_logic;
     signal ready_reg_s: std_logic;
-    
-    --IMAGE ELEMENTS
-    signal img_height_reg_s: std_logic_vector(DATA_WIDTH -1 downto 0);          --16 bit     
-    signal img_width_reg_s: std_logic_vector(DATA_WIDTH -1 downto 0);           --16 bit
-    signal img_offset_up_reg_s: std_logic_vector(DATA_WIDTH -1 downto 0);       --16 bit
-    signal img_offset_down_reg_s: std_logic_vector(DATA_WIDTH -1 downto 0);     --16 bit
-    signal img_per_octave_reg_s: std_logic_vector(DATA_WIDTH -1 downto 0);      --16 bit
+    signal img_height_reg_s: std_logic_vector(DATA_WIDTH -1 downto 0);     
+    signal img_width_reg_s: std_logic_vector(DATA_WIDTH -1 downto 0);
+    signal img_offset_up_reg_s: std_logic_vector(DATA_WIDTH -1 downto 0);
+    signal img_offset_down_reg_s: std_logic_vector(DATA_WIDTH -1 downto 0);
+    signal img_per_octave_reg_s: std_logic_vector(DATA_WIDTH -1 downto 0);
 
-
-    --signal main_bram_a_wdata_i_s: std_logic_vector(2*(DATA_WIDTH-1)-1 downto 0); --30 bit
-    --signal main_bram_a_rdata_o_s: std_logic_vector(2*(DATA_WIDTH-1)-1 downto 0); --30 bit
-    --end of user signals
-
+    ----------------------------------------------------------------------------------------------
 
 	-- component declaration
 	component gaussian_blur_v1_0_S00_AXI 
 		generic (
 		
-		--DATA WIDTH
+		-- Data Width User Parameter
         DATA_WIDTH : natural := 16;    
 		
 		C_S_AXI_DATA_WIDTH	: integer	:= 32;
@@ -129,31 +120,30 @@ architecture arch_imp of gaussian_blur_v1_0 is
 		);
 		port (
 		
-		--User ports added here
+        -- Value which is coming from CPU and is transfered towards gaussian blur
 		reg_data_o : out std_logic_vector(DATA_WIDTH - 1 downto 0);
-    
+
+        -- Control write enable signals.
         img_height_we_o: out std_logic;
         img_width_we_o: out std_logic;
         img_offset_up_we_o: out std_logic; 
         img_offset_down_we_o: out std_logic;
         img_per_octave_we_o: out std_logic;
-        
         start_we_o : out std_logic;
         reset_we_o : out std_logic;
-        --ready_we_o : out std_logic;
+        -- ready_we_o : out std_logic;
                
-        --software read
+        -- Software (CPU) Read. Data from gaussian blur back to AXI Lite and CPU. 
         img_height_axi_i: in std_logic_vector(DATA_WIDTH -1 downto 0);
         img_width_axi_i: in std_logic_vector(DATA_WIDTH -1 downto 0);
         img_offset_up_axi_i: in std_logic_vector(DATA_WIDTH -1 downto 0); 
         img_offset_down_axi_i: in std_logic_vector(DATA_WIDTH -1 downto 0);
         img_per_octave_axi_i: in std_logic_vector(DATA_WIDTH -1 downto 0);
-        
         ready_axi_i : in std_logic;
         start_axi_i : in std_logic;
         reset_axi_i : in std_logic;
         
-        --END user ports
+        -- END user ports
         
 		S_AXI_ACLK	: in std_logic;
 		S_AXI_ARESETN	: in std_logic;
@@ -182,39 +172,41 @@ architecture arch_imp of gaussian_blur_v1_0 is
      
     component top_model 
     Generic(
-    --DATA WIDTH
+    -- DATA WIDTH
     DATA_WIDTH : natural := 16;
     
-    --SIZE OF BRAMS AND ROM
+    -- SIZE OF BRAMS AND ROM
     KERNEL_ROM_SIZE : natural := 77; --FIXED 
     BRAM_SIZE : natural := 60000 --FIXED
     );
-    Port ( 
+    Port (
+
     clk: in std_logic;
     reset: in std_logic;
     start: in std_logic;
     
-    --IMAGE ELEMENTS
+    -- IMAGE ELEMENTS (Values from Memory Subsystem)
     img_height: in std_logic_vector(DATA_WIDTH -1 downto 0);
     img_width: in std_logic_vector(DATA_WIDTH -1 downto 0);
     img_offset_up: in std_logic_vector(DATA_WIDTH -1 downto 0); 
     img_offset_down: in std_logic_vector(DATA_WIDTH -1 downto 0);
     img_per_octave: in std_logic_vector(DATA_WIDTH -1 downto 0);
     
-    --CPU PORTS FOR MAIN_BRAM
+    -- Port for Main BRAM to be filled from CPU side.
     main_bram_a_cpu_en: in std_logic;
     main_bram_a_cpu_we: in std_logic_vector(3 downto 0);
     main_bram_a_cpu_addr: in std_logic_vector(log2c(BRAM_SIZE/2) - 1 downto 0);
     main_bram_a_cpu_rdata: out std_logic_vector(2 *DATA_WIDTH -1 downto 0);
     main_bram_a_cpu_wdata: in std_logic_vector(2 *DATA_WIDTH -1 downto 0); 
     
+    -- Ready signal of top gaussian blur module
     ready: out std_logic
     );
     end component;
     
     component memory_subsystem 
     Generic(
-    --DATA WIDTH
+    -- DATA WIDTH
     DATA_WIDTH : natural := 16);
 
     Port (
@@ -223,43 +215,42 @@ architecture arch_imp of gaussian_blur_v1_0 is
     
     -----------------------------------------------------------------
     
-    --INTERFACE TO AXI LITE
-    
+    -- INTERFACE TO AXI LITE
     reg_data_i : in std_logic_vector(DATA_WIDTH - 1 downto 0); --16 bita
     
+    -- Write enable signals for all of the registers
     img_height_we_i: in std_logic; 
     img_width_we_i: in std_logic;
     img_offset_up_we_i: in std_logic; 
     img_offset_down_we_i: in std_logic;
     img_per_octave_we_i: in std_logic;
-    
     start_we_i : in std_logic;
     reset_we_i : in std_logic;
-    --ready_wr_i : in std_logic;
+    -- ready_we_i : in std_logic;
        
-    --software read
+    -- Software read. Register values towards AXI Lite.
     img_height_axi_o: out std_logic_vector(DATA_WIDTH -1 downto 0);         --16 bita
     img_width_axi_o: out std_logic_vector(DATA_WIDTH -1 downto 0);          --16 bita
     img_offset_up_axi_o: out std_logic_vector(DATA_WIDTH -1 downto 0);      --16 bita
     img_offset_down_axi_o: out std_logic_vector(DATA_WIDTH -1 downto 0);    --16 bita
     img_per_octave_axi_o: out std_logic_vector(DATA_WIDTH -1 downto 0);     --16 bita
-    
     ready_axi_o : out std_logic;
-    start_axi_o : out std_logic; --ako treba da se cita od strane softvera, treba dodati
+    start_axi_o : out std_logic;
     reset_axi_o : out std_logic;
      
-    --INTERFACE TO GAUSSIAN_BLUR
+    ----------------------------------------------------------------------------------------------------------------------------------
+
+    -- INTERFACE TO GAUSSIAN_BLUR
     
-    --registers 
+    -- Gaussian blur read. Register values towards Top model.
     img_height_o: out std_logic_vector(DATA_WIDTH -1 downto 0);                 --16 bita
     img_width_o: out std_logic_vector(DATA_WIDTH -1 downto 0);                  --16 bita
     img_offset_up_o: out std_logic_vector(DATA_WIDTH -1 downto 0);              --16 bita
     img_offset_down_o: out std_logic_vector(DATA_WIDTH -1 downto 0);            --16 bita
     img_per_octave_o: out std_logic_vector(DATA_WIDTH -1 downto 0);             --16 bita
-    
     start_o : out std_logic;
     reset_o : out std_logic;
-    
+    -- Gaussian blur write. Ready is set by Top model.
     ready_i : in std_logic
    );
 
@@ -275,30 +266,33 @@ gaussian_blur_v1_0_S00_AXI_inst : gaussian_blur_v1_0_S00_AXI
 	)
 	port map (
 	   
-	    --user ports
+        -- User defined ports
+
+	    -- Value which is coming from CPU towards Gaussian blur (Top Model)
 	    reg_data_o => reg_data_s,
     
+        -- Control write enable signals
         img_height_we_o => img_height_we_s,
         img_width_we_o => img_width_we_s,
         img_offset_up_we_o => img_offset_up_we_s,
         img_offset_down_we_o => img_offset_down_we_s,
         img_per_octave_we_o => img_per_octave_we_s,
-        
         start_we_o => start_we_s,
         reset_we_o => reset_we_s, 
-        --ready_we_o => ready_we_s;
+        -- Ready is changed from gaussian blur side.
+        -- ready_we_o => ready_we_s;
                
-        --software read
+        -- Software (CPU) Read. Data from gaussian blur back to AXI Lite and CPU. 
         img_height_axi_i => img_height_axi_s,
         img_width_axi_i => img_width_axi_s,
         img_offset_up_axi_i => img_offset_up_axi_s,
         img_offset_down_axi_i => img_offset_down_axi_s,
         img_per_octave_axi_i => img_per_octave_axi_s,
-        
         ready_axi_i => ready_axi_s, 
         start_axi_i => start_axi_s, 
         reset_axi_i => reset_axi_s, 
 	
+        -- End of user defined ports
 	
 		S_AXI_ACLK	=> s00_axi_aclk,
 		S_AXI_ARESETN	=> s00_axi_aresetn,
@@ -325,10 +319,10 @@ gaussian_blur_v1_0_S00_AXI_inst : gaussian_blur_v1_0_S00_AXI
 
 	-- Add user logic here
 	
+    -- Reset signal used for memory subsystem
     system_reset_s <= not s00_axi_aresetn;
-    
            
-    --Top modul
+    -- Top module
     top_model_instance: top_model
     generic map(
     DATA_WIDTH => DATA_WIDTH,
@@ -340,23 +334,24 @@ gaussian_blur_v1_0_S00_AXI_inst : gaussian_blur_v1_0_S00_AXI
     reset => reset_reg_s,
     start => start_reg_s,
     
-    --IMAGE ELEMENTS
+    -- IMAGE ELEMENTS (Values from Memory Subsystem)
     img_height => img_height_reg_s,
     img_width => img_width_reg_s,
     img_offset_up => img_offset_up_reg_s, 
     img_offset_down => img_offset_down_reg_s,
     img_per_octave => img_per_octave_reg_s,
     
-    --BRAMS
+    -- Port for Main BRAM to be filled from CPU side.
     main_bram_a_cpu_en => main_bram_a_en_i,
     main_bram_a_cpu_we => main_bram_a_we_i,
     main_bram_a_cpu_addr => main_bram_a_addr_i(BRAM_ADDR_WIDTH + BYTE_OFFSET - 1 downto BYTE_OFFSET),
     main_bram_a_cpu_rdata => main_bram_a_rdata_o,
-    main_bram_a_cpu_wdata => main_bram_a_wdata_i,    --odsecanje? 
+    main_bram_a_cpu_wdata => main_bram_a_wdata_i,
     
+    -- Ready signal of top gaussian blur module
     ready => ready_reg_s);
     
-    
+    -- Memory Subsystem instance
     memory_subsystem_instsance: memory_subsystem
     generic map(
             DATA_WIDTH => DATA_WIDTH
@@ -368,21 +363,22 @@ gaussian_blur_v1_0_S00_AXI_inst : gaussian_blur_v1_0_S00_AXI
             
             -----------------------------------------------------------------
             
-            --INTERFACE TO AXI LITE
+            -- INTERFACE TO AXI LITE
             
+            -- Input data from AXI interface. This data is written to one of the registers
             reg_data_i => reg_data_s,
             
+            -- Write enable signals for all of the registers
             img_height_we_i => img_height_we_s,
             img_width_we_i => img_width_we_s,
             img_offset_up_we_i => img_offset_up_we_s,
             img_offset_down_we_i => img_offset_down_we_s,
             img_per_octave_we_i => img_per_octave_we_s,
-            
             start_we_i  => start_we_s,
             reset_we_i  => reset_we_s,
-            --ready_we_i  => ready_we_s,
+            -- ready_we_i  => ready_we_s,
                
-            --software read
+            -- Software read. Register values towards AXI Lite.
             img_height_axi_o => img_height_axi_s,
             img_width_axi_o => img_width_axi_s,
             img_offset_up_axi_o => img_offset_up_axi_s,
@@ -393,32 +389,21 @@ gaussian_blur_v1_0_S00_AXI_inst : gaussian_blur_v1_0_S00_AXI
             start_axi_o => start_axi_s,
             reset_axi_o => reset_axi_s,
             
+            ----------------------------------------------------------------------------------------------------------------------------------
+
+            -- INTERFACE TO GAUSSIAN_BLUR
             
-            --INTERFACE TO GAUSSIAN_BLUR
-            
-            --registers 
+            -- Gaussian blur read. Register values towards Top model. 
             img_height_o => img_height_reg_s,
             img_width_o => img_width_reg_s,
             img_offset_up_o => img_offset_up_reg_s,
             img_offset_down_o => img_offset_down_reg_s,
             img_per_octave_o => img_per_octave_reg_s,
-            
             start_o => start_reg_s,
             reset_o => reset_reg_s,
+            -- ready is set from gaussian_blur
             ready_i => ready_reg_s
             ); 
-    
-    
-    
-    --Addition to instaces
-    
-    
-    
-    
-    --15 bit data concatenation
-    --main_bram_a_rdata_o <= '0'&main_bram_a_rdata_o_s(29 downto 15)&'0'&main_bram_a_rdata_o_s(14 downto 0);
-    --main_bram_a_wdata_i_s <= main_bram_a_wdata_i(30 downto 16)&main_bram_a_wdata_i(14 downto 0);
-    
     
 	-- User logic ends
 

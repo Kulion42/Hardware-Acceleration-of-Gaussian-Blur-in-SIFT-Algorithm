@@ -33,17 +33,21 @@ Generic (
 Port ( 
     clk: in std_logic;
     reset: in std_logic;
-      
+    
+    -- Img per scale parameter
     img_number: in std_logic_vector(DATA_WIDTH- 1 downto 0);
     
+    -- Read address and enable signals
     kernel_rom_a_en: in std_logic;
     kernel_rom_a_addr: in std_logic_vector(log2c(KERNEL_ROM_SIZE) -1 downto 0);
     kernel_rom_b_en: in std_logic;
     kernel_rom_b_addr: in std_logic_vector(log2c(KERNEL_ROM_SIZE) -1 downto 0);
     
+    -- Output read values
     kernel_rom_a_data: out std_logic_vector(DATA_WIDTH -1 downto 0); 
     kernel_rom_b_data: out std_logic_vector(DATA_WIDTH -1 downto 0);    
     
+    -- sigma_size -> f(img_number)
     sigma_size: out std_logic_vector(DATA_WIDTH/2 -1 downto 0) 
     
 );
@@ -53,14 +57,20 @@ architecture Mixed of kernel_rom is
     attribute use_dsp : string;
     attribute use_dsp of Mixed : architecture is "yes";
 
+    -- Out of date.
     constant LUT_DEPTH : natural := 3;
+    -- Width of word used to describe number of values and offsets
     constant LUT_WIDTH : natural := 8; 
     
+    -- Data type used to represent number of values and offsets
     type sigma_lut is array (0 to 5) of std_logic_vector(LUT_WIDTH -1 downto 0);
     
+    -- Number of values in each row
     signal SIGMA_VALS : sigma_lut := (
        "00001001", "00001001", "00001011", "00001101", "00001111", "00010011"
     );	
+
+-- Out of date. Not used anymore. It was used for addr. gen.
 component dsp_unit_add
     generic (WIDTH1: natural := 16;
              WIDTH2: natural := 16
@@ -72,8 +82,10 @@ component dsp_unit_add
           out_res: out std_logic_vector(WIDTH1 - 1 downto 0));
 end component;
 
-
+-- Address signals
 signal addr_a_out, addr_b_out: std_logic_vector(DATA_WIDTH/2 -1 downto 0);
+
+-- ROM memory
 type rom_type is array (0 to KERNEL_ROM_SIZE-1) of std_logic_vector(DATA_WIDTH -1 downto 0);
 signal ROM: rom_type := (
     -- First row: 9 elements
@@ -91,6 +103,8 @@ signal ROM: rom_type := (
     --Dummy values to fill the rest of the ROM
     "0000000000000000", "0000000000000000"
     );
+
+-- Values of offsets. 0, 9, 18, 29, 42, 57
 signal ROM_ADDR_OFF: sigma_lut := ( "00000000", "00001001", "00010010", "00011101", "00101010", "00111001") ;                           
 begin
 
@@ -104,6 +118,7 @@ begin
         kernel_rom_a_data <= (others => '0');
         kernel_rom_b_data <= (others => '0');
 
+    -- On rising edge of clock, use address calculated below to access ROM and recieve data
     elsif (rising_edge(clk)) then
          if ( kernel_rom_a_en= '1') then
                 kernel_rom_a_data <= ROM(to_integer(unsigned(addr_a_out)));
@@ -119,9 +134,10 @@ end process;
 -- The kernel ROM is divided into 6 sections, each section has a different size
 -- The address offset is used to select the correct section based on the image number
 -- The address offset is added to the kernel ROM address to get the correct address for the kernel ROM
-             
 addr_a_out <= std_logic_vector(unsigned(kernel_rom_a_addr) + unsigned(ROM_ADDR_OFF(TO_INTEGER(unsigned(img_number)))));
 addr_b_out <= std_logic_vector(unsigned(kernel_rom_b_addr) + unsigned(ROM_ADDR_OFF(TO_INTEGER(unsigned(img_number)))));
+
+-- Value used to calculate center and to know k loop range
 sigma_size <= SIGMA_VALS(TO_INTEGER(unsigned(img_number)));
                                                        
 end Mixed;

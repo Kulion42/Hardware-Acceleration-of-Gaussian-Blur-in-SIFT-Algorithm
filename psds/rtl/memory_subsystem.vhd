@@ -12,55 +12,55 @@ Port (
     clk: in std_logic;
     reset: in std_logic;
     
-    -----------------------------------------------------------------
+    ----------------------------------------------------------------------------------------------------------------------------------
     
     --INTERFACE TO AXI LITE
     
+    -- Input data from AXI interface. This data is written to one of the registers
     reg_data_i : in std_logic_vector(DATA_WIDTH - 1 downto 0); --16 bita
     
+    -- Write enable signals for all of the registers
     img_height_we_i: in std_logic; 
     img_width_we_i: in std_logic;
     img_offset_up_we_i: in std_logic; 
     img_offset_down_we_i: in std_logic;
     img_per_octave_we_i: in std_logic;
-    
     start_we_i : in std_logic;
     reset_we_i : in std_logic;
-    --ready_wr_i : in std_logic;
+    -- ready_we_i : in std_logic;
        
-    --software read
+    -- Software read. Register values towards AXI Lite.
     img_height_axi_o: out std_logic_vector(DATA_WIDTH -1 downto 0);         --16 bita
     img_width_axi_o: out std_logic_vector(DATA_WIDTH -1 downto 0);          --16 bita
     img_offset_up_axi_o: out std_logic_vector(DATA_WIDTH -1 downto 0);      --16 bita
     img_offset_down_axi_o: out std_logic_vector(DATA_WIDTH -1 downto 0);    --16 bita
     img_per_octave_axi_o: out std_logic_vector(DATA_WIDTH -1 downto 0);     --16 bita
-    
     ready_axi_o : out std_logic;
-    start_axi_o : out std_logic; --ako treba da se cita od strane softvera, treba dodati
+    start_axi_o : out std_logic;
     reset_axi_o : out std_logic;
-     
+    
+    ----------------------------------------------------------------------------------------------------------------------------------
+
     --INTERFACE TO GAUSSIAN_BLUR
     
-    --registers 
+    -- Gaussian blur read. Register values towards Top model.
     img_height_o: out std_logic_vector(DATA_WIDTH -1 downto 0);                 --16 bita
     img_width_o: out std_logic_vector(DATA_WIDTH -1 downto 0);                  --16 bita
     img_offset_up_o: out std_logic_vector(DATA_WIDTH -1 downto 0);              --16 bita
     img_offset_down_o: out std_logic_vector(DATA_WIDTH -1 downto 0);            --16 bita
     img_per_octave_o: out std_logic_vector(DATA_WIDTH -1 downto 0);             --16 bita
-    
     start_o : out std_logic;
     reset_o : out std_logic;
-    
+    -- ready is set from gaussian_blur
     ready_i : in std_logic
-   
-    
+
     );
     
 end memory_subsystem;
 
 architecture struct of memory_subsystem is
 
-    --registers
+    --Register values
     signal img_height_s: std_logic_vector(DATA_WIDTH -1 downto 0);
     signal img_width_s: std_logic_vector(DATA_WIDTH -1 downto 0);
     signal img_offset_up_s: std_logic_vector(DATA_WIDTH -1 downto 0); 
@@ -70,10 +70,9 @@ architecture struct of memory_subsystem is
     signal ready_s : std_logic;
     signal reset_s : std_logic;
 
-
 begin
 
-    --to gaussian blur
+    --Interface towards gaussian_blur 
     img_height_o <= img_height_s;
     img_width_o <= img_width_s;
     img_offset_up_o <= img_offset_up_s;
@@ -82,7 +81,7 @@ begin
     start_o <= start_s;
     reset_o <= reset_s;
     
-    --to axi
+    --Interface towards AXI Lite
     img_height_axi_o <= img_height_s;
     img_width_axi_o <= img_width_s;
     img_offset_up_axi_o <= img_offset_up_s;
@@ -92,7 +91,7 @@ begin
     start_axi_o <= start_s;
     reset_axi_o <= reset_s;
     
-    --img_height reg
+    -- img_height reg
     process(clk)
     begin
         if rising_edge(clk) then
@@ -105,7 +104,7 @@ begin
     end process;
     
     
-    --img width reg
+    -- img width reg
     process(clk)
     begin
         if rising_edge(clk) then
@@ -117,7 +116,7 @@ begin
         end if;
     end process; 
     
-    --img offset up reg
+    -- img offset up reg
     process(clk)
     begin
         if rising_edge(clk) then
@@ -129,7 +128,7 @@ begin
         end if;
     end process;
     
-    --img offset down reg
+    -- img offset down reg
     process(clk)
     begin
         if rising_edge(clk) then
@@ -141,7 +140,7 @@ begin
         end if;
     end process;
     
-    --img per octave reg
+    -- img per octave reg
     process(clk)
     begin
         if rising_edge(clk) then
@@ -153,7 +152,7 @@ begin
         end if;
     end process;
     
-    --start reg
+    -- start reg
     process(clk)
     begin
         if rising_edge(clk) then
@@ -165,7 +164,7 @@ begin
         end if;
     end process;
     
-    --ready reg
+    -- ready reg
     process(clk)
     begin
         if rising_edge(clk) then
@@ -176,9 +175,8 @@ begin
             end if;
         end if;
     end process;
-    --ovde mozda fali CE signal kao kod drugih, ako ga axi lite generise
        
-    --reset reg
+    -- reset reg
     process(clk)
     begin
         if rising_edge(clk) then
@@ -190,7 +188,4 @@ begin
         end if;
     end process;
                 
- 
 end struct;
-
-
