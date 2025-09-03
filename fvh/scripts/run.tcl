@@ -24,7 +24,11 @@ set root_dir [pwd]
 cd scripts
 
 puts "Running test: $test_mode for $test_count times"
-set resultDir ../uvm_project_rand
+if {$test_mode == "rand"} {
+    set resultDir ../uvm_project_rand
+} else {
+    set resultDir ../uvm_project
+}
 file mkdir $resultDir
 create_project gaussian_blur_verif $resultDir -part xc7z010clg400-1 -force
 set_property board_part digilentinc.com:zybo-z7-10:part0:1.2 [current_project]
