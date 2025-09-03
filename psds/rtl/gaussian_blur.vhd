@@ -340,6 +340,8 @@ begin
         main_bram_b_addr <= write_x_b_addr;                   
         tmp_bram_b_addr <= read_x_b_addr;
         tmp_bram_a_addr <= read_x_a_addr;
+        
+    -- All enable and addr signals set to 0
     else
         main_bram_b_we <= (others => '0');
         tmp_bram_a_we <= (others => '0');

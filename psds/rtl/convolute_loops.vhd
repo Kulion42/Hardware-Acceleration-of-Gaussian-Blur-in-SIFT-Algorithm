@@ -33,7 +33,7 @@ Generic(
     -- PARAMETRS OF CONVOLUTION
     -- This parameter is used to distinguish which BRAM is 16 and which is 32 bit (Read/Write)
     R_PIXEL: natural := 1;
-    W_PIXEL: natural := 2;  
+    W_PIXEL: natural := 2;
     
     -- SIZE OF BRAMS AND ROM
     KERNEL_ROM_SIZE : natural := 77;
@@ -48,7 +48,7 @@ Port (
     -- IMAGE ELEMENTS
     img_height: in std_logic_vector(DATA_WIDTH -1 downto 0);
     img_width: in std_logic_vector(DATA_WIDTH -1 downto 0);
-    img_offset_up: in std_logic_vector(DATA_WIDTH -1 downto 0); 
+    img_offset_up: in std_logic_vector(DATA_WIDTH -1 downto 0);
     img_offset_down: in std_logic_vector(DATA_WIDTH -1 downto 0);
     
     -- Value we get from Kernel ROM depending on Img Per Octave parameter
@@ -130,7 +130,7 @@ signal pix1, pix2, kernel_val: std_logic_vector(DATA_WIDTH -1 downto 0);
 signal x1_coord, x2_coord, y_coord, c_x1_vec, c_x2_vec,  c_y_vec: std_logic_vector(DATA_WIDTH -1 downto 0);
 
 -- Values to be written to BRAMs
-signal sum1_reg, sum2_reg: unsigned(DATA_WIDTH -1  downto 0); 
+signal sum1_reg, sum2_reg: unsigned(DATA_WIDTH -1  downto 0);
 signal sum1_next, sum2_next: unsigned(DATA_WIDTH - 1 downto 0);
 
 -- Output of dsp mul units. Used to calculate sum1 and sum2.
@@ -142,7 +142,7 @@ signal sigma_center: signed(DATA_WIDTH/2 -1 downto 0);
 -- Helper variables used to calculate address. For Tmp Bram = width, For Main BRAM = width/2.
 signal img_w1, img_w2: std_logic_vector(DATA_WIDTH -1 downto 0);
 
--- Valid register used for dsp mul modules to destinguish if input is valid.
+-- Valid register used for dsp mul modules to distinguish if input is valid.
 signal valid_reg, valid_next: std_logic;
 
 -- FSM state and register values.
@@ -157,23 +157,25 @@ sigma_center <= not('0' &signed(sigma_size(DATA_WIDTH/2 -1 downto 1))) + 1;
 -- Registers process
 next_state_process: process(clk, reset)
 begin
+    -- If reset is sent, assign default values to all variables
     if (reset = '1') then
         state_reg <= idle;
         
         x_reg <= (others => '0');
-        y_reg <= (others => '0');   
+        y_reg <= (others => '0');
         k_reg <= (others => '0');
         
         sum1_reg <= (others => '0');
         sum2_reg <= (others => '0');
         valid_reg <= '0';
         
+    -- If reset is low and clock is on rising edge, assign values calculated in combinational logic
     elsif (rising_edge(clk) and reset = '0') then
         state_reg <= state_next;
     
         x_reg <= x_next;
         y_reg <= y_next;
-        k_reg <= k_next; 
+        k_reg <= k_next;
         
         sum1_reg <= sum1_next;
         sum2_reg <= sum2_next;
@@ -186,29 +188,31 @@ end process;
 combinational_logic_process: process(start, state_reg, state_next, sigma_size, x_reg, y_reg, k_reg, img_width, img_height, img_offset_up, img_offset_down, 
 sum1_reg, sum2_reg, mul_reg_1, mul_reg_2, valid_reg) 
 begin
+
+    -- Default values (Prevent latches)
     x_next <= x_reg;
     y_next <= y_reg;
-    k_next <= k_reg;    
-    
+    k_next <= k_reg;
     sum1_next <= sum1_reg;
-    sum2_next <= sum2_reg; 
-    
+    sum2_next <= sum2_reg;
     valid_next <= valid_reg;
-                     
+    
     ready <= '0';
     
     case state_reg is
         -- In idle state, FSM is waiting for ready signal
         when idle =>
             if start = '1' then
-                state_next <= loops;                                               
+                state_next <= loops;
             else
-                ready <= '1'; 
+                ready <= '1';
+
+                -- If vertical convolution, starting y value is img_offset_up, if horizontal then starting y value is 0
                 if HORIZONTAL = false then
                     y_next <= signed(img_offset_up);
                 else
                     y_next <= (others => '0');
-                end if;                                                                 
+                end if;
                 state_next <= idle;
             end if;
 
@@ -217,21 +221,22 @@ begin
         -- If x loop is finished, y++, x=0, and move back to loops state (y for loop, next iteration)
         -- If k loop is finished, x+=2, k=0, and move to stal2->stal3 states (After these states, back to x loop, next iteration)
         -- If none of these conditions are met, move to stal1 state (Regular flow of pixel calculation)
-        when loops =>           
-            if (HORIZONTAL = true and y_reg>= signed(img_height) - signed(img_offset_down) - signed(img_offset_up)) or (HORIZONTAL = false and y_reg>= signed(img_height) - signed(img_offset_down)) then             
+        when loops =>
+            if (HORIZONTAL = true and y_reg>= signed(img_height) - signed(img_offset_down) - signed(img_offset_up)) or
+               (HORIZONTAL = false and y_reg>= signed(img_height) - signed(img_offset_down)) then
                 y_next <= (others => '0');
-                state_next <= idle;          
-            elsif x_reg>= signed(img_width) then    
-                y_next <= y_reg + 1; 
+                state_next <= idle;
+            elsif x_reg>= signed(img_width) then
+                y_next <= y_reg + 1;
                 x_next <= (others => '0');
                 valid_next <= '0';
-                state_next <= loops; 
+                state_next <= loops;
             elsif k_reg > signed(sigma_size)    then
-                k_next <= (others => '0');          
-                x_next <= x_reg + 2;     
-                valid_next <= '0';              
-                state_next <= stal2;                   
-            else 
+                k_next <= (others => '0');
+                x_next <= x_reg + 2;
+                valid_next <= '0';
+                state_next <= stal2;
+            else
                 state_next <= stal1;
             end if;
 
@@ -240,31 +245,31 @@ begin
         -- In loops state we have inputs to dsp mac unit (address)
         -- In stal1 we have values of pix1 and pix2 and we can calculate values
         -- This way, in sum_calc we have valid mul_reg1 and mul_reg2
-        when stal1 => 
+        when stal1 =>
                 valid_next <= '1';
-                state_next <= sum_calc;        
+                state_next <= sum_calc;
 
         -- In stal2 state, k_reg is set to 0, x_reg+=2. New sum1/sum2 addresses are calculated so
         -- we need one cycle to be sure that we clear correct data. Without this state stal2, race condition would appear
-        when stal2 =>   
+        when stal2 =>
                 state_next <= stal3;
 
         -- In stal3 state we are clearing sum1/sum2 and in the next cycle these values are valid and sent to BRAM on valid address
         -- This way, they are cleared and ready for new accumulating
-        when stal3 => 
+        when stal3 =>
                 sum1_next <= (others => '0');
                 sum2_next <= (others => '0');
-                state_next <= loops;       
+                state_next <= loops;
                 
         -- In sum_calc state, all values are final and valid and we can calculate sum1/sum2. k++, and move to next k loop iteration
-        when sum_calc => 
-                sum1_next <= sum1_reg + unsigned(mul_reg_1);   
+        when sum_calc =>
+                sum1_next <= sum1_reg + unsigned(mul_reg_1);
                 sum2_next <= sum2_reg + unsigned(mul_reg_2);
                 k_next <= k_reg + 1;
                 state_next <= loops;
         
         -- Error handling
-        when others => 
+        when others =>
             state_next <= idle;
     
     end case;
@@ -276,9 +281,9 @@ end process;
     dx <= sigma_center + k_reg;
     dy <= sigma_center + k_reg;
 
-    kernel_rom_addr <= std_logic_vector(TO_UNSIGNED(TO_INTEGER(k_reg), log2c(KERNEL_ROM_SIZE))); 
+    kernel_rom_addr <= std_logic_vector(TO_UNSIGNED(TO_INTEGER(k_reg), log2c(KERNEL_ROM_SIZE)));
 
-    -- Calculate initial addresses if it's horizontal convolution
+    -- Calculate initial addresses if it's horizontal convolution.
     read_adrr_gen_h: if  HORIZONTAL = true generate
         horiz_proc : process(x_reg, dx, img_width, y_reg) 
         begin
@@ -292,131 +297,156 @@ end process;
                 c_x <= unsigned(img_width) -1;
             else
                 c_x <= unsigned(x_reg + dx);
-            end if;                 
-        end process;    
+            end if;
+        end process;
     end generate;
 
-    -- Calculate initial addresses if it's vertical convolution
+    -- Calculate initial addresses if it's vertical convolution.
     -- First in memory are storred rows in offset up, then image, and then rows in offset down
     read_adrr_gen_v: if  HORIZONTAL = false generate
         vertic_proc: process(y_reg, dy, img_offset_up, img_offset_down, img_height, x_reg)
         begin
 
             -- Default values 
-            c_x <= unsigned(x_reg); 
+            c_x <= unsigned(x_reg);
             c_y <= unsigned(y_reg);
 
             -- Regular clamp
-            if TO_INTEGER(signed(img_offset_down)) = 0 and TO_INTEGER(signed(img_offset_up)) = 0  then                    
+            -- If we don't have any offset, image is starting from 0, and going to height
+            if TO_INTEGER(signed(img_offset_down)) = 0 and TO_INTEGER(signed(img_offset_up)) = 0  then
                 if  (y_reg + dy) < TO_SIGNED(0, 16)  then
-                    c_y <= (others => '0');                                   
+                    c_y <= (others => '0');
                 elsif (y_reg + dy) >= signed(img_height) then
-                    c_y <= unsigned(img_height) -1 ;                                   
+                    c_y <= unsigned(img_height) -1 ;
                 else
                     c_y <= unsigned(y_reg + dy);
                 end if;
             
-            -- If current image has both offset rows, values can iterate above and below image data
-            elsif TO_INTEGER(signed(img_offset_down)) /= 0 and TO_INTEGER(signed(img_offset_up)) /= 0  then
-                if  (y_reg + dy) < signed(img_offset_up) then
-                    c_y <= unsigned(signed(img_offset_up) + dy);                           
+            -- If current image has offset down, values can iterate below image data
+            -- Image is starting from 0, because there is no offset_up, and going to height - offset_down because we have offset_down
+            elsif TO_INTEGER(signed(img_offset_down)) /= 0 and TO_INTEGER(signed(img_offset_up)) = 0  then
+                if (y_reg + dy) < TO_SIGNED(0, 16)  then
+                    c_y <= (others => '0');
                 elsif (y_reg + dy) >= signed(img_height) - signed(img_offset_down) then
                     c_y <= unsigned(signed(img_height) - signed(img_offset_down) + dy);
                 else
                     c_y <= unsigned(y_reg + dy);
                 end if;
             
-            -- If current image has offset down, values can iterate below image data
-            elsif TO_INTEGER(signed(img_offset_down)) /= 0 and TO_INTEGER(signed(img_offset_up)) = 0  then                    
-                if (y_reg + dy) < TO_SIGNED(0, 16)  then
-                    c_y <= (others => '0');                        
-                elsif (y_reg + dy) >= signed(img_height) - signed(img_offset_down) then
-                    c_y <= unsigned(signed(img_height) - signed(img_offset_down) + dy);                                   
-                else
-                    c_y <= unsigned(y_reg + dy);
-                end if;
-            
             -- If current image has offset up, values can iterate above image data
+            -- Image is starting from offset_up, because there is offset_up and going to height because there is no offset_down
             elsif TO_INTEGER(signed(img_offset_down)) = 0 and TO_INTEGER(signed(img_offset_up)) /= 0  then
                 if (y_reg + dy) < signed(img_offset_up) then
-                    c_y <= unsigned(signed(img_offset_up) + dy);                           
+                    c_y <= unsigned(signed(img_offset_up) + dy);
                 elsif (y_reg + dy) >= signed(img_height) then
-                    c_y <= unsigned(img_height) -1 ;  
+                    c_y <= unsigned(img_height) -1 ;
                 else
                     c_y <= unsigned(y_reg + dy);
                 end if;
-            end if;                     
-        end process; 
+
+             -- If current image has both offset rows, values can iterate above and below image data
+             -- This is combined situation of 2 scenarios before this, we start from offset_up, and going to height - offset_down
+            elsif TO_INTEGER(signed(img_offset_down)) /= 0 and TO_INTEGER(signed(img_offset_up)) /= 0  then
+                if  (y_reg + dy) < signed(img_offset_up) then
+                    c_y <= unsigned(signed(img_offset_up) + dy);
+                elsif (y_reg + dy) >= signed(img_height) - signed(img_offset_down) then
+                    c_y <= unsigned(signed(img_height) - signed(img_offset_down) + dy);
+                else
+                    c_y <= unsigned(y_reg + dy);
+                end if;
+            end if;
+
+            -- After this process we have clamped addresses calculated
+        end process;
 
     end generate;
 
     -- Always used and calculated
+    -- In both convolutions used to calculate read address
     c_y_vec <= std_logic_vector(c_y);
-
-    -- Used for vertical convolution sum1 write address
-    x2_coord <= std_logic_vector(x_reg);
-
-    -- Used for horizontal convolution pix1 read address
-    c_x1_vec <= std_logic_vector(c_x);
-    
-    -- When Main BRAM is input BRAM, words are 32 bit, when Tmp BRAM is input BRAM, words are 16 bit
 
     -- pix2 is always read from bram1_b_rdata lower 16 bits
     -- pix1 is either upper 16 bits on the same address, or different address
     pix2 <= '0'&bram1_b_rdata((DATA_WIDTH-1) -1 downto 0);
 
-
+-- For Vertical convolution input BRAM is Main BRAM which is 32 bit wide
+-- This means that we can read 2 pixels at the same time on 1 port (It's planned so they are alligned)
+-- But since Tmp BRAM is 16 bit, we must write them separately on different ports at the same time
 vertical_conv: if HORIZONTAL = false generate
 
+        -- Tmp BRAM is BRAM 2 for vertical convolution and it's 16 bit, so we need to split sums accross 2 ports to write
         -- sum2 -> BRAM2 (Tmp BRAM) B Port, sum1 -> BRAM2 (Tmp BRAM) A Port
         bram2_b_wdata <= std_logic_vector(sum2_reg(DATA_WIDTH -2 downto 0));
         bram2_a_wdata <= std_logic_vector(sum1_reg(DATA_WIDTH -2 downto 0));
         
-        -- Variable used for sum1 and sum2 write (Tmp BRAM Port A and Port B Address)
+        -- Variable used to calculate sum1 and sum2 write addresses (Tmp BRAM Port A/Port B)
+        -- y cordinate is the same because the pixels move in columns together
         y_coord <= std_logic_vector(y_reg- signed(img_offset_up));
 
+        -- In vertical convolution used for sum1 write address (Tmp BRAM Port B)
+        -- sum1 on x_reg, sum2 on x_reg + 1
+        x2_coord <= std_logic_vector(x_reg);
+
         -- Used for sum2 write address (Tmp BRAM Port B)
+        -- sum1 on x_reg, sum2 on x_reg + 1
         x1_coord <= std_logic_vector(x_reg + 1);
 
         -- Used for pix1 and pix2 read address (Main BRAM Port B)
+        -- Because they are in the same memory address in Main BRAM
+        -- Calculated as c_x/2 because 2 pixels stored per location
         c_x2_vec <= std_logic_vector(c_x/2);
 
         -- Read pix1 from Main BRAM port B, upper 16 bits
+        -- Read from the same memory location as pix2 in vertical convolution
         pix1 <= '0'&bram1_b_rdata(R_PIXEL *(DATA_WIDTH-1) -1 downto (DATA_WIDTH-1));
 
         -- Full width for Tmp BRAM and width/2 for Main BRAM
+        -- Always img_w1 used for BRAM 2 (Output), img_w2 used for BRAM 1 (Input)
+        -- For horizontal, BRAM 1 is Main BRAM => img_w2 = width/2; BRAM 2 is Tmp BRAM => img_w1 = width/2
         img_w1 <= img_width;
         img_w2 <= std_logic_vector(shift_right(unsigned(img_width), 1));
     
     end generate;
 
-
+-- For Horizontal convolution input BRAM is Tmp BRAM which is 16 bit wide
+-- This means that we must read 2 pixels at the same time on 2 different ports (Difference in address between these 2 pixels is 1)
+-- But since Main BRAM is 32 bit, we can write them together on the same port
 horizontal_conv: if HORIZONTAL = true  generate
 
-        -- Sum1 and Sum2 concatenated and send to Main BRAM Port B
+        -- Sum1 and Sum2 concatenated and sent to Main BRAM Port B
+        -- Since they are writen to Main BRAM which is 32 bit, and they are next to each other in memory, we can use 1 port (Port B)
         bram2_b_wdata <= std_logic_vector(sum1_reg(DATA_WIDTH -2 downto 0)&sum2_reg(DATA_WIDTH -2 downto 0));
         bram2_a_wdata <= (others => '0');
 
-        -- Variable used for sum1 and sum2 write (Main Port B Address)
+        -- Variable used to calculate sum1 and sum2 write address (Main BRAM Port B)
+        -- y cordinate is the same, and address for both sums is the same, pixels move in one row next to each other
         y_coord <= std_logic_vector(y_reg);
 
         -- Variable used for sum1 and sum2 write (Main Port B Address)
+        -- x cordinate is the same, and address for both sums is the same
+        -- x_reg/2 is used because 2 pixels are stored to each address
         x1_coord <= std_logic_vector(x_reg/2);
 
-        -- Used for pix2 read address (Tmp BRAM Port B)
+        -- Used for pix1 read address calculation (Tmp BRAM Port A)
+        c_x1_vec <= std_logic_vector(c_x);
+
+        -- Used for pix2 read address calculation (Tmp BRAM Port B)
         c_x2_vec <= std_logic_vector(c_x + 1);
 
-        -- Read pix1 from Tmp BRAM port A
+        -- Read pix1 from Main BRAM port B, all 16 bits
+        -- pix2 is read from different location because Tmp Bram is 16 bit
         pix1 <= '0'&bram1_a_rdata((DATA_WIDTH-1) -1 downto 0);
 
         -- Full width for Tmp BRAM and width/2 for Main BRAM
+        -- Always img_w1 used for BRAM 2 (Output), img_w2 used for BRAM 1 (Input)
+        -- For horizontal, BRAM 1 is Tmp BRAM => img_w2 = width; BRAM 2 is Main BRAM => img_w1 = width/2
         img_w1 <= std_logic_vector(shift_right(unsigned(img_width), 1));
         img_w2 <= img_width;
 
     end generate;
 
 
--- Multiply DSP to calculate multiplied value which is used for sum1
+-- Multiply DSP to calculate pix1 * kernel_rom_data = mul_reg_1 which is later accumulated with sum1
 dsp_mul1: dsp_unit_mul_shift
 generic map(WIDTH1 => DATA_WIDTH,
             WIDTH2 => DATA_WIDTH,
@@ -428,7 +458,7 @@ port map( clk => clk,
           out_res => mul_reg_1
           );
 
--- Multiply DSP to calculate multiplied value which is used for sum2
+-- Multiply DSP to calculate pix2 * kernel_rom_data = mul_reg_2 which is later accumulated with sum2
 dsp_mul2: dsp_unit_mul_shift
 generic map(WIDTH1 => DATA_WIDTH,
             WIDTH2 => DATA_WIDTH,
@@ -441,6 +471,8 @@ port map( clk => clk,
           );
 
 -- Multiply and add DSP module to calculate address of input BRAM Port B
+-- Values used: c_y_vec (same for both convolutions) * img_w2 (differs depending on convolution) + c_x2_vec (used for both convolutions) = bram1_b_addr
+-- This address is used to read pix2 if horizontal convolution or both pix1 and pix2 if vertical convolution
 addr_b_gen_1: dsp_unit_mac_shift
 generic map(WIDTH_IN => DATA_WIDTH,
             WIDTH_OUT => log2c(BRAM_SIZE/R_PIXEL)
@@ -451,9 +483,11 @@ port map( clk => clk,
           in_2 => img_w2,
           in_3 => c_x2_vec,
           out_res => bram1_b_addr
-          );              
+          );
               
--- Multiply and add DSP module to calculate address of output BRAM Port B
+-- Multiply and add DSP module to calculate address of Output BRAM Port B
+-- Values used: y_coord (same for both convolutions) * img_w1 (differs depending on convolution) + x1_coord (differs depending on convolution) = bram2_b_addr
+-- This address is used to write sum2 in vertical convolution or both sum1 and sum2 in horizontal convolution
 addr_b_gen_2: dsp_unit_mac_shift
 generic map(WIDTH_IN => DATA_WIDTH,
             WIDTH_OUT => log2c(BRAM_SIZE/W_PIXEL)
@@ -464,10 +498,13 @@ port map( clk => clk,
           in_2 => img_w1,
           in_3 => x1_coord,
           out_res => bram2_b_addr
-          ); 
+          );
 
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------
+-- Depending on convolution we need either one more read address or one more write address
 
--- If horizontal convolution => Calculate read address for pix1 (Tmp BRAM)
+-- If horizontal convolution, calculate read address for pix1 (Tmp BRAM Port A)
+-- Values used: c_y_vec * img_w2 (BRAM 1 = Tmp => img_w2 = width) + c_x1_vec = bram1_a_addr
 addr_a_gen_1: if HORIZONTAL = true generate
 dsp1:dsp_unit_mac_shift
 generic map(WIDTH_IN => DATA_WIDTH,
@@ -479,11 +516,12 @@ port map( clk => clk,
           in_2 => img_w2,
           in_3 => c_x1_vec,
           out_res => bram1_a_addr
-          ); 
+          );
            
-end generate;    
+end generate;
         
--- If vertical convolution => Calculate write address for sum1 (Read BRAM)
+-- If vertical convolution, calculate write address for sum1 (Tmp BRAM Port A)
+-- Values used: y_coord * img_w1 (BRAM 2 = Tmp => img_w1 = width) + x2_coord = bram2_a_addr
 addr_a_gen_2: if HORIZONTAL = false generate
 dsp2: dsp_unit_mac_shift
 generic map(WIDTH_IN => DATA_WIDTH,
@@ -495,23 +533,24 @@ port map( clk => clk,
           in_2 => img_w1,
           in_3 => x2_coord,
           out_res => bram2_a_addr
-          ); 
+          );
            
 end generate;
 
 -- CONSTANTS------------------------------------
 kernel_rom_en <= '1';
 bram1_b_en <= '1';
-bram2_b_en <= '1';        
+bram2_b_en <= '1';
 bram1_a_en <= '1' ;
-bram2_a_en <= '1' ; 
+bram2_a_en <= '1' ;
 
-bram2_b_we <= "1111";            
+-- Always be able to write to output BRAM
+bram2_b_we <= "1111";
 bram2_a_we <= "1111";
 
 -- Musn't be able to write to input BRAM
-bram1_b_we <= "0000";        
-bram1_a_we <= "0000"; 
+bram1_b_we <= "0000";
+bram1_a_we <= "0000";
 ------------------------------------------------
 
 end Mixed;
