@@ -26,19 +26,19 @@ use work.utils_pkg.ALL;
 
 entity gaussian_blur is
 Generic(
-    --DATA WIDTH
+    -- DATA WIDTH
     DATA_WIDTH : natural := 16;
     
-    --SIZE OF BRAMS AND ROM
-    KERNEL_ROM_SIZE : natural := 77; --FIXED 
-    BRAM_SIZE : natural := 60000 --FIXED
+    -- SIZE OF BRAMS AND ROM
+    KERNEL_ROM_SIZE : natural := 77;  
+    BRAM_SIZE : natural := 60000 
 );
 Port ( 
     clk: in std_logic;
     reset: in std_logic;
     start: in std_logic;
     
-    --IMAGE ELEMENTS
+    -- IMAGE ELEMENTS
     img_height: in std_logic_vector(DATA_WIDTH -1 downto 0);
     img_width: in std_logic_vector(DATA_WIDTH -1 downto 0);
     img_offset_up: in std_logic_vector(DATA_WIDTH -1 downto 0); 
@@ -76,19 +76,19 @@ architecture Mixed of gaussian_blur is
 
 component convolute_loops 
 Generic(
-    --WIDTH OF DATA
-    DATA_WIDTH : natural := 16; -- FIXED
+    -- WIDTH OF DATA
+    DATA_WIDTH : natural := 16;
     
-    --CONVOLUTION DIRECTION
+    -- CONVOLUTION DIRECTION
     HORIZONTAL: boolean := true;
     
-    --PARAMETRS OF CONVOLUTION
+    -- PARAMETRS OF CONVOLUTION
     R_PIXEL: natural := 1;
     W_PIXEL: natural := 2;  
     
-    --SIZE OF BRAMS AND ROM
-    KERNEL_ROM_SIZE : natural := 77; --FIXED 
-    BRAM_SIZE : natural := 60000 --FIXED
+    -- SIZE OF BRAMS AND ROM
+    KERNEL_ROM_SIZE : natural := 77;  
+    BRAM_SIZE : natural := 60000 
 
 );
 Port ( 
@@ -96,7 +96,7 @@ Port (
     reset: in std_logic;
     start: in std_logic;
     
-    --IMAGE ELEMENTS
+    -- IMAGE ELEMENTS
     img_height: in std_logic_vector(DATA_WIDTH -1 downto 0);
     img_width: in std_logic_vector(DATA_WIDTH -1 downto 0);
     img_offset_up: in std_logic_vector(DATA_WIDTH -1 downto 0); 
@@ -133,8 +133,8 @@ end component;
 
 component kernel_rom 
 Generic (
-    DATA_WIDTH : natural := 16; -- FIXED
-    KERNEL_ROM_SIZE : natural := 77 --FIXED     
+    DATA_WIDTH : natural := 16;
+    KERNEL_ROM_SIZE : natural := 77      
 );
 Port ( 
     clk: in std_logic;

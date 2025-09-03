@@ -6,7 +6,7 @@ use work.utils_pkg.ALL;
 
 entity memory_subsystem is
 Generic(
-    --DATA WIDTH
+    -- DATA WIDTH
     DATA_WIDTH : natural := 16);
 Port (
     clk: in std_logic;
@@ -14,10 +14,10 @@ Port (
     
     ----------------------------------------------------------------------------------------------------------------------------------
     
-    --INTERFACE TO AXI LITE
+    -- INTERFACE TO AXI LITE
     
     -- Input data from AXI interface. This data is written to one of the registers
-    reg_data_i : in std_logic_vector(DATA_WIDTH - 1 downto 0); --16 bita
+    reg_data_i : in std_logic_vector(DATA_WIDTH - 1 downto 0); -- 16 bits
     
     -- Write enable signals for all of the registers
     img_height_we_i: in std_logic; 
@@ -30,25 +30,25 @@ Port (
     -- ready_we_i : in std_logic;
        
     -- Software read. Register values towards AXI Lite.
-    img_height_axi_o: out std_logic_vector(DATA_WIDTH -1 downto 0);         --16 bita
-    img_width_axi_o: out std_logic_vector(DATA_WIDTH -1 downto 0);          --16 bita
-    img_offset_up_axi_o: out std_logic_vector(DATA_WIDTH -1 downto 0);      --16 bita
-    img_offset_down_axi_o: out std_logic_vector(DATA_WIDTH -1 downto 0);    --16 bita
-    img_per_octave_axi_o: out std_logic_vector(DATA_WIDTH -1 downto 0);     --16 bita
+    img_height_axi_o: out std_logic_vector(DATA_WIDTH -1 downto 0);         -- 16 bits
+    img_width_axi_o: out std_logic_vector(DATA_WIDTH -1 downto 0);          -- 16 bits
+    img_offset_up_axi_o: out std_logic_vector(DATA_WIDTH -1 downto 0);      -- 16 bits
+    img_offset_down_axi_o: out std_logic_vector(DATA_WIDTH -1 downto 0);    -- 16 bits
+    img_per_octave_axi_o: out std_logic_vector(DATA_WIDTH -1 downto 0);     -- 16 bits
     ready_axi_o : out std_logic;
     start_axi_o : out std_logic;
     reset_axi_o : out std_logic;
     
     ----------------------------------------------------------------------------------------------------------------------------------
 
-    --INTERFACE TO GAUSSIAN_BLUR
+    -- INTERFACE TO GAUSSIAN_BLUR
     
     -- Gaussian blur read. Register values towards Top model.
-    img_height_o: out std_logic_vector(DATA_WIDTH -1 downto 0);                 --16 bita
-    img_width_o: out std_logic_vector(DATA_WIDTH -1 downto 0);                  --16 bita
-    img_offset_up_o: out std_logic_vector(DATA_WIDTH -1 downto 0);              --16 bita
-    img_offset_down_o: out std_logic_vector(DATA_WIDTH -1 downto 0);            --16 bita
-    img_per_octave_o: out std_logic_vector(DATA_WIDTH -1 downto 0);             --16 bita
+    img_height_o: out std_logic_vector(DATA_WIDTH -1 downto 0);                 --16 bits
+    img_width_o: out std_logic_vector(DATA_WIDTH -1 downto 0);                  --16 bits
+    img_offset_up_o: out std_logic_vector(DATA_WIDTH -1 downto 0);              --16 bits
+    img_offset_down_o: out std_logic_vector(DATA_WIDTH -1 downto 0);            --16 bits
+    img_per_octave_o: out std_logic_vector(DATA_WIDTH -1 downto 0);             --16 bits
     start_o : out std_logic;
     reset_o : out std_logic;
     -- ready is set from gaussian_blur
@@ -60,7 +60,7 @@ end memory_subsystem;
 
 architecture struct of memory_subsystem is
 
-    --Register values
+    -- Register values
     signal img_height_s: std_logic_vector(DATA_WIDTH -1 downto 0);
     signal img_width_s: std_logic_vector(DATA_WIDTH -1 downto 0);
     signal img_offset_up_s: std_logic_vector(DATA_WIDTH -1 downto 0); 
@@ -72,7 +72,7 @@ architecture struct of memory_subsystem is
 
 begin
 
-    --Interface towards gaussian_blur 
+    -- Interface towards gaussian_blur 
     img_height_o <= img_height_s;
     img_width_o <= img_width_s;
     img_offset_up_o <= img_offset_up_s;
@@ -81,7 +81,7 @@ begin
     start_o <= start_s;
     reset_o <= reset_s;
     
-    --Interface towards AXI Lite
+    -- Interface towards AXI Lite
     img_height_axi_o <= img_height_s;
     img_width_axi_o <= img_width_s;
     img_offset_up_axi_o <= img_offset_up_s;

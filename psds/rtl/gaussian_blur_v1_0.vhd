@@ -7,11 +7,11 @@ entity gaussian_blur_v1_0 is
 	generic (
 		-- Users to add parameters here
         
-        --DATA WIDTH
+        -- DATA WIDTH
         DATA_WIDTH : natural := 16;
-        --SIZE OF BRAMS AND ROM
-        KERNEL_ROM_SIZE : natural := 78; --FIXED 
-        BRAM_SIZE : natural := 60000; --FIXED
+        -- SIZE OF BRAMS AND ROM
+        KERNEL_ROM_SIZE : natural := 78;
+        BRAM_SIZE : natural := 60000;
         BRAM_ADDR_WIDTH : natural := 15;
         BYTE_OFFSET : natural := 2;
 
@@ -25,12 +25,12 @@ entity gaussian_blur_v1_0 is
 	port (
 		-- Users to add ports here
     
-        --Ports for BRAM controller. BRAM controller is used between Main BRAM and IP Core.
+        -- Ports for BRAM controller. BRAM controller is used between Main BRAM and IP Core.
         main_bram_a_en_i: in std_logic;
         main_bram_a_we_i: in std_logic_vector(3 downto 0);
-        main_bram_a_addr_i: in std_logic_vector(BRAM_ADDR_WIDTH + BYTE_OFFSET - 1 downto 0);    --17 bit (Byte addressable from CPU Side)
-        main_bram_a_rdata_o: out std_logic_vector(2*DATA_WIDTH - 1 downto 0);                   --32 bit
-        main_bram_a_wdata_i: in std_logic_vector(2*DATA_WIDTH - 1 downto 0);                    --32 bit
+        main_bram_a_addr_i: in std_logic_vector(BRAM_ADDR_WIDTH + BYTE_OFFSET - 1 downto 0);    -- 17 bits (Byte addressable from CPU Side)
+        main_bram_a_rdata_o: out std_logic_vector(2*DATA_WIDTH - 1 downto 0);
+        main_bram_a_wdata_i: in std_logic_vector(2*DATA_WIDTH - 1 downto 0);
 
 		-- User ports ends
 		-- Do not modify the ports beyond this line
@@ -62,7 +62,7 @@ end gaussian_blur_v1_0;
 
 architecture arch_imp of gaussian_blur_v1_0 is
     
-    --signal declaration
+    -- signal declaration
     
     -- Reset signal used for memory subsystem.
     signal system_reset_s : std_logic;
@@ -176,8 +176,8 @@ architecture arch_imp of gaussian_blur_v1_0 is
     DATA_WIDTH : natural := 16;
     
     -- SIZE OF BRAMS AND ROM
-    KERNEL_ROM_SIZE : natural := 77; --FIXED 
-    BRAM_SIZE : natural := 60000 --FIXED
+    KERNEL_ROM_SIZE : natural := 77;
+    BRAM_SIZE : natural := 60000
     );
     Port (
 
@@ -216,7 +216,7 @@ architecture arch_imp of gaussian_blur_v1_0 is
     -----------------------------------------------------------------
     
     -- INTERFACE TO AXI LITE
-    reg_data_i : in std_logic_vector(DATA_WIDTH - 1 downto 0); --16 bita
+    reg_data_i : in std_logic_vector(DATA_WIDTH - 1 downto 0); -- 16 bits
     
     -- Write enable signals for all of the registers
     img_height_we_i: in std_logic; 
@@ -229,11 +229,11 @@ architecture arch_imp of gaussian_blur_v1_0 is
     -- ready_we_i : in std_logic;
        
     -- Software read. Register values towards AXI Lite.
-    img_height_axi_o: out std_logic_vector(DATA_WIDTH -1 downto 0);         --16 bita
-    img_width_axi_o: out std_logic_vector(DATA_WIDTH -1 downto 0);          --16 bita
-    img_offset_up_axi_o: out std_logic_vector(DATA_WIDTH -1 downto 0);      --16 bita
-    img_offset_down_axi_o: out std_logic_vector(DATA_WIDTH -1 downto 0);    --16 bita
-    img_per_octave_axi_o: out std_logic_vector(DATA_WIDTH -1 downto 0);     --16 bita
+    img_height_axi_o: out std_logic_vector(DATA_WIDTH -1 downto 0);         -- 16 bita
+    img_width_axi_o: out std_logic_vector(DATA_WIDTH -1 downto 0);          -- 16 bita
+    img_offset_up_axi_o: out std_logic_vector(DATA_WIDTH -1 downto 0);      -- 16 bita
+    img_offset_down_axi_o: out std_logic_vector(DATA_WIDTH -1 downto 0);    -- 16 bita
+    img_per_octave_axi_o: out std_logic_vector(DATA_WIDTH -1 downto 0);     -- 16 bita
     ready_axi_o : out std_logic;
     start_axi_o : out std_logic;
     reset_axi_o : out std_logic;
@@ -243,11 +243,11 @@ architecture arch_imp of gaussian_blur_v1_0 is
     -- INTERFACE TO GAUSSIAN_BLUR
     
     -- Gaussian blur read. Register values towards Top model.
-    img_height_o: out std_logic_vector(DATA_WIDTH -1 downto 0);                 --16 bita
-    img_width_o: out std_logic_vector(DATA_WIDTH -1 downto 0);                  --16 bita
-    img_offset_up_o: out std_logic_vector(DATA_WIDTH -1 downto 0);              --16 bita
-    img_offset_down_o: out std_logic_vector(DATA_WIDTH -1 downto 0);            --16 bita
-    img_per_octave_o: out std_logic_vector(DATA_WIDTH -1 downto 0);             --16 bita
+    img_height_o: out std_logic_vector(DATA_WIDTH -1 downto 0);                 -- 16 bita
+    img_width_o: out std_logic_vector(DATA_WIDTH -1 downto 0);                  -- 16 bita
+    img_offset_up_o: out std_logic_vector(DATA_WIDTH -1 downto 0);              -- 16 bita
+    img_offset_down_o: out std_logic_vector(DATA_WIDTH -1 downto 0);            -- 16 bita
+    img_per_octave_o: out std_logic_vector(DATA_WIDTH -1 downto 0);             -- 16 bita
     start_o : out std_logic;
     reset_o : out std_logic;
     -- Gaussian blur write. Ready is set by Top model.

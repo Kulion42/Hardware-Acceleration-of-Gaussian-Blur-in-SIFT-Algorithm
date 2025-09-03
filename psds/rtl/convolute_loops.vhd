@@ -24,21 +24,20 @@ use work.utils_pkg.ALL;
 
 entity convolute_loops is
 Generic(
-    --WIDTH OF DATA
-    DATA_WIDTH : natural := 16; -- FIXED
+    -- WIDTH OF DATA
+    DATA_WIDTH : natural := 16;
     
-    --CONVOLUTION DIRECTION
+    -- CONVOLUTION DIRECTION
     HORIZONTAL: boolean := true;
     
-    --PARAMETRS OF CONVOLUTION
+    -- PARAMETRS OF CONVOLUTION
     -- This parameter is used to distinguish which BRAM is 16 and which is 32 bit (Read/Write)
     R_PIXEL: natural := 1;
     W_PIXEL: natural := 2;  
     
-    --SIZE OF BRAMS AND ROM
-    KERNEL_ROM_SIZE : natural := 77; --FIXED 
-    BRAM_SIZE : natural := 60000 --FIXED
-
+    -- SIZE OF BRAMS AND ROM
+    KERNEL_ROM_SIZE : natural := 77;
+    BRAM_SIZE : natural := 60000
 );
 Port ( 
 
@@ -46,7 +45,7 @@ Port (
     reset: in std_logic;
     start: in std_logic;
     
-    --IMAGE ELEMENTS
+    -- IMAGE ELEMENTS
     img_height: in std_logic_vector(DATA_WIDTH -1 downto 0);
     img_width: in std_logic_vector(DATA_WIDTH -1 downto 0);
     img_offset_up: in std_logic_vector(DATA_WIDTH -1 downto 0); 
@@ -198,7 +197,8 @@ begin
                      
     ready <= '0';
     
-    case state_reg is    
+    case state_reg is
+        -- In idle state, FSM is waiting for ready signal
         when idle =>
             if start = '1' then
                 state_next <= loops;                                               
@@ -212,6 +212,11 @@ begin
                 state_next <= idle;
             end if;
 
+        -- In loops state, FSM is checking all 3 loops (y, x, k)
+        -- If y loop is finished, convolution is finished and move to the idle state (Ranges were calculated as a part of goto)
+        -- If x loop is finished, y++, x=0, and move back to loops state (y for loop, next iteration)
+        -- If k loop is finished, x+=2, k=0, and move to stal2->stal3 states (After these states, back to x loop, next iteration)
+        -- If none of these conditions are met, move to stal1 state (Regular flow of pixel calculation)
         when loops =>           
             if (HORIZONTAL = true and y_reg>= signed(img_height) - signed(img_offset_down) - signed(img_offset_up)) or (HORIZONTAL = false and y_reg>= signed(img_height) - signed(img_offset_down)) then             
                 y_next <= (others => '0');
@@ -221,7 +226,6 @@ begin
                 x_next <= (others => '0');
                 valid_next <= '0';
                 state_next <= loops; 
-                 
             elsif k_reg > signed(sigma_size)    then
                 k_next <= (others => '0');          
                 x_next <= x_reg + 2;     
@@ -230,20 +234,36 @@ begin
             else 
                 state_next <= stal1;
             end if;
+
+        -- stal1 state is necessary because dsp mac unit generates read address for pix1 and pix2
+        -- We need to wait fo that address to be ready, pixels to be read so we can use them to calculate mul_reg1/mul_reg2
+        -- In loops state we have inputs to dsp mac unit (address)
+        -- In stal1 we have values of pix1 and pix2 and we can calculate values
+        -- This way, in sum_calc we have valid mul_reg1 and mul_reg2
         when stal1 => 
                 valid_next <= '1';
-                state_next <= sum_calc;                
+                state_next <= sum_calc;        
+
+        -- In stal2 state, k_reg is set to 0, x_reg+=2. New sum1/sum2 addresses are calculated so
+        -- we need one cycle to be sure that we clear correct data. Without this state stal2, race condition would appear
         when stal2 =>   
                 state_next <= stal3;
+
+        -- In stal3 state we are clearing sum1/sum2 and in the next cycle these values are valid and sent to BRAM on valid address
+        -- This way, they are cleared and ready for new accumulating
         when stal3 => 
                 sum1_next <= (others => '0');
                 sum2_next <= (others => '0');
-                state_next <= loops;             
+                state_next <= loops;       
+                
+        -- In sum_calc state, all values are final and valid and we can calculate sum1/sum2. k++, and move to next k loop iteration
         when sum_calc => 
                 sum1_next <= sum1_reg + unsigned(mul_reg_1);   
                 sum2_next <= sum2_reg + unsigned(mul_reg_2);
                 k_next <= k_reg + 1;
-                state_next <= loops;                           
+                state_next <= loops;
+        
+        -- Error handling
         when others => 
             state_next <= idle;
     
@@ -479,7 +499,7 @@ port map( clk => clk,
            
 end generate;
 
---CONSTANTS------------------------------------
+-- CONSTANTS------------------------------------
 kernel_rom_en <= '1';
 bram1_b_en <= '1';
 bram2_b_en <= '1';        
