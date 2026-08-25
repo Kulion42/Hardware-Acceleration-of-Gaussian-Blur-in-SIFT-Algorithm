@@ -26,17 +26,17 @@ use work.utils_pkg.ALL;
 
 -- Uncomment the following library declaration if instantiating
 -- any Xilinx leaf cells in this code.
---library UNISIM;
---use UNISIM.VComponents.all;
+-- library UNISIM;
+-- use UNISIM.VComponents.all;
 
 entity top_model is
 Generic(
-    --DATA WIDTH
+    -- DATA WIDTH
     DATA_WIDTH : natural := 16;
     
-    --SIZE OF BRAMS AND ROM
-    KERNEL_ROM_SIZE : natural := 78; --FIXED 
-    BRAM_SIZE : natural := 60000 --FIXED
+    -- SIZE OF BRAMS AND ROM
+    KERNEL_ROM_SIZE : natural := 78; 
+    BRAM_SIZE : natural := 60000 
 );
 Port ( 
     clk: in std_logic;
@@ -65,26 +65,26 @@ end top_model;
 architecture Structural of top_model is
 component gaussian_blur
 Generic(
-    --DATA WIDTH
+    -- DATA WIDTH
     DATA_WIDTH : natural := 16;
     
-    --SIZE OF BRAMS AND ROM
-    KERNEL_ROM_SIZE : natural := 77; --FIXED 
-    BRAM_SIZE : natural := 60000 --FIXED
+    -- SIZE OF BRAMS AND ROM
+    KERNEL_ROM_SIZE : natural := 77; 
+    BRAM_SIZE : natural := 60000 
 );
 Port ( 
     clk: in std_logic;
     reset: in std_logic;
     start: in std_logic;
     
-    --IMAGE ELEMENTS
+    -- IMAGE ELEMENTS
     img_height: in std_logic_vector(DATA_WIDTH -1 downto 0);
     img_width: in std_logic_vector(DATA_WIDTH -1 downto 0);
     img_offset_up: in std_logic_vector(DATA_WIDTH -1 downto 0); 
     img_offset_down: in std_logic_vector(DATA_WIDTH  -1 downto 0);
     img_per_octave: in std_logic_vector(DATA_WIDTH  -1 downto 0);
     
-    --BRAMS  
+    -- BRAMS  
     main_bram_b_en: out std_logic;
     main_bram_b_we: out std_logic_vector(3 downto 0);
     main_bram_b_addr: out std_logic_vector(log2c(BRAM_SIZE/2) - 1 downto 0);
@@ -138,10 +138,10 @@ begin
 
 gauss_blur: gaussian_blur
 Generic map(
-    --DATA WIDTH
+    -- DATA WIDTH
     DATA_WIDTH => DATA_WIDTH,
     
-    --SIZE OF BRAMS AND ROM
+    -- SIZE OF BRAMS AND ROM
     KERNEL_ROM_SIZE => KERNEL_ROM_SIZE,
     BRAM_SIZE => BRAM_SIZE)
     
@@ -150,14 +150,14 @@ Port map(
     reset => reset,
     start => start,
     
-    --IMAGE ELEMENTS
+    -- IMAGE ELEMENTS
     img_height => img_height,
     img_width => img_width,
     img_offset_up => img_offset_up,
     img_offset_down => img_offset_down,
     img_per_octave => img_per_octave,
     
-    --BRAMS
+    -- BRAMS
     main_bram_b_en => main_bram_b_en_blur_s,
     main_bram_b_we => main_bram_b_we_blur_s,
     main_bram_b_addr => main_bram_b_addr_blur_s,

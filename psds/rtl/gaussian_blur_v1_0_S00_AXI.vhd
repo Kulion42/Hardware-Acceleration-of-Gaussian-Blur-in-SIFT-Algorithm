@@ -7,7 +7,7 @@ use work.utils_pkg.ALL;
 entity gaussian_blur_v1_0_S00_AXI is
 	generic (
 		-- Users to add parameters here
-        --DATA WIDTH
+        -- DATA WIDTH
         DATA_WIDTH : natural := 16;
         
 		-- User parameters ends
@@ -250,7 +250,7 @@ begin
             
            start_we_o <= '0';
            reset_we_o <= '0';
-           --ready_we_o <= '0';
+           -- ready_we_o <= '0';
 	    else
 	    
 	       -- Default values
@@ -264,7 +264,7 @@ begin
            reset_we_o <= '0';
 
 		   -- CPU can't change ready register
-           --ready_we_o <= '0';
+           -- ready_we_o <= '0';
 	    
 	      loc_addr := axi_awaddr(ADDR_LSB + OPT_MEM_ADDR_BITS downto ADDR_LSB);
 	      if (slv_reg_wren = '1') then
@@ -284,7 +284,7 @@ begin
 	          when "110" =>
 	               start_we_o <= '1';
 	          when "111" =>
-	               --ready_we_o <= '1';
+	               -- ready_we_o <= '1';
 	          when others =>
 	        end case;
 	      end if;
@@ -306,13 +306,13 @@ begin
 	  if rising_edge(S_AXI_ACLK) then 
 	    if S_AXI_ARESETN = '0' then
 	      axi_bvalid  <= '0';
-	      axi_bresp   <= "00"; --need to work more on the responses
+	      axi_bresp   <= "00";
 	    else
 	      if (axi_awready = '1' and S_AXI_AWVALID = '1' and axi_wready = '1' and S_AXI_WVALID = '1' and axi_bvalid = '0'  ) then
 	        axi_bvalid <= '1';
 	        axi_bresp  <= "00"; 
-	      elsif (S_AXI_BREADY = '1' and axi_bvalid = '1') then   --check if bready is asserted while bvalid is high)
-	        axi_bvalid <= '0';                                 -- (there is a possibility that bready is always asserted high)
+	      elsif (S_AXI_BREADY = '1' and axi_bvalid = '1') then
+	        axi_bvalid <= '0';
 	      end if;
 	    end if;
 	  end if;                   
