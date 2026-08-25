@@ -21,7 +21,7 @@ class base_test_rand extends uvm_test;
       end
       cfg.randomize(); 
       cfg.random_configuration(); //randomize files
-      uvm_config_db#(gaussian_blur_config_rand)::set(this, "env_rand", "gaussian_blur_config_rand", cfg);      
+      uvm_config_db#(gaussian_blur_config_rand)::get(this, "", "gaussian_blur_config_rand", cfg)
       env_rand = gaussian_blur_env_rand::type_id::create("env_rand", this);
       if (env_rand == null) begin
             `uvm_fatal("ENV_RAND_NULL", "Env_rand is null!")

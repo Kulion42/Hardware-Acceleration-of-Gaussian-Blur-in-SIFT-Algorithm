@@ -11,7 +11,6 @@ class gaussian_blur_scoreboard_rand extends uvm_scoreboard;
     int num_of_tr, num_of_missed = 0;
     int fd;
     int pixel_data_of = 1;
-    int ref_d = 1;
 
     uvm_analysis_imp#(agent_pkg::gaussian_blur_seq_item, gaussian_blur_scoreboard_rand) item_collected_import;
     
@@ -24,18 +23,24 @@ class gaussian_blur_scoreboard_rand extends uvm_scoreboard;
     function new(string name = "gaussian_blur_scoreboard_rand", uvm_component parent = null);
         super.new(name, parent);
         item_collected_import = new("item_collected_import", this);       
-         
-        if(!uvm_config_db#(gaussian_blur_config_rand)::get(this, "", "gaussian_blur_config_rand", cfg))
-            `uvm_fatal("NOCONFIG",{"Config object must be set for: ",get_full_name(),".cfg"})          
     endfunction 
     
     function void build_phase(uvm_phase phase);
         super.build_phase(phase);
+        if(!uvm_config_db#(gaussian_blur_config_rand)::get(this, "", "gaussian_blur_config_rand", cfg))
+            `uvm_fatal("NOCONFIG",{"Config object must be set for: ",get_full_name(),".cfg"}) 
     endfunction : build_phase
 
     function void connect_phase(uvm_phase phase);
         super.connect_phase(phase);
-    endfunction : connect_phase               
+    endfunction : connect_phase             
+
+    function void start_of_simulation_phase(uvm_phase phase);
+        super.start_of_simulation_phase(phase);
+        gaussian_blur_ref(cfg.img_in_data_arr, cfg.rand_width, cfg.rand_height,
+                        cfg.rand_offset_up, cfg.rand_offset_down,
+                        cfg.rand_img_per_octave, cfg.ref_out_data_arr);
+    endfunction : start_of_simulation_phase
     
     function void gaussian_blur_ref(int img_in_data_arr [$], int img_width, int img_height, int img_offset_up, int img_offset_down, int num_img_per_octave, ref int output_data_arr[$]);
         int tmp_arr[60000];
@@ -107,12 +112,9 @@ class gaussian_blur_scoreboard_rand extends uvm_scoreboard;
     endfunction : gaussian_blur_ref       
     
     function void write(agent_pkg::gaussian_blur_seq_item curr_it);
-        if (ref_d) begin
-            gaussian_blur_ref(cfg.img_in_data_arr, cfg.rand_width, cfg.rand_height, cfg.rand_offset_up, cfg.rand_offset_down, cfg.rand_img_per_octave, cfg.ref_out_data_arr);
-            ref_d = 0;  
-        end    
+
         `uvm_info(get_type_name(),$sformatf("\n[Scoreboard] Scoreboard function write called..."),UVM_MEDIUM);
-        if(checks_enable && !ref_d) begin
+        if(checks_enable) begin
             ass_check_pix_up : assert((((curr_it.main_bram_a_rdata_o >> 16) & 16'hffff) >= (cfg.ref_out_data_arr[curr_it.main_bram_a_addr_i/2]) -pixel_data_of) && (((curr_it.main_bram_a_rdata_o >> 16) & 16'hffff) <= ((cfg.ref_out_data_arr[curr_it.main_bram_a_addr_i/2]) + pixel_data_of)))
             `uvm_info(get_type_name(),$sformatf("\nComparison match succesfull\nObserved value is %0d, expected is %0d.\n",        
                                                     (curr_it.main_bram_a_rdata_o >> 16) & 16'hffff, 

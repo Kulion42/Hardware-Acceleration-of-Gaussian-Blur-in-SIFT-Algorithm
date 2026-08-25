@@ -14,14 +14,14 @@ class rand_test extends base_test_rand;
 
    function void build_phase(uvm_phase phase);
       super.build_phase(phase);
-      rand_seq = gaussian_blur_rand_seq::type_id::create("gaussian_blur_rand_seq");
-      if (rand_seq == null) begin
-            `uvm_fatal("RAND_SEQ_NULL", "Rand_seq is null!")
-      end
    endfunction : build_phase
 
    task main_phase(uvm_phase phase);
       phase.raise_objection(this);
+      rand_seq = gaussian_blur_rand_seq::type_id::create("gaussian_blur_rand_seq");
+      if (rand_seq == null) begin
+            `uvm_fatal("RAND_SEQ_NULL", "Rand_seq is null!")
+      end
       rand_seq.start(env_rand.agent.seqr);
       phase.drop_objection(this);
    endtask : main_phase

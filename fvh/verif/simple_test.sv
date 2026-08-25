@@ -14,14 +14,14 @@ class simple_test extends base_test;
 
    function void build_phase(uvm_phase phase);
       super.build_phase(phase);
-      simple_seq = gaussian_blur_simple_seq::type_id::create("gaussian_blur_simple_seq");
-      if (simple_seq == null) begin
-            `uvm_fatal("SIM_SEQ_NULL", "Simple_seq is null!")
-      end
    endfunction : build_phase
 
    task main_phase(uvm_phase phase);
       phase.raise_objection(this);
+      simple_seq = gaussian_blur_simple_seq::type_id::create("gaussian_blur_simple_seq");
+      if (simple_seq == null) begin
+            `uvm_fatal("SIM_SEQ_NULL", "Simple_seq is null!")
+      end
       simple_seq.start(env.agent.seqr);
       phase.drop_objection(this);
    endtask : main_phase

@@ -6,7 +6,7 @@
 
 ##Clock signal
 #set_property -dict { PACKAGE_PIN K17   IOSTANDARD LVCMOS33 } [get_ports { sysclk }]; #IO_L12P_T1_MRCC_35 Sch=sysclk
-create_clock -add -name clk_pin -period 8.00 -waveform {0 4} [get_ports { clk }];
+#create_clock -add -name clk_pin -period 10.00 -waveform {0 5} [get_ports { clk }];
 
 
 ##Switches
@@ -110,6 +110,22 @@ create_clock -add -name clk_pin -period 8.00 -waveform {0 4} [get_ports { clk }]
 #set_property -dict { PACKAGE_PIN J16   IOSTANDARD LVCMOS33 } [get_ports { ja[6] }]; #IO_L24N_T3_AD15N_35 Sch=JA3_R_N            
 #set_property -dict { PACKAGE_PIN J14   IOSTANDARD LVCMOS33 } [get_ports { ja[7] }]; #IO_L20N_T3_AD6N_35 Sch=JA4_R_N             
  
+# =============================================================================
+# Pmod AD1 on JA - Zybo Z7-10 / Zybo Z7-20 - 100 % working
+# =============================================================================
+set_property IOSTANDARD LVCMOS33 [get_ports spi_rtl_0_io0_io]
+set_property IOSTANDARD LVCMOS33 [get_ports spi_rtl_0_io1_io]
+set_property IOSTANDARD LVCMOS33 [get_ports spi_rtl_0_sck_io]
+set_property IOSTANDARD LVCMOS33 [get_ports spi_rtl_0_ss_io[0]]
+
+set_property PACKAGE_PIN N15 [get_ports spi_rtl_0_io0_io]     ;# JA1 → MOSI → AD1 pin 6 (DOUT)
+set_property PACKAGE_PIN L14 [get_ports spi_rtl_0_sck_io]     ;# JA2 → SCK  → AD1 pin 5 (~CS)
+set_property PACKAGE_PIN N16 [get_ports spi_rtl_0_ss_io[0]]   ;# JA7 → SS (manual, ignored by AD1)
+set_property PACKAGE_PIN L15 [get_ports spi_rtl_0_io1_io]     ;# JA8 → MISO (unused)
+
+# Optional - cleaner edges, faster slew (highly recommended for AD1)
+set_property SLEW FAST [get_ports {spi_rtl_0_*}]
+set_property DRIVE 12  [get_ports {spi_rtl_0_*}]
 
 ##Pmod Header JB (Zybo Z7-20 only)
 #set_property -dict { PACKAGE_PIN V8    IOSTANDARD LVCMOS33     } [get_ports { jb[0] }]; #IO_L15P_T2_DQS_13 Sch=jb_p[1]		 

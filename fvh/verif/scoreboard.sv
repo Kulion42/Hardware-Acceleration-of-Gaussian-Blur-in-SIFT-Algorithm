@@ -10,7 +10,6 @@ class gaussian_blur_scoreboard extends uvm_scoreboard;
     int num_of_tr, num_of_missed = 0;
     int num_of_zeros = 0;
     int zeros = 0;
-    int ref_d = 1;
     int fd;
     int pixel_data_of = 1;
     string num;
@@ -35,7 +34,7 @@ class gaussian_blur_scoreboard extends uvm_scoreboard;
 
     function void connect_phase(uvm_phase phase);
         super.connect_phase(phase);
-    endfunction : connect_phase               
+    endfunction : connect_phase           
     
     function void gaussian_blur_ref(int img_in_data_arr[$], int img_width, int img_height, int img_offset_up, int img_offset_down, int num_img_per_octave, ref int output_data_arr[$]);
          int tmp_arr[60000];
@@ -106,11 +105,14 @@ class gaussian_blur_scoreboard extends uvm_scoreboard;
         
     endfunction : gaussian_blur_ref 
 
+    function void start_of_simulation_phase(uvm_phase phase);
+        super.start_of_simulation_phase(phase);
+        gaussian_blur_ref(cfg.img_in_data_arr, cfg.img_width, cfg.img_height,
+                        cfg.img_offset_up, cfg.img_offset_down,
+                        cfg.img_img_per_octave, cfg.ref_out_data_arr);
+    endfunction : start_of_simulation_phase    
+
     function void write(agent_pkg::gaussian_blur_seq_item curr_it);
-         if (ref_d) begin
-            gaussian_blur_ref(cfg.ref_in_data_arr, cfg.img_width, cfg.img_height, cfg.img_offset_up, cfg.img_offset_down, cfg.num_img_per_oct, cfg.ref_out_data_arr);
-            ref_d = 0;  
-        end    
 
         if ((curr_it.main_bram_a_rdata_o >> 16) == 0) begin
             num_of_zeros++;
@@ -120,7 +122,7 @@ class gaussian_blur_scoreboard extends uvm_scoreboard;
         end
 
         `uvm_info(get_type_name(),$sformatf("\n[Scoreboard] Scoreboard function write called..."),UVM_MEDIUM);
-        if(checks_enable && !ref_d) begin
+        if(checks_enable ) begin
             ass_check_pix_up : assert((((curr_it.main_bram_a_rdata_o >> 16) & 16'hffff) >= (cfg.ref_out_data_arr[curr_it.main_bram_a_addr_i/2]) -pixel_data_of) && (((curr_it.main_bram_a_rdata_o >> 16) & 16'hffff) <= ((cfg.ref_out_data_arr[curr_it.main_bram_a_addr_i/2]) + pixel_data_of)))
             `uvm_info(get_type_name(),$sformatf("\nComparison match succesfull\nObserved value is %0d, expected is %0d.\n",        
                                                     (curr_it.main_bram_a_rdata_o >> 16) & 16'hffff, 

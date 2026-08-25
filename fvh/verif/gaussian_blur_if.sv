@@ -4,14 +4,14 @@
 
 interface gaussian_blur_if (input clk, logic rst);
 
-    parameter DATA_WIDTH = 16;
-    parameter KERNEL_ROM_SIZE = 77;
-    parameter BRAM_SIZE = 60000;
-    parameter BRAM_ADDR_WIDTH = 15;
-    parameter BYTE_OFFSET = 2;
+    localparam DATA_WIDTH = 16;
+    localparam KERNEL_ROM_SIZE = 77;
+    localparam BRAM_SIZE = 60000;
+    localparam BRAM_ADDR_WIDTH = 15;
+    localparam BYTE_OFFSET = 2;
     
-    parameter C_S00_AXI_DATA_WIDTH = 32;
-    parameter C_S00_AXI_ADDR_WIDTH = 5;
+    localparam C_S00_AXI_DATA_WIDTH = 32;
+    localparam C_S00_AXI_ADDR_WIDTH = 5;
     
     //User ports
     logic main_bram_a_en_i;

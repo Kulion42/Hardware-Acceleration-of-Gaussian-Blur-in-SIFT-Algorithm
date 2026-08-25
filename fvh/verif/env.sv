@@ -20,10 +20,10 @@ class gaussian_blur_env extends uvm_env;
 
         // Getting interfaces from configuration base 
         if (!uvm_config_db#(virtual gaussian_blur_if)::get(this, "", "gaussian_blur_if", vif))
-            `uvm_fatal("NOVIF",{"virtual interface must be set:",get_full_name(),".vif"})
+            `uvm_fatal("NO_VIF", {"Virtual interface 'gaussian_blur_if' not set for: ", get_full_name()})
 
         if (!uvm_config_db#(gaussian_blur_config)::get(this, "", "gaussian_blur_config", cfg))
-            `uvm_fatal("NOVIF",{"virtual interface must be set:",get_full_name(),".cfg"})
+            `uvm_fatal("NO_CFG", {"Config object 'gaussian_blur_config' not set for: ", get_full_name()})
 
          // Setting to configurartion base 
         uvm_config_db#(gaussian_blur_config)::set(this, "agent", "gaussian_blur_config", cfg);
