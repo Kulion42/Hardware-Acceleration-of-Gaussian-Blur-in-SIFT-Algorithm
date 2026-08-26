@@ -2,7 +2,7 @@
 
 This repository implements an FPGA hardware accelerator for the **Gaussian blur** stage of the **SIFT** (Scale-Invariant Feature Transform) keypoint-detection algorithm, and carries it end to end through the ASIC/FPGA design flow: software specification, Electronic System Level (ESL) modeling, RTL functional verification, physical design/synthesis, and embedded software integration on a Zynq SoC.
 
-Gaussian blur (repeated convolution to build the scale-space pyramid) is the dominant hotspot in a software SIFT implementation - profiling (`esl/spec/profiler.txt`) shows `gaussian_blur`/`Image::get_pixel` consuming over half of total runtime - which motivated offloading it to a dedicated hardware IP core.
+Gaussian blur (repeated convolution to build the scale-space pyramid) is the dominant hotspot in a software SIFT implementation - profiling (`esl/spec/profiler.txt`) shows `gaussian_blur` consuming over half of total runtime - which motivated offloading it to a dedicated hardware IP core.
 
 ## Target platform
 
