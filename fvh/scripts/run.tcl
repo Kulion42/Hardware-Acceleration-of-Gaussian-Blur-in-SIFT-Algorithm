@@ -6,6 +6,7 @@
 set test_mode "simple"
 set test_count 1
 
+
 if {$argc > 0} {
     set test_mode [lindex $argv 0]
 }
@@ -31,7 +32,7 @@ if {$test_mode == "rand"} {
 }
 file mkdir $resultDir
 create_project gaussian_blur_verif $resultDir -part xc7z010clg400-1 -force
-set_property board_part digilentinc.com:zybo-z7-10:part0:1.2 [current_project]
+set_property board_part digilentinc.com:zybo-z7-10:part0:1.1 [current_project]
 
 # Add RTL files
 add_files -norecurse ../../psds/rtl/gaussian_blur_v1_0.vhd

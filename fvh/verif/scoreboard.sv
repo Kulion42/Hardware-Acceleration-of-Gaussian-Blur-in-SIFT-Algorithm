@@ -37,7 +37,7 @@ class gaussian_blur_scoreboard extends uvm_scoreboard;
     endfunction : connect_phase           
     
     function void gaussian_blur_ref(int img_in_data_arr[$], int img_width, int img_height, int img_offset_up, int img_offset_down, int num_img_per_octave, ref int output_data_arr[$]);
-         int tmp_arr[60000];
+        int tmp_arr[60000];
         int sigma_vals[6] = {9, 9, 11, 13, 15, 19};
         int size = sigma_vals[num_img_per_octave];
         int center = size/2;
@@ -107,9 +107,9 @@ class gaussian_blur_scoreboard extends uvm_scoreboard;
 
     function void start_of_simulation_phase(uvm_phase phase);
         super.start_of_simulation_phase(phase);
-        gaussian_blur_ref(cfg.img_in_data_arr, cfg.img_width, cfg.img_height,
+        gaussian_blur_ref(cfg.ref_in_data_arr, cfg.img_width, cfg.img_height,
                         cfg.img_offset_up, cfg.img_offset_down,
-                        cfg.img_img_per_octave, cfg.ref_out_data_arr);
+                        cfg.num_img_per_oct, cfg.ref_out_data_arr);
     endfunction : start_of_simulation_phase    
 
     function void write(agent_pkg::gaussian_blur_seq_item curr_it);
