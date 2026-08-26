@@ -25,6 +25,7 @@ fvh/uvm_project_rand/
 fvh/scripts/.Xil/
 fvh/scripts/*.log
 fvh/scripts/*.str
+fvh/scripts/*.jou
 fvh/scripts/xsim.covdb
 fvh/result_files/
 fvh/*.txt

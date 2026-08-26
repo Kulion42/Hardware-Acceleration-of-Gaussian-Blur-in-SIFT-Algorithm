@@ -8,6 +8,7 @@ class gaussian_blur_scoreboard_rand extends uvm_scoreboard;
     bit coverage_enable = 1;
     
     gaussian_blur_config_rand cfg;
+    int img_size;
     int num_of_tr, num_of_missed = 0;
     int fd;
     int pixel_data_of = 1;
@@ -35,12 +36,17 @@ class gaussian_blur_scoreboard_rand extends uvm_scoreboard;
         super.connect_phase(phase);
     endfunction : connect_phase             
 
-    function void start_of_simulation_phase(uvm_phase phase);
-        super.start_of_simulation_phase(phase);
+    virtual task run_phase(uvm_phase phase);
+        super.run_phase(phase);
+        img_size = cfg.rand_width * cfg.rand_height;
+        // Wait until the image input array is filled by the sequence
+        wait (cfg.img_in_data_arr.size() >= img_size);
+        `uvm_info(get_type_name(), $sformatf("Image data loaded (%0d elements). Generating reference output...", cfg.img_in_data_arr.size()), UVM_LOW)
         gaussian_blur_ref(cfg.img_in_data_arr, cfg.rand_width, cfg.rand_height,
                         cfg.rand_offset_up, cfg.rand_offset_down,
                         cfg.rand_img_per_octave, cfg.ref_out_data_arr);
-    endfunction : start_of_simulation_phase
+        `uvm_info(get_type_name(), $sformatf("Reference output generated (%0d elements)", cfg.ref_out_data_arr.size()), UVM_LOW)
+    endtask : run_phase
     
     function void gaussian_blur_ref(int img_in_data_arr [$], int img_width, int img_height, int img_offset_up, int img_offset_down, int num_img_per_octave, ref int output_data_arr[$]);
         int tmp_arr[60000];
