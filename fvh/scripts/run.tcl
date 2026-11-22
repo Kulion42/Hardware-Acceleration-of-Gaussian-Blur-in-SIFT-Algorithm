@@ -6,7 +6,6 @@
 set test_mode "simple"
 set test_count 1
 
-
 if {$argc > 0} {
     set test_mode [lindex $argv 0]
 }
@@ -32,7 +31,7 @@ if {$test_mode == "rand"} {
 }
 file mkdir $resultDir
 create_project gaussian_blur_verif $resultDir -part xc7z010clg400-1 -force
-set_property board_part digilentinc.com:zybo-z7-10:part0:1.1 [current_project]
+set_property board_part digilentinc.com:zybo-z7-10:part0:* [current_project]
 
 # Add RTL files
 add_files -norecurse ../../psds/rtl/gaussian_blur_v1_0.vhd
@@ -54,13 +53,9 @@ set_property SOURCE_SET sources_1 [get_filesets sim_1]
 
 # Add common verification files (adjust as needed)
 add_files -fileset sim_1 -norecurse ../verif/agent/agent_pkg.sv
-add_files -fileset sim_1 -norecurse ../verif/agent_rand/agent_rand_pkg.sv
 add_files -fileset sim_1 -norecurse ../verif/config/gaussian_blur_config_pkg.sv
-add_files -fileset sim_1 -norecurse ../verif/config/gaussian_blur_config_rand_pkg.sv
 add_files -fileset sim_1 -norecurse ../verif/sequences/seq_pkg.sv
-add_files -fileset sim_1 -norecurse ../verif/sequences/seq_rand_pkg.sv
 add_files -fileset sim_1 -norecurse ../verif/test_pkg.sv
-add_files -fileset sim_1 -norecurse ../verif/test_rand_pkg.sv
 add_files -fileset sim_1 -norecurse ../verif/gaussian_blur_if.sv
 add_files -fileset sim_1 -norecurse ../verif/gaussian_blur_top.sv
 
@@ -75,7 +70,7 @@ set_property -name {xsim.compile.xvlog.more_options} -value {-L uvm} -objects [g
 set_property -name {xsim.elaborate.xelab.more_options} -value {-L uvm} -objects [get_filesets sim_1]
 
 # Run regression
-set test_name [expr {$test_mode == "rand" ? "rand_test" : "simple_test"}]
+set test_name [expr {$test_mode == "rand" ? "rand_test" : "file_test"}]
 for {set i 0} {$i < $test_count} {incr i} {
     set db_name "covdb_$i"
     set xsim_command "set_property -name \{xsim.simulate.xsim.more_options\} -value \{-testplusarg UVM_TESTNAME=$test_name -testplusarg UVM_VERBOSITY=UVM_LOW -sv_seed random -runall -cov_db_name $db_name\} -objects \[get_filesets sim_1\]"

@@ -13,8 +13,7 @@ package test_pkg;
 
 	`include "scoreboard.sv" 
 	`include "env.sv"   
-	`include "base_test.sv"
-	`include "simple_test.sv"
+	`include "gaussian_blur_test.sv"
 
 endpackage : test_pkg
 
