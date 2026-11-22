@@ -9,7 +9,6 @@ module gaussian_blur_top;
     import uvm_pkg::*;
     
     import test_pkg::*;
-    import test_rand_pkg::*;
     
     logic clk;
     logic rst;
@@ -51,7 +50,7 @@ module gaussian_blur_top;
      // run test
    initial begin      
       uvm_config_db#(virtual gaussian_blur_if)::set(null, "uvm_test_top.env", "gaussian_blur_if", gaussian_blur_vif);
-      uvm_config_db#(virtual gaussian_blur_if)::set(null, "uvm_test_top.env_rand", "gaussian_blur_if", gaussian_blur_vif);
+      //uvm_config_db#(virtual gaussian_blur_if)::set(null, "uvm_test_top.env_rand", "gaussian_blur_if", gaussian_blur_vif);
       run_test();
    end
     

@@ -28,15 +28,18 @@ class gaussian_blur_monitor extends uvm_monitor;
         item_collected_port = new("item_collected_port", this);
         //bram_cover = new();
         
-         if (!uvm_config_db#(virtual gaussian_blur_if)::get(this, "", "gaussian_blur_if", vif))
+    endfunction    
+
+    function void build_phase(uvm_phase phase);
+      super.build_phase(phase);
+       if (!uvm_config_db#(virtual gaussian_blur_if)::get(this, "", "gaussian_blur_if", vif))
             `uvm_fatal("NOVIF",{"virtual interface must be set:",get_full_name(),".vif"})
         
         //Geting from configuration database
          if(!uvm_config_db#(gaussian_blur_config)::get(this, "", "gaussian_blur_config", cfg))
             `uvm_fatal("NOCONFIG",{"Config object must be set for: ",get_full_name(),".cfg"})
         //----------------------------------------------------------------------------------
-   
-    endfunction    
+    endfunction : build_phase
     
     function void connect_phase(uvm_phase phase);
       super.connect_phase(phase);
@@ -50,7 +53,7 @@ class gaussian_blur_monitor extends uvm_monitor;
         wait(vif.s00_axi_rdata == 0)
         wait(vif.s00_axi_rdata == 1)
         
-        fd = $fopen(cfg.main_bram_read_file[((cfg.rand_img*NUMBER_OF_IMAGE_PARTS + cfg.rand_part) *NUMBER_OF_OCTAVES + cfg.rand_oct)], "w+");
+        fd = $fopen(cfg.tag, "w+");
         if (fd) 
             `uvm_info(get_name(), $sformatf("Successfully opened main_bram_read_file"),UVM_HIGH)
         else

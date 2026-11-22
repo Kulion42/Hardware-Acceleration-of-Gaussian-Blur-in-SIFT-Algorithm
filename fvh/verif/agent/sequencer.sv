@@ -9,11 +9,14 @@ class gaussian_blur_sequencer extends uvm_sequencer#(agent_pkg::gaussian_blur_se
     gaussian_blur_config cfg;
     
     function new(string name = "gaussian_blur_sequencer" , uvm_component parent = null);
-        super.new(name, parent);
-        
+        super.new(name, parent); 
+    endfunction : new
+
+    function void build_phase(uvm_phase phase);
+        super.build_phase(phase);
         if (!uvm_config_db#(gaussian_blur_config)::get(this, "", "gaussian_blur_config", cfg))
             `uvm_fatal("NOCONFIG", {"Config object must be set for: ", get_full_name(), ".cfg"})
-    endfunction : new
+    endfunction
 
 endclass : gaussian_blur_sequencer
 

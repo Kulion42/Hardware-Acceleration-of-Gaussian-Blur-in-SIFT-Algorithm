@@ -23,13 +23,14 @@ class gaussian_blur_scoreboard extends uvm_scoreboard;
     function new(string name = "gaussian_blur_scoreboard", uvm_component parent = null);
         super.new(name, parent);
         item_collected_import = new("item_collected_import", this);
-        
-        if(!uvm_config_db#(gaussian_blur_config)::get(this, "", "gaussian_blur_config", cfg))
-            `uvm_fatal("NOCONFIG",{"Config object must be set for: ",get_full_name(),".cfg"})          
+          
     endfunction 
     
     function void build_phase(uvm_phase phase);
         super.build_phase(phase);
+        if(!uvm_config_db#(gaussian_blur_config)::get(this, "", "gaussian_blur_config", cfg))
+            `uvm_fatal("NOCONFIG",{"Config object must be set for: ",get_full_name(),".cfg"})        
+
     endfunction : build_phase
 
     function void connect_phase(uvm_phase phase);
@@ -37,7 +38,7 @@ class gaussian_blur_scoreboard extends uvm_scoreboard;
     endfunction : connect_phase           
     
     function void gaussian_blur_ref(int img_in_data_arr[$], int img_width, int img_height, int img_offset_up, int img_offset_down, int num_img_per_octave, ref int output_data_arr[$]);
-        int tmp_arr[60000];
+         int tmp_arr[60000];
         int sigma_vals[6] = {9, 9, 11, 13, 15, 19};
         int size = sigma_vals[num_img_per_octave];
         int center = size/2;
@@ -157,24 +158,18 @@ class gaussian_blur_scoreboard extends uvm_scoreboard;
     
     function void report_phase(uvm_phase phase);
         `uvm_info(get_type_name(), $sformatf("Gaussian blur scoreboard examined: %0d transactions(%0d pixels), %0d succesfull pixel matches, %0d pixel mismatches", num_of_tr,2 *num_of_tr, 2 *num_of_tr - num_of_missed, num_of_missed), UVM_LOW);
-         for (int i = 0; i < cfg.ref_out_data_arr.size(); i++) begin
-            if (cfg.ref_out_data_arr[i] == 0) begin
-                zeros++;
-            end
-         end
 
-         cfg.main_bram_wdata_arr.delete();
-         cfg.ref_out_data_arr.delete();
-         cfg.ref_in_data_arr.delete();
-         //cfg.main_bram_gv_arr.delete();
-         num = cfg.rand_ipo == 0 ? cfg.ipo_str[0] : cfg.ipo_str[1];
+        cfg.main_bram_wdata_arr.delete();
+        cfg.ref_out_data_arr.delete();
+        cfg.ref_in_data_arr.delete();
+        //cfg.main_bram_gv_arr.delete();
          
-         fd = $fopen("../../../../../regression_log.txt", "a+");
+        fd = $fopen(cfg.log_file, "a+");
            if (fd) 
                  `uvm_info(get_name(), $sformatf("Successfully opened log file"),UVM_HIGH)
            else
                  `uvm_info(get_name(), $sformatf("Error log file"),UVM_HIGH)
-         $fdisplay(fd, "File img_%s_ipart_%0d_oct_%0d_ipo%s.txt examined: %0d pixels, %0d succesfull pixel matches, %0d pixel mismatches",cfg.image_names[cfg.rand_img], cfg.rand_part, (cfg.rand_oct) ? cfg.rand_oct - 1 : 0, num, 2 *num_of_tr, 2 *num_of_tr - num_of_missed, num_of_missed);
+        $fdisplay(fd, "File %s examined: %0d pixels, %0d succesfull pixel matches, %0d pixel mismatches",cfg.tag, 2 *num_of_tr, 2 *num_of_tr - num_of_missed, num_of_missed);
         $fclose(fd); 
             
     endfunction : report_phase
