@@ -11,11 +11,10 @@ class gaussian_blur_scoreboard extends uvm_scoreboard;
     int num_of_zeros = 0;
     int zeros = 0;
     int fd;
-    int pixel_data_of = 1;
     string num;
     uvm_analysis_imp#(agent_pkg::gaussian_blur_seq_item, gaussian_blur_scoreboard) item_collected_import;
     
-     `uvm_component_utils_begin(gaussian_blur_scoreboard)
+    `uvm_component_utils_begin(gaussian_blur_scoreboard)
         `uvm_field_int(checks_enable, UVM_DEFAULT)
         `uvm_field_int(coverage_enable, UVM_DEFAULT)
     `uvm_component_utils_end
@@ -124,7 +123,7 @@ class gaussian_blur_scoreboard extends uvm_scoreboard;
 
         `uvm_info(get_type_name(),$sformatf("\n[Scoreboard] Scoreboard function write called..."),UVM_MEDIUM);
         if(checks_enable ) begin
-            ass_check_pix_up : assert((((curr_it.main_bram_a_rdata_o >> 16) & 16'hffff) >= (cfg.ref_out_data_arr[curr_it.main_bram_a_addr_i/2]) -pixel_data_of) && (((curr_it.main_bram_a_rdata_o >> 16) & 16'hffff) <= ((cfg.ref_out_data_arr[curr_it.main_bram_a_addr_i/2]) + pixel_data_of)))
+            ass_check_pix_up : assert((((curr_it.main_bram_a_rdata_o >> 16) & 16'hffff) >= (cfg.ref_out_data_arr[curr_it.main_bram_a_addr_i/2]) -cfg.pixel_tol) && (((curr_it.main_bram_a_rdata_o >> 16) & 16'hffff) <= ((cfg.ref_out_data_arr[curr_it.main_bram_a_addr_i/2]) + cfg.pixel_tol)))
             `uvm_info(get_type_name(),$sformatf("\nComparison match succesfull\nObserved value is %0d, expected is %0d.\n",        
                                                     (curr_it.main_bram_a_rdata_o >> 16) & 16'hffff, 
                                                     cfg.ref_out_data_arr[curr_it.main_bram_a_addr_i/2]),UVM_MEDIUM)
@@ -138,7 +137,7 @@ class gaussian_blur_scoreboard extends uvm_scoreboard;
                                                        
              end
              
-             ass_check_pix_down : assert(((curr_it.main_bram_a_rdata_o & 16'hffff) >= (cfg.ref_out_data_arr[curr_it.main_bram_a_addr_i/2 + 1]) - pixel_data_of) && ((curr_it.main_bram_a_rdata_o & 16'hffff) <= ((cfg.ref_out_data_arr[curr_it.main_bram_a_addr_i/2 + 1]) + pixel_data_of)))
+             ass_check_pix_down : assert(((curr_it.main_bram_a_rdata_o & 16'hffff) >= (cfg.ref_out_data_arr[curr_it.main_bram_a_addr_i/2 + 1]) - cfg.pixel_tol) && ((curr_it.main_bram_a_rdata_o & 16'hffff) <= ((cfg.ref_out_data_arr[curr_it.main_bram_a_addr_i/2 + 1]) + cfg.pixel_tol)))
             `uvm_info(get_type_name(),$sformatf("\nComparison match succesfull\nObserved value is %0d, expected is %0d.\n",
                                                     curr_it.main_bram_a_rdata_o & 16'hffff, 
                                                     cfg.ref_out_data_arr[curr_it.main_bram_a_addr_i/2 + 1]),UVM_MEDIUM)
