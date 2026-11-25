@@ -27,7 +27,7 @@ class gaussian_blur_config extends uvm_object;
     int num_img_per_oct;
 
     bit checks_enable = 1;
-    int pixel_tol    = 1;
+    int pixel_tol    = 0;
 
     int main_bram_wdata_arr[$];
     int ref_in_data_arr[$];  
@@ -443,7 +443,7 @@ class gaussian_blur_config_rand extends gaussian_blur_config;
     constraint rand_height_constr3 {(rand_img_per_octave == 0) -> (rand_height > MIN_HEIGHT + 10);}
     constraint rand_width_height_constr {rand_width >= rand_height;}
     constraint rand_offset_constr1 {offset_p >= 0; offset_p < 6;}
-    constraint rand_offset_constr2 {offset_p dist {0:= 10, [1:5]:= 5};}  
+    constraint rand_offset_constr2 {offset_p dist {0:= 10, [1:5]:/ 5};}  
     constraint rand_constr_ipo1 {rand_img_per_octave >= 0 ; rand_img_per_octave < NUMBER_OF_IMAGES_PER_OCTAVE;}
     constraint rand_constr_ipo2 {rand_img_per_octave dist {0:= 15, [1:5]:/ 35 };}
     constraint rand_off_or_0_constr1 {off_or_0 >= 0; off_or_0 < 2;}

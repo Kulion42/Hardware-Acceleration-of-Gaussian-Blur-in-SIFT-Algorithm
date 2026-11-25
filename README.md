@@ -36,15 +36,15 @@ Each subfolder builds independently via its own `Makefile` (`make` then `make ru
 
 SystemVerilog/UVM-style testbench for the standalone Gaussian blur RTL (independent of the Zynq PS):
 
-- `verif/agent/`, `verif/agent_rand/` - Driver/monitor/sequencer agents for directed and randomized stimulus.
+- `verif/agent/` - Driver/monitor/sequencer agent.
 - `verif/sequences/`, `verif/config/` - Test sequences and DUT configuration objects.
-- `verif/scoreboard.sv`, `verif/scoreboard_rand.sv` - Self-checking comparison against golden output vectors.
-- `verif/env.sv`, `verif/env_rand.sv`, `verif/*_test*.sv` - Verification environments and top-level tests (`simple_test`, `rand_test`).
+- `verif/scoreboard.sv` - Self-checking comparison against golden output vectors.
+- `verif/env.sv`, `verif/gaussian_blur_test.sv` - Verification environments and top-level tests (`file_test`, `rand_test`).
 - `image_files/`, `img_dimensions/` - Golden input/output pixel vectors and per-image geometry (width/height/offsets, per SIFT octave and image-per-octave index) used to drive and check the DUT.
 - `scripts/run.tcl`, `scripts/flow.sh` - Vivado batch simulation entry points:
   ```sh
   vivado -mode tcl -nolog -nojournal -source run.tcl [test_name] [number_of_tests]
-  # test_name: "simple" (default, image-file based) or "rand" (randomized data)
+  # test_name: "file" (default, image-file based) or "rand" (randomized data)
   ```
 
 ### `psds/` - Physical Design & System Integration
